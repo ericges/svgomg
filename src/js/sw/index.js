@@ -32,7 +32,7 @@ addEventListener('install', (event) => {
       // If it's a major version change, don't skip waiting
       if (
         !activeVersion ||
-        activeVersion.split('.')[0] === version.split('.')[0]
+        activeVersion.split('.', 1)[0] === version.split('.', 1)[0]
       ) {
         self.skipWaiting();
       }

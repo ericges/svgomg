@@ -1,21 +1,31 @@
-const fs = require('fs/promises');
-const path = require('path');
-const process = require('process');
-const sirv = require('sirv-cli');
-const { VERSION: SVGO_VERSION } = require('svgo');
-const sass = require('sass');
-const CleanCSS = require('clean-css');
-const vinylMap = require('vinyl-map');
-const gulp = require('gulp');
-const gulpif = require('gulp-if');
-const gulpSass = require('gulp-sass')(sass);
-const gulpNunjucks = require('gulp-nunjucks');
-const gulpHtmlmin = require('gulp-htmlmin');
-const rollup = require('rollup');
-const { nodeResolve: rollupResolve } = require('@rollup/plugin-node-resolve');
-const rollupCommon = require('@rollup/plugin-commonjs');
-const rollupReplace = require('@rollup/plugin-replace');
-const { terser: rollupTerser } = require('rollup-plugin-terser');
+import { Buffer } from 'node:buffer';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import process from 'node:process';
+import http from 'node:http';
+import { Transform } from 'node:stream';
+import { fileURLToPath } from 'node:url';
+// `sirv-cli` no longer exposes a programmatic entry point, so the dev server
+// uses the underlying `sirv` middleware directly. `npm start` still uses the
+// `sirv` CLI that `sirv-cli` provides.
+import sirv from 'sirv';
+import { VERSION as SVGO_VERSION } from 'svgo';
+import * as sass from 'sass';
+import CleanCSS from 'clean-css';
+import gulp from 'gulp';
+import gulpif from 'gulp-if';
+import gulpSassFactory from 'gulp-sass';
+import { nunjucksCompile } from 'gulp-nunjucks';
+import { minify as htmlMinify } from 'html-minifier-terser';
+import * as rollup from 'rollup';
+import { nodeResolve as rollupResolve } from '@rollup/plugin-node-resolve';
+import rollupCommon from '@rollup/plugin-commonjs';
+import rollupReplace from '@rollup/plugin-replace';
+import rollupTerser from '@rollup/plugin-terser';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+const gulpSass = gulpSassFactory(sass);
 
 const IS_DEV_TASK =
   process.argv.includes('dev') || process.argv.includes('--dev');
@@ -71,20 +81,51 @@ const readJSON = async (filePath) => {
   return JSON.parse(content);
 };
 
-const minifyCss = vinylMap((buffer) => {
-  return new CleanCSS(buildConfig.cleancss).minify(buffer.toString()).styles;
-});
+// Map each vinyl file's contents through `fn`, which takes a string and returns
+// a string or a promise of one.
+const mapContents = (fn) =>
+  new Transform({
+    objectMode: true,
+    async transform(file, _encoding, callback) {
+      if (file.isNull()) {
+        callback(null, file);
+        return;
+      }
+
+      try {
+        file.contents = Buffer.from(await fn(file.contents.toString()));
+      } catch (error) {
+        callback(error);
+        return;
+      }
+
+      callback(null, file);
+    },
+  });
+
+const minifyCss = () =>
+  mapContents(
+    (source) => new CleanCSS(buildConfig.cleancss).minify(source).styles,
+  );
+
+const minifyHtml = () =>
+  mapContents((source) => htmlMinify(source, buildConfig.htmlmin));
 
 function copy() {
   return gulp
-    .src([
-      'src/{.well-known,imgs,test-svgs,fonts}/**',
-      // Exclude the test-svgs files except for `car-lite.svg`
-      // which is used in the demo
-      '!src/test-svgs/!(car-lite.svg)',
-      '!src/imgs/maskable.svg',
-      'src/*.json',
-    ])
+    .src(
+      [
+        'src/{.well-known,imgs,test-svgs,fonts}/**',
+        // Exclude the test-svgs files except for `car-lite.svg`
+        // which is used in the demo
+        '!src/test-svgs/!(car-lite.svg)',
+        '!src/imgs/maskable.svg',
+        'src/*.json',
+      ],
+      // `base` is explicit because gulp resolves it per-glob: without it
+      // `src/*.json` would be written to `build/src/` rather than `build/`.
+      { base: 'src' },
+    )
     .pipe(gulp.dest('build'));
 }
 
@@ -92,7 +133,7 @@ function css() {
   return gulp
     .src('src/css/*.scss', { sourcemaps: true })
     .pipe(gulpSass.sync(buildConfig.sass).on('error', gulpSass.logError))
-    .pipe(gulpif(!IS_DEV_TASK, minifyCss))
+    .pipe(gulpif(!IS_DEV_TASK, minifyCss()))
     .pipe(gulp.dest('build/', { sourcemaps: '.' }));
 }
 
@@ -106,18 +147,18 @@ async function html() {
   return gulp
     .src('src/*.html')
     .pipe(
-      gulpNunjucks.compile({
+      nunjucksCompile({
         plugins: config.plugins,
         headCSS,
         SVGOMG_VERSION: changelog[0].version,
         SVGO_VERSION,
         liveBaseUrl: 'https://jakearchibald.github.io/svgomg/',
-        title: `SVGOMG - SVGO's Missing GUI for minifying SVGs`,
+        title: "SVGOMG - SVGO's Missing GUI for minifying SVGs",
         description: 'Easy & visual compression of SVG images.',
         iconPath: 'imgs/icon.png',
       }),
     )
-    .pipe(gulpif(!IS_DEV_TASK, gulpHtmlmin(buildConfig.htmlmin)))
+    .pipe(gulpif(!IS_DEV_TASK, minifyHtml()))
     .pipe(gulp.dest('build'));
 }
 
@@ -140,7 +181,7 @@ async function js(entry, outputPath) {
       rollupCommon({ include: /node_modules/ }),
       // Don't use terser on development
       IS_DEV_TASK
-        ? ''
+        ? undefined
         : rollupTerser(
             name === 'page'
               ? {
@@ -189,21 +230,21 @@ function watch() {
 }
 
 function serve() {
-  sirv('build', {
-    host: 'localhost',
-    port: 8080,
-    dev: true,
-    clear: false,
-  });
+  const port = 8080;
+  http.createServer(sirv('build', { dev: true })).listen(port, 'localhost');
+  console.log(`Serving build/ on http://localhost:${port}`);
 }
 
-exports.clean = clean;
-exports.allJs = allJs;
-exports.css = css;
-exports.html = html;
-exports.copy = copy;
-exports.build = mainBuild;
+const cleanBuild = gulp.series(clean, mainBuild);
+const dev = gulp.series(clean, mainBuild, gulp.parallel(watch, serve));
 
-exports['clean-build'] = gulp.series(clean, mainBuild);
-
-exports.dev = gulp.series(clean, mainBuild, gulp.parallel(watch, serve));
+export {
+  clean,
+  allJs,
+  css,
+  html,
+  copy,
+  mainBuild as build,
+  cleanBuild as 'clean-build',
+  dev,
+};

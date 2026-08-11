@@ -19,6 +19,6 @@ export default class CodeOutput {
   }
 
   reset() {
-    this._codeEl.innerHTML = '';
+    this._codeEl.replaceChildren();
   }
 }

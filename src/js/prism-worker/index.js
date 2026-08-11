@@ -1,5 +1,8 @@
 // This needs to be an import so it executes before Prism
-import './prism-config.js'; // eslint-disable-line import/no-unassigned-import
+/* eslint-disable-next-line import-x/no-unassigned-import -- Imported purely
+   for the side effect of configuring Prism. */
+import './prism-config.js';
+// eslint-disable-next-line import-x/order -- Must load after prism-config.js.
 import { highlight, languages } from 'prismjs';
 
 self.onmessage = (event) => {

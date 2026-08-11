@@ -20,9 +20,10 @@ import MainUi from './ui/main-ui.js';
 const svgo = new Svgo();
 
 export default class MainController {
+  _mainUi = null;
+
   constructor() {
     // ui components
-    this._mainUi = null;
     this._outputUi = new Output();
     this._downloadButtonUi = new DownloadButton();
     this._copyButtonUi = new CopyButton();
@@ -142,11 +143,11 @@ export default class MainController {
 
   _onGlobalPaste(event) {
     const value = event.clipboardData.getData('text');
-    if (!value.includes('</svg>')) {
-      this._toastsUi.show('Pasted value not an SVG', { duration: 2000 });
-    } else {
+    if (value.includes('</svg>')) {
       this._mainMenuUi.setPasteInput(value);
       event.preventDefault();
+    } else {
+      this._toastsUi.show('Pasted value not an SVG', { duration: 2000 });
     }
   }
 

@@ -24,7 +24,7 @@ There are **no unit tests and no test runner**; `npm test` is lint + build, whic
 
 Deployment: CI builds every push/PR, but only the **`live`** branch is published to `gh-pages`. `main` is the development branch.
 
-## Build pipeline (gulpfile.js)
+## Build pipeline (gulpfile.mjs)
 
 Five separate Rollup IIFE bundles, one per entry directory under `src/js/` — the output filename is the *directory* name:
 
@@ -40,10 +40,13 @@ Adding a bundle means adding a `js.bind(...)` line to `allJs`.
 
 Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks → `build/index.html`), `copy` (`.well-known`, `imgs`, `fonts`, `src/*.json`, `test-svgs/car-lite.svg`).
 
-Two build-order facts that are easy to trip over:
+Three build facts that are easy to trip over:
 
 - `html` reads `build/head.css` off disk and inlines it via `{{ headCSS|safe }}`, so it must run *after* `css` (`gulp.series(css, html)`).
-- `IS_DEV_TASK` (argv contains `dev` or `--dev`) disables terser, CleanCSS and htmlmin. Minification bugs only reproduce under `npm run build`.
+- `IS_DEV_TASK` (argv contains `dev` or `--dev`) disables terser, CleanCSS and html minification. Minification bugs only reproduce under `npm run build`.
+- `copy` passes an explicit `{ base: 'src' }`. gulp 5 resolves `base` per-glob, so without it `src/*.json` lands in `build/src/` instead of `build/` — which silently breaks the service worker, since it precaches `changelog.json` at the root.
+
+The gulpfile is ESM (`gulpfile.mjs`) because `gulp-nunjucks` is ESM-only. CleanCSS and `html-minifier-terser` are driven through a small local `mapContents()` vinyl transform rather than gulp plugin wrappers.
 
 ### `_`-prefixed properties are mangled — this constrains naming
 
@@ -108,4 +111,9 @@ Two Sass entry points, both in `src/css/`: `head.scss` (critical CSS, inlined in
 
 ## Code style
 
-xo + Prettier (single quotes, semicolons, trailing commas, 2-space indent) for JS; stylelint with `stylelint-config-twbs-bootstrap` for Sass. Rule overrides for both live in `package.json` (`xo` key) and `.stylelintrc`. `npm run fix` autofixes JS. `.editorconfig` applies repo-wide.
+xo + Prettier (single quotes, semicolons, trailing commas, 2-space indent) for JS; stylelint with `stylelint-config-twbs-bootstrap` for Sass. Rule overrides live in `xo.config.mjs` and `.stylelintrc`; Prettier options live in `.prettierrc`. `npm run fix` autofixes JS. `.editorconfig` applies repo-wide.
+
+Two xo gotchas worth knowing:
+
+- xo applies **its own** Prettier options in preference to `.prettierrc` (it defaults to `bracketSpacing: false`), so this repo's formatting is pinned by restating the options in the `prettier/prettier` rule in `xo.config.mjs`. Changing `.prettierrc` alone won't change what xo enforces.
+- `xo.config.mjs` disables a set of rules that conflict with load-bearing patterns here — most importantly `unicorn/prefer-private-class-fields` and `unicorn/no-undeclared-class-members`, because the `_` prefix must stay a normal property for the terser mangling described above. Each override carries a comment explaining why.
