@@ -1,6 +1,7 @@
 export default class WorkerMessenger {
+  _requestId = 0;
+
   constructor(url) {
-    this._requestId = 0;
     // worker jobs awaiting response { [requestId]: [ resolve, reject ] }
     this._pending = {};
     this._url = url;

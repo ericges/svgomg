@@ -33,7 +33,7 @@ export default class Changelog {
       .slice(startIndex, endIndex)
       // TODO: remove `reduce`
       // eslint-disable-next-line unicorn/no-array-reduce
-      .reduce((array, entry) => array.concat(entry.changes), [])
+      .reduce((array, entry) => [...array, ...entry.changes], [])
       .map((change) => escapeHtmlTag`<li>${change}</li>`);
 
     this.container.append(

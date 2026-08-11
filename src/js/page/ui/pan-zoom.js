@@ -55,7 +55,8 @@ export default class PanZoom {
     this._onPointerMove = (event) => {
       event.preventDefault();
       const points = getPoints(event);
-      /* eslint-disable unicorn/no-array-reduce, unicorn/no-array-callback-reference */
+      /* eslint-disable unicorn/no-array-reduce, unicorn/no-array-callback-reference
+         -- Reducing the points with getMidpoint is the clearest way to average them. */
       const averagePoint = points.reduce(getMidpoint);
       const averageLastPoint = this._lastPoints.reduce(getMidpoint);
       /* eslint-enable unicorn/no-array-reduce, unicorn/no-array-callback-reference */

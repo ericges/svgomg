@@ -11,7 +11,7 @@ const range = document.createRange();
 range.selectNode(document.documentElement);
 
 export function strToEl(str) {
-  return range.createContextualFragment(String(str)).children[0];
+  return range.createContextualFragment(String(str)).firstElementChild;
 }
 
 const entityMap = {
@@ -24,7 +24,7 @@ const entityMap = {
 };
 
 export function escapeHTML(str) {
-  return String(str).replace(/[&<>"'/]/g, (s) => entityMap[s]);
+  return String(str).replaceAll(/["&'/<>]/g, (s) => entityMap[s]);
 }
 
 export function escapeHtmlTag(strings, ...values) {
@@ -58,7 +58,7 @@ function transitionClassFunc({ removeClass = false } = {}) {
 
       requestAnimationFrame(() => {
         element.addEventListener('transitionend', listener);
-        element.classList[removeClass ? 'remove' : 'add'](className);
+        element.classList.toggle(className, !removeClass);
       });
     });
 
@@ -83,7 +83,7 @@ export function trackFocusMethod() {
         focusMethod === 'key' ? 'key-focused' : 'mouse-focused',
       );
     },
-    true,
+    { capture: true },
   );
 
   document.body.addEventListener(
@@ -91,7 +91,7 @@ export function trackFocusMethod() {
     (event) => {
       event.target.classList.remove('key-focused', 'mouse-focused');
     },
-    true,
+    { capture: true },
   );
 
   document.body.addEventListener(
@@ -99,7 +99,7 @@ export function trackFocusMethod() {
     () => {
       focusMethod = 'key';
     },
-    true,
+    { capture: true },
   );
 
   document.body.addEventListener(
@@ -107,6 +107,6 @@ export function trackFocusMethod() {
     () => {
       focusMethod = 'mouse';
     },
-    true,
+    { capture: true },
   );
 }

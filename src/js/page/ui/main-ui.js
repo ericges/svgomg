@@ -1,8 +1,9 @@
 import { transitionToClass } from '../utils.js';
 
 export default class MainUi {
+  _activated = false;
+
   constructor(...elements) {
-    this._activated = false;
     this._toActivate = elements;
   }
 
