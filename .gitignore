@@ -1,3 +1,10 @@
-/.netlify/
+.claude-flow/
+.claude/
+.env
+.idea/
+.netlify/
+.swarm/
 /build/
-/node_modules/
+/data/
+node_modules/
+ruvector.db
