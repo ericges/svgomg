@@ -2,6 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; manifest-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; frame-src 'self' data:">
     <title>{{ title }}</title>
     <meta name="theme-color" content="#303f9f">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,7 +19,8 @@
     <meta property="og:title" content="{{ title }}">
     <script src="js/page.js" defer></script>
     <style>{{headCSS|safe}}</style>
-    <link rel="preload" as="style" href="all.css" onload="rel='stylesheet'">
+    <!-- Swapped to rel=stylesheet by page.js; see src/js/page/index.js. -->
+    <link rel="preload" as="style" href="all.css">
   </head>
   <body>
     <div class="app-output">
