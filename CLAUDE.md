@@ -36,15 +36,16 @@ Five separate Rollup IIFE bundles, one per entry directory under `src/js/` — t
 | `src/js/prism-worker/index.js` | `build/js/prism-worker.js` |
 | `src/js/sw/index.js` | `build/sw.js` (root — needs root scope) |
 
-Adding a bundle means adding a `js.bind(...)` line to `allJs`.
+Adding a bundle means adding a `js.bind(...)` line to `appJs`. The service worker is deliberately *not* in `appJs`: it is bundled by the separate `swJs` task, which runs last (see "The service worker and its cache name" below).
 
 Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks → `build/index.html`), `copy` (`.well-known`, `imgs`, `fonts`, `src/*.json`, `test-svgs/car-lite.svg`).
 
-Three build facts that are easy to trip over:
+Four build facts that are easy to trip over:
 
 - `html` reads `build/head.css` off disk and inlines it via `{{ headCSS|safe }}`, so it must run *after* `css` (`gulp.series(css, html)`).
+- `swJs` hashes `build/`, so it must run *after* every task that writes there — hence `gulp.series(gulp.parallel(gulp.series(css, html), appJs, copy), swJs)`, and the same ordering in each `watch()` watcher.
 - `IS_DEV_TASK` (argv contains `dev` or `--dev`) disables terser, CleanCSS and html minification. Minification bugs only reproduce under `npm run build`.
-- `copy` passes an explicit `{ base: 'src' }`. gulp 5 resolves `base` per-glob, so without it `src/*.json` lands in `build/src/` instead of `build/` — which silently breaks the service worker, since it precaches `changelog.json` at the root.
+- `copy` passes an explicit `{ base: 'src' }`. gulp 5 resolves `base` per-glob, so without it `src/*.json` lands in `build/src/` instead of `build/` — which would put `manifest.json` at the wrong URL.
 
 The gulpfile is ESM (`gulpfile.mjs`) because `gulp-nunjucks` is ESM-only. CleanCSS and `html-minifier-terser` are driven through a small local `mapContents()` vinyl transform rather than gulp plugin wrappers.
 
@@ -95,15 +96,18 @@ Consequences:
 
 `SvgFile` (`page/svg-file.js`) lazily memoises both its blob `url` and its gzipped `size()`. `ResultsCache` calls `release()` on evicted entries to revoke blob URLs — if you add another place that holds `SvgFile`s, it owns that revocation too.
 
-### Versioning and the service worker
+### The service worker and its cache name
 
-`src/changelog.json`'s **first entry's `version` is the single source of truth**. It reaches the app twice: Rollup `@rollup/plugin-replace` substitutes `SVGOMG_VERSION` (used by `sw/index.js` for cache names), and Nunjucks writes `window.version` into `index.html` (read as `self.version` for the changelog UI and the `last-seen-version` IndexedDB key). `package.json` deliberately has **no** `version` field: the package is `private` and never published, nothing reads it, and a second copy only ever drifts from the changelog. Bump the changelog and nothing else.
+**The app has no version number** — no changelog, and `package.json` deliberately has no `version` field. Nothing in the page bundle knows what build it is; git history is the record.
 
-So: **shipping a user-visible change means prepending an entry to `src/changelog.json`**, which changes the SW cache name and triggers the update flow.
+The service worker's static cache is named `svgomg-static-<hash>`, where the hash is `SVGOMG_BUILD_ID`: the gulpfile's `buildId()` sha256-hashes the relative path and contents of every file in `build/` (sorted, excluding `sw.js` itself and `.map` files) and Rollup `@rollup/plugin-replace` substitutes it into the SW bundle. So the cache name — and with it the update flow — changes **exactly when the shipped bytes change**, with nothing to bump by hand. Two consequences:
 
-`src/js/sw/index.js` precaches a **hand-written asset list** — new runtime assets must be added there manually. Its update policy is deliberate: on a *minor* version change it `skipWaiting()`s; on a *major* change it waits, and `MainController._onUpdateFound` shows either a silent reload (user hasn't interacted) or an "Update available" toast. `.woff2` requests use a separate cache-first-then-fill `svgomg-fonts` cache that survives version changes.
+- `swJs` must run after every other build task, since it hashes their output. This is the only reason the SW isn't part of `appJs`.
+- Anything that alters output alters the hash, including a dependency upgrade or a change to the minifier config. Rebuilding unchanged sources reproduces the same hash, so an idempotent redeploy doesn't churn users' caches.
 
-`src/js/utils/storage.js` is a tiny hand-rolled IndexedDB key/value store (`svgo-keyval`), shared by the page and the service worker.
+`src/js/sw/index.js` precaches a **hand-written asset list** — new runtime assets must be added there manually. Because there's no version, there's no way to tell a breaking update from a safe one, so **every update `skipWaiting()`s**; `MainController._onUpdateFound` then shows either a silent reload (user hasn't interacted) or an "Update available" toast. `.woff2` requests use a separate cache-first-then-fill `svgomg-fonts` cache that survives build changes.
+
+`src/js/utils/storage.js` is a tiny hand-rolled IndexedDB key/value store (`svgo-keyval`), used by the page for saved settings.
 
 ## Styles
 

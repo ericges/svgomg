@@ -11,7 +11,6 @@ import MainMenu from './ui/main-menu.js';
 import Toasts from './ui/toasts.js';
 import FileDrop from './ui/file-drop.js';
 import Preloader from './ui/preloader.js';
-import Changelog from './ui/changelog.js';
 import ResultsContainer from './ui/results-container.js';
 import ViewToggler from './ui/view-toggler.js';
 import ResultsCache from './results-cache.js';
@@ -35,7 +34,6 @@ export default class MainController {
     const bgFillUi = new BgFillButton();
     const dropUi = new FileDrop();
     const preloaderUi = new Preloader();
-    const changelogUi = new Changelog(self.version);
     // _resultsContainerUi is unused
     this._resultsContainerUi = new ResultsContainer(this._resultsUi);
     const viewTogglerUi = new ViewToggler();
@@ -76,12 +74,6 @@ export default class MainController {
         });
     }
 
-    // tell the user about the latest update
-    storage.get('last-seen-version').then((lastSeenVersion) => {
-      if (lastSeenVersion) changelogUi.showLogFrom(lastSeenVersion);
-      storage.set('last-seen-version', self.version);
-    });
-
     domReady.then(() => {
       const container = document.querySelector('.app-output');
       const actionContainer = container.querySelector(
@@ -92,7 +84,6 @@ export default class MainController {
       );
       const toolbarElement = container.querySelector('.toolbar');
       const outputElement = container.querySelector('.output');
-      const menuExtraElement = container.querySelector('.menu-extra');
 
       // elements for intro anim
       this._mainUi = new MainUi(
@@ -109,7 +100,6 @@ export default class MainController {
       actionContainer.append(this._downloadButtonUi.container);
       outputElement.append(this._outputUi.container);
       container.append(this._toastsUi.container, dropUi.container);
-      menuExtraElement.append(changelogUi.container);
 
       // load previous settings
       this._loadSettings();
