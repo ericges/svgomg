@@ -115,12 +115,18 @@ function copy() {
   return gulp
     .src(
       [
-        'src/{.well-known,imgs,test-svgs,fonts}/**',
+        'src/{imgs,test-svgs,fonts}/**',
+        'src/*.json',
+        // Tells GitHub Pages which custom domain serves this site
+        'src/CNAME',
+        // Exclusions must come after every positive glob: gulp applies a
+        // negative glob only to the globs that follow it, and a magic-free
+        // path like `src/CNAME` errors as "not found" if one precedes it.
+        //
         // Exclude the test-svgs files except for `car-lite.svg`
         // which is used in the demo
         '!src/test-svgs/!(car-lite.svg)',
         '!src/imgs/maskable.svg',
-        'src/*.json',
       ],
       // `base` is explicit because gulp resolves it per-glob: without it
       // `src/*.json` would be written to `build/src/` rather than `build/`.
@@ -152,7 +158,7 @@ async function html() {
         headCSS,
         SVGOMG_VERSION: changelog[0].version,
         SVGO_VERSION,
-        liveBaseUrl: 'https://jakearchibald.github.io/svgomg/',
+        liveBaseUrl: 'https://svgomg.ges.dev/',
         title: "SVGOMG - SVGO's Missing GUI for minifying SVGs",
         description: 'Easy & visual compression of SVG images.',
         iconPath: 'imgs/icon.png',

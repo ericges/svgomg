@@ -97,7 +97,7 @@ Consequences:
 
 ### Versioning and the service worker
 
-`src/changelog.json`'s **first entry's `version` is the single source of truth**. It reaches the app twice: Rollup `@rollup/plugin-replace` substitutes `SVGOMG_VERSION` (used by `sw/index.js` for cache names), and Nunjucks writes `window.version` into `index.html` (read as `self.version` for the changelog UI and the `last-seen-version` IndexedDB key). `package.json`'s `version` is a separate copy — keep them in step when bumping.
+`src/changelog.json`'s **first entry's `version` is the single source of truth**. It reaches the app twice: Rollup `@rollup/plugin-replace` substitutes `SVGOMG_VERSION` (used by `sw/index.js` for cache names), and Nunjucks writes `window.version` into `index.html` (read as `self.version` for the changelog UI and the `last-seen-version` IndexedDB key). `package.json` deliberately has **no** `version` field: the package is `private` and never published, nothing reads it, and a second copy only ever drifts from the changelog. Bump the changelog and nothing else.
 
 So: **shipping a user-visible change means prepending an entry to `src/changelog.json`**, which changes the SW cache name and triggers the update flow.
 

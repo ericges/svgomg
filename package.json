@@ -1,17 +1,16 @@
 {
   "name": "svgomg",
   "private": true,
-  "version": "1.17.0",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jakearchibald/svgomg.git"
+    "url": "git+https://github.com/ericges/svgomg.git"
   },
   "keywords": [],
   "author": "Jake Archibald",
   "bugs": {
-    "url": "https://github.com/jakearchibald/svgomg/issues"
+    "url": "https://github.com/ericges/svgomg/issues"
   },
-  "homepage": "https://jakearchibald.github.io/svgomg/",
+  "homepage": "https://svgomg.ges.dev/",
   "license": "MIT",
   "engines": {
     "node": "^22 || ^24 || >=26"
