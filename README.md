@@ -25,14 +25,7 @@ npm run dev
 ## Deployment
 
 Pushing to `main` builds the site and publishes it to GitHub Pages at
-<https://svgomg.ges.dev/> via `.github/workflows/ci.yml`. Lint and build both
+<https://svgomg.ges.dev/> via [.github/workflows/ci.yml](./.github/workflows/ci.yml). Lint and build both
 have to pass before the deploy job runs.
-
-The repository needs two one-off settings for this to work:
-
-- **Settings → Pages → Source**: `GitHub Actions`
-- **Settings → Pages → Custom domain**: `svgomg.ges.dev`, with a DNS `CNAME`
-  record pointing `svgomg.ges.dev` at `ericges.github.io`. Enable
-  **Enforce HTTPS** once the certificate is issued.
 
 The site is entirely static and has no backend — SVGs never leave the browser.

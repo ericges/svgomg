@@ -156,7 +156,7 @@ function copy() {
   return gulp
     .src(
       [
-        'src/{imgs,test-svgs,fonts}/**',
+        'src/{images,test-svgs,fonts}/**',
         'src/*.json',
         // Tells GitHub Pages which custom domain serves this site
         'src/CNAME',
@@ -167,7 +167,7 @@ function copy() {
         // Exclude the test-svgs files except for `car-lite.svg`
         // which is used in the demo
         '!src/test-svgs/!(car-lite.svg)',
-        '!src/imgs/maskable.svg',
+        '!src/images/maskable.svg',
       ],
       // `base` is explicit because gulp resolves it per-glob: without it
       // `src/*.json` would be written to `build/src/` rather than `build/`.
@@ -178,7 +178,7 @@ function copy() {
 
 function css() {
   return gulp
-    .src('src/css/*.scss', { sourcemaps: true })
+    .src('src/styles/*.scss', { sourcemaps: true })
     .pipe(gulpSass.sync(buildConfig.sass).on('error', gulpSass.logError))
     .pipe(gulpif(!IS_DEV_TASK, minifyCss()))
     .pipe(gulp.dest('build/', { sourcemaps: '.' }));
@@ -200,7 +200,7 @@ async function html() {
         liveBaseUrl: 'https://svgomg.ges.dev/',
         title: "SVGOMG - SVGO's Missing GUI for minifying SVGs",
         description: 'Easy & visual compression of SVG images.',
-        iconPath: 'imgs/icon.png',
+        iconPath: 'images/icon.png',
       }),
     )
     .pipe(gulpif(!IS_DEV_TASK, minifyHtml()))
@@ -274,7 +274,7 @@ const mainBuild = gulp.series(
 );
 
 function watch() {
-  gulp.watch(['src/css/**/*.scss'], gulp.series(css, html, swJs));
+  gulp.watch(['src/styles/**/*.scss'], gulp.series(css, html, swJs));
   gulp.watch(['src/js/**/*.js'], allJs);
   gulp.watch(
     ['src/**/*.{html,svg,woff2}', 'src/*.json'],
