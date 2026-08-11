@@ -1,23 +1,21 @@
-/* globals SVGOMG_VERSION:false */
+/* globals SVGOMG_BUILD_ID:false */
 
-import { idbKeyval as storage } from '../utils/storage.js';
-
-const version = SVGOMG_VERSION;
+// A hash of everything the build produces, injected by the gulpfile. It changes
+// exactly when the cached assets change, so the cache below is rebuilt only
+// when there's something new to cache.
 const cachePrefix = 'svgomg-';
-const staticCacheName = `${cachePrefix}static-${version}`;
+const staticCacheName = `${cachePrefix}static-${SVGOMG_BUILD_ID}`;
 const fontCacheName = `${cachePrefix}fonts`;
 const expectedCaches = new Set([staticCacheName, fontCacheName]);
 
 addEventListener('install', (event) => {
   event.waitUntil(
     (async () => {
-      const activeVersionPromise = storage.get('active-version');
       const cache = await caches.open(staticCacheName);
 
       await cache.addAll([
         './',
         'all.css',
-        'changelog.json',
         'fonts/code-latin.woff2',
         'imgs/icon.png',
         'js/gzip-worker.js',
@@ -27,15 +25,10 @@ addEventListener('install', (event) => {
         'test-svgs/car-lite.svg',
       ]);
 
-      const activeVersion = await activeVersionPromise;
-
-      // If it's a major version change, don't skip waiting
-      if (
-        !activeVersion ||
-        activeVersion.split('.', 1)[0] === version.split('.', 1)[0]
-      ) {
-        self.skipWaiting();
-      }
+      // Without versions there's no way to tell a breaking update from a safe
+      // one, so every update activates straight away; `MainController` then
+      // either reloads silently or offers the user a reload.
+      self.skipWaiting();
     })(),
   );
 });
@@ -55,8 +48,6 @@ addEventListener('activate', (event) => {
           )
           .map((cacheName) => caches.delete(cacheName)),
       );
-
-      await storage.set('active-version', version);
     })(),
   );
 });

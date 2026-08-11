@@ -14,24 +14,6 @@ export function strToEl(str) {
   return range.createContextualFragment(String(str)).firstElementChild;
 }
 
-const entityMap = {
-  '&': '&amp;',
-  '<': '&lt;',
-  '>': '&gt;',
-  '"': '&quot;',
-  "'": '&#39;',
-  '/': '&#x2F;',
-};
-
-export function escapeHTML(str) {
-  return String(str).replaceAll(/["&'/<>]/g, (s) => entityMap[s]);
-}
-
-export function escapeHtmlTag(strings, ...values) {
-  values = values.map((s) => escapeHTML(s));
-  return strings.reduce((str, val, i) => str + val + (values[i] || ''), '');
-}
-
 export function readFileAsText(file) {
   return new Response(file).text();
 }

@@ -1,4 +1,5 @@
 import { Buffer } from 'node:buffer';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -81,6 +82,46 @@ const readJSON = async (filePath) => {
   return JSON.parse(content);
 };
 
+const comparePaths = (a, b) => {
+  if (a === b) return 0;
+  return a < b ? -1 : 1;
+};
+
+// Hash everything in `build/` that the service worker may cache, to give its
+// cache a name that changes exactly when the shipped bytes do. `sw.js` and
+// source maps are excluded: the former embeds this hash (and is written after
+// every other task for that reason), the latter are never cached.
+async function buildId() {
+  const entries = await fs.readdir(path.join(__dirname, 'build'), {
+    recursive: true,
+    withFileTypes: true,
+  });
+
+  const files = entries
+    .filter(
+      (entry) =>
+        entry.isFile() &&
+        !entry.name.endsWith('.map') &&
+        !(
+          entry.parentPath === path.join(__dirname, 'build') &&
+          entry.name === 'sw.js'
+        ),
+    )
+    .map((entry) => path.join(entry.parentPath, entry.name))
+    // Directory order isn't guaranteed, but the hash must be stable
+    .toSorted(comparePaths);
+
+  const hash = crypto.createHash('sha256');
+
+  for (const file of files) {
+    hash.update(path.relative(__dirname, file));
+    // eslint-disable-next-line no-await-in-loop
+    hash.update(await fs.readFile(file));
+  }
+
+  return hash.digest('hex').slice(0, 16);
+}
+
 // Map each vinyl file's contents through `fn`, which takes a string and returns
 // a string or a promise of one.
 const mapContents = (fn) =>
@@ -144,9 +185,8 @@ function css() {
 }
 
 async function html() {
-  const [config, changelog, headCSS] = await Promise.all([
+  const [config, headCSS] = await Promise.all([
     readJSON(path.join(__dirname, 'src', 'config.json')),
-    readJSON(path.join(__dirname, 'src', 'changelog.json')),
     fs.readFile(path.join(__dirname, 'build', 'head.css'), 'utf8'),
   ]);
 
@@ -156,7 +196,6 @@ async function html() {
       nunjucksCompile({
         plugins: config.plugins,
         headCSS,
-        SVGOMG_VERSION: changelog[0].version,
         SVGO_VERSION,
         liveBaseUrl: 'https://svgomg.ges.dev/',
         title: "SVGOMG - SVGO's Missing GUI for minifying SVGs",
@@ -170,19 +209,15 @@ async function html() {
 
 const rollupCaches = new Map();
 
-async function js(entry, outputPath) {
+async function js(entry, outputPath, replacements) {
   const name = path.basename(path.dirname(entry));
-  const changelog = await readJSON(
-    path.join(__dirname, 'src', 'changelog.json'),
-  );
   const bundle = await rollup.rollup({
     cache: rollupCaches.get(entry),
     input: `src/${entry}`,
     plugins: [
-      rollupReplace({
-        preventAssignment: true,
-        SVGOMG_VERSION: JSON.stringify(changelog[0].version),
-      }),
+      replacements
+        ? rollupReplace({ preventAssignment: true, ...replacements })
+        : undefined,
       rollupResolve({ browser: true }),
       rollupCommon({ include: /node_modules/ }),
       // Don't use terser on development
@@ -216,22 +251,34 @@ function clean() {
   return fs.rm('build', { force: true, recursive: true });
 }
 
-const allJs = gulp.parallel(
+const appJs = gulp.parallel(
   js.bind(null, 'js/prism-worker/index.js', 'js/'),
   js.bind(null, 'js/gzip-worker/index.js', 'js/'),
   js.bind(null, 'js/svgo-worker/index.js', 'js/'),
-  js.bind(null, 'js/sw/index.js', ''),
   js.bind(null, 'js/page/index.js', 'js/'),
 );
 
-const mainBuild = gulp.parallel(gulp.series(css, html), allJs, copy);
+// Bundles `sw.js`, hashing the rest of `build/` into it — so this has to run
+// after every task that writes there, `appJs` included.
+async function swJs() {
+  await js('js/sw/index.js', '', {
+    SVGOMG_BUILD_ID: JSON.stringify(await buildId()),
+  });
+}
+
+const allJs = gulp.series(appJs, swJs);
+
+const mainBuild = gulp.series(
+  gulp.parallel(gulp.series(css, html), appJs, copy),
+  swJs,
+);
 
 function watch() {
-  gulp.watch(['src/css/**/*.scss'], gulp.series(css, html));
+  gulp.watch(['src/css/**/*.scss'], gulp.series(css, html, swJs));
   gulp.watch(['src/js/**/*.js'], allJs);
   gulp.watch(
     ['src/**/*.{html,svg,woff2}', 'src/*.json'],
-    gulp.parallel(html, copy, allJs),
+    gulp.series(gulp.parallel(html, copy, appJs), swJs),
   );
 }
 
