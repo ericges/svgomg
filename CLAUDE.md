@@ -111,7 +111,18 @@ The service worker's static cache is named `svgomg-static-<hash>`, where the has
 
 ## Styles
 
-Two Sass entry points, both in `src/css/`: `head.scss` (critical CSS, inlined into `<head>`) and `all.scss` (the rest, loaded async). Partials live in `src/css/components/`. Note both entries `@import 'utils'` — putting output-producing rules in `_utils.scss` duplicates them.
+Two Sass entry points, both in `src/css/`: `head.scss` (critical CSS, inlined into `<head>`) and `all.scss` (the rest, loaded async). Component partials live in one of two directories, each with an `_index.scss` that `@forward`s its members:
+
+| directory | index loaded by | when to put a component here |
+|---|---|---|
+| `src/css/critical/` | `head.scss` | it styles server-rendered markup that must not flash unstyled (`main-menu`, `preloader`) |
+| `src/css/components/` | `all.scss` | everything else |
+
+**A component belongs to exactly one directory.** The two entry points are separate compilations, so a partial forwarded by both indexes would have its rules emitted into both `head.css` and `all.css`. Adding a component means one `@forward` line in one index.
+
+Everything uses the Sass module system (`@use` / `@forward`) — no `@import`. So a partial that needs `_utils.scss` (the `user-select` mixin, the `$ease*` easing curves) must `@use '../utils'` itself and call members namespaced: `@include utils.user-select(none)`, `utils.$easeOutQuint`. Loading a module twice in one compilation emits its CSS once, so this costs nothing.
+
+`_utils.scss` still emits one rule (`.bg-dark`), and both entries load it — so that rule does land in both stylesheets. Keep output-producing rules out of it.
 
 ## Code style
 

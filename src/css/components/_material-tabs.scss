@@ -1,5 +1,7 @@
+@use '../utils';
+
 .material-tabs {
-  @include user-select(none);
+  @include utils.user-select(none);
   display: flex;
   align-self: stretch;
   text-transform: uppercase;
@@ -39,6 +41,6 @@
   }
 
   :focus + .selected {
-    background-color: transparentize(#fff, 0.9);
+    background-color: rgba(#fff, 0.1);
   }
 }

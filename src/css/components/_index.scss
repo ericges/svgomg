@@ -1,0 +1,17 @@
+// Components loaded by the async stylesheet (all.scss). Critical-path
+// components live in ../critical instead.
+@forward 'settings';
+@forward 'material-switch';
+@forward 'toolbar';
+@forward 'floating-action-button';
+@forward 'spinner';
+@forward 'toasts';
+@forward 'material-slider';
+@forward 'drop-overlay';
+@forward 'svg-output';
+@forward 'material-tabs';
+@forward 'results';
+@forward 'output';
+@forward 'code-output';
+@forward 'prism';
+@forward 'ripple';

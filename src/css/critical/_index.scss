@@ -1,0 +1,4 @@
+// Components whose CSS must be in the critical path, i.e. inlined into
+// <head> by head.scss. Everything else belongs in ../components.
+@forward 'main-menu';
+@forward 'preloader';
