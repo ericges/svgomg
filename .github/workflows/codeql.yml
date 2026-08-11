@@ -4,12 +4,10 @@ on:
   push:
     branches:
       - main
-      - live
       - "!dependabot/**"
   pull_request:
     branches:
       - main
-      - live
       - "!dependabot/**"
   schedule:
     - cron: "0 0 * * 0"
