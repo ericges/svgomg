@@ -17,23 +17,7 @@
     <meta property="og:image" content="{{ liveBaseUrl }}{{ iconPath }}">
     <meta property="og:title" content="{{ title }}">
     <script>
-      if ((!location.port || location.port === '80') && location.protocol !== 'https:') {
-        location.protocol = 'https:';
-      }
-
-      window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
-      ga('create', 'UA-58850134-1', 'auto');
-      ga('send', 'pageview');
-
       window.version = '{{SVGOMG_VERSION}}';
-
-      // Delay analytics until after the page has loaded, to avoid extending
-      // the browser spinner, and allow higher priority stuff through.
-      addEventListener('load', function() {
-        var script = document.createElement('script');
-        script.src = 'https://www.google-analytics.com/analytics.js';
-        document.head.appendChild(script);
-      });
     </script>
     <script src="js/page.js" defer></script>
     <style>{{headCSS|safe}}</style>
@@ -180,13 +164,6 @@
         </div>
         <p>Sorry, wasn't ready…</p>
       </div>
-      <script>
-        document.querySelector('.preloader').addEventListener('click', function() {
-          // track it
-          ga('send', 'event', 'preloader', 'clicked');
-          this.className = 'preloader active';
-        });
-      </script>
     </div>
   </body>
 </html>
