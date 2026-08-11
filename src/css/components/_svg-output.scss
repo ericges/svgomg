@@ -1,5 +1,7 @@
+@use '../utils';
+
 .svg-output {
-  @include user-select(none);
+  @include utils.user-select(none);
   position: absolute;
   top: 0;
   left: 0;

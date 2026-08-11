@@ -1,8 +1,7 @@
-@import 'fonts';
-@import 'utils';
-@import 'global';
-@import 'components/main-menu';
-@import 'components/preloader';
+@use 'fonts';
+@use 'utils';
+@use 'global';
+@use 'critical';
 
 .unbutton {
   display: inline-block;
