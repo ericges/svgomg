@@ -3,11 +3,11 @@
   "scope": "./",
   "icons": [
     {
-      "src": "imgs/icon.png",
+      "src": "images/icon.png",
       "sizes": "600x600"
     },
     {
-      "src": "imgs/maskable.png",
+      "src": "images/maskable.png",
       "sizes": "600x600",
       "purpose": "maskable"
     }

@@ -13,7 +13,7 @@ npm install
 npm run dev      # clean + build + watch src/ + serve build/ on localhost:8080 (sirv, dev mode)
 npm run build    # one-off production build (clean-build: terser + cleancss + htmlmin)
 npm start        # serve an existing build/ without building
-npm run lint     # xo (JS) + stylelint (src/css/)
+npm run lint     # xo (JS) + stylelint (src/styles/)
 npm run fix      # xo --fix
 npm test         # lint + build — this is the whole test suite
 ```
@@ -38,7 +38,7 @@ Five separate Rollup IIFE bundles, one per entry directory under `src/js/` — t
 
 Adding a bundle means adding a `js.bind(...)` line to `appJs`. The service worker is deliberately *not* in `appJs`: it is bundled by the separate `swJs` task, which runs last (see "The service worker and its cache name" below).
 
-Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks → `build/index.html`), `copy` (`.well-known`, `imgs`, `fonts`, `src/*.json`, `test-svgs/car-lite.svg`).
+Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks → `build/index.html`), `copy` (`.well-known`, `images`, `fonts`, `src/*.json`, `test-svgs/car-lite.svg`).
 
 Four build facts that are easy to trip over:
 
@@ -111,12 +111,12 @@ The service worker's static cache is named `svgomg-static-<hash>`, where the has
 
 ## Styles
 
-Two Sass entry points, both in `src/css/`: `head.scss` (critical CSS, inlined into `<head>`) and `all.scss` (the rest, loaded async). Component partials live in one of two directories, each with an `_index.scss` that `@forward`s its members:
+Two Sass entry points, both in `src/styles/`: `head.scss` (critical CSS, inlined into `<head>`) and `all.scss` (the rest, loaded async). Component partials live in one of two directories, each with an `_index.scss` that `@forward`s its members:
 
 | directory | index loaded by | when to put a component here |
 |---|---|---|
-| `src/css/critical/` | `head.scss` | it styles server-rendered markup that must not flash unstyled (`main-menu`, `preloader`) |
-| `src/css/components/` | `all.scss` | everything else |
+| `src/styles/critical/` | `head.scss` | it styles server-rendered markup that must not flash unstyled (`main-menu`, `preloader`) |
+| `src/styles/components/` | `all.scss` | everything else |
 
 **A component belongs to exactly one directory.** The two entry points are separate compilations, so a partial forwarded by both indexes would have its rules emitted into both `head.css` and `all.css`. Adding a component means one `@forward` line in one index.
 

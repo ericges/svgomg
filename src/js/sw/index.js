@@ -17,7 +17,7 @@ addEventListener('install', (event) => {
         './',
         'all.css',
         'fonts/code-latin.woff2',
-        'imgs/icon.png',
+        'images/icon.png',
         'js/gzip-worker.js',
         'js/page.js',
         'js/prism-worker.js',
