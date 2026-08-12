@@ -223,10 +223,12 @@
 
 // Outside .toolbar-actions, so the one control that must always be reachable
 // can't scroll out of view on a narrow screen.
+// `stretch`, so the toggler inside can size itself off the bar height and end
+// up the same box as a .toolbar-action pill.
 .toolbar-output-nav {
   flex: none;
   display: flex;
-  align-items: center;
+  align-items: stretch;
   padding: 0 0.5rem;
 }
 

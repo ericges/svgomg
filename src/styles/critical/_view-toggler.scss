@@ -7,6 +7,10 @@
   @include utils.user-select(none);
   display: flex;
   align-items: stretch;
+  // The same box as a .toolbar-action's pill, which is drawn at `inset: 10px 0`.
+  // Taking the height from the bar instead of hard-coding it keeps the two the
+  // same size at every breakpoint.
+  margin: 10px 0;
   border-radius: 8px;
   overflow: hidden;
   background-color: rgba(#fff, 0.08);
@@ -24,7 +28,8 @@
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  padding: 6px 0.9em;
+  // Matches .toolbar-action, so the halves read as buttons of the same size.
+  padding: 0 1em;
   white-space: nowrap;
   cursor: pointer;
 
@@ -68,6 +73,6 @@
 
 @media (max-width: 639px) {
   .view-toggler-tab {
-    padding: 6px 0.7em;
+    padding: 0 0.7em;
   }
 }

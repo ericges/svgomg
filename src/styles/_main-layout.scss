@@ -86,7 +86,16 @@
 // z-index and shadow — so that the inlined head.css and this async stylesheet
 // can't disagree about the bar and shift it after first paint. Don't add
 // `.toolbar` rules here.
-.setting {
+
+// Keeps the panel above the output. `.code-output` is deliberately `100vw` wide
+// at >=900px (it reserves room for this panel with a padding-right hack), so
+// without this the markup view paints straight over the settings. z-index works
+// on a statically positioned flex item, which is what this is.
+//
+// This used to be spelled `.setting`, which matches no element — it only
+// appeared to work because the intro animation left a `transform` on `.settings`
+// and that painted it with the positioned elements.
+.settings {
   z-index: 1;
 }
 
