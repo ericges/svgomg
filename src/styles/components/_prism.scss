@@ -1,67 +1,111 @@
+// Darcula, adapted from prism-themes (themes/prism-darcula.css), itself based
+// on the IntelliJ Darcula theme. Only the token rules are kept: the theme's
+// `code[class*='language-']` / `pre[class*='language-']` block sets the font,
+// background and layout, all of which `_code-output.scss` already owns — and
+// its selectors wouldn't match anyway, since the output markup is a bare
+// `<pre><code>`. The base text colour (#a9b7c6) lives there too.
 .token.comment,
 .token.prolog,
-.token.doctype,
 .token.cdata {
-  color: slategray;
+  color: #808080;
 }
 
-.token.punctuation {
-  color: #f8f8f2;
+.token.delimiter,
+.token.boolean,
+.token.keyword,
+.token.selector,
+.token.important,
+.token.atrule {
+  color: #cc7832;
+}
+
+.token.operator,
+.token.punctuation,
+.token.attr-name {
+  color: #a9b7c6;
+}
+
+.token.tag,
+.token.tag .punctuation,
+.token.doctype,
+.token.builtin {
+  color: #e8bf6a;
+}
+
+.token.entity,
+.token.number,
+.token.symbol {
+  color: #6897bb;
+}
+
+.token.property,
+.token.constant,
+.token.variable {
+  color: #9876aa;
+}
+
+.token.string,
+.token.char {
+  color: #6a8759;
+}
+
+.token.attr-value,
+.token.attr-value .punctuation {
+  color: #a5c261;
+}
+
+.token.attr-value .punctuation:first-child {
+  color: #a9b7c6;
+}
+
+.token.url {
+  color: #287bde;
+  text-decoration: underline;
+}
+
+.token.function {
+  color: #ffc66d;
+}
+
+.token.regex {
+  background: #364135;
+}
+
+.token.bold {
+  font-weight: 700;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.inserted {
+  background: #294436;
+}
+
+.token.deleted {
+  background: #484a4a;
 }
 
 .namespace {
   opacity: 0.7;
 }
 
-.token.property,
-.token.tag,
-.token.constant,
-.token.symbol,
-.token.deleted {
-  color: #f92672;
+// Prism's markup grammar tags embedded `<style>` contents with a
+// `.language-css` *wrapper span*, so the upstream `code.language-css`
+// selectors are rewritten as descendant selectors to match this DOM. The
+// trailing compounds drop their redundant `.token` to stay within
+// stylelint's `selector-max-class` limit — every one of these elements is a
+// Prism token anyway.
+.language-css .token.property,
+.language-css .token.property + .punctuation {
+  color: #a9b7c6;
 }
 
-.token.boolean,
-.token.number {
-  color: #ae81ff;
-}
-
-.token.selector,
-.token.attr-name,
-.token.string,
-.token.char,
-.token.builtin,
-.token.inserted {
-  color: #a6e22e;
-}
-
-.token.operator,
-.token.entity,
-.token.url,
-.language-css .token.string,
-.style .token.string,
-.token.variable {
-  color: #f8f8f2;
-}
-
-.token.atrule,
-.token.attr-value {
-  color: #e6db74;
-}
-
-.token.keyword {
-  color: #66d9ef;
-}
-
-.token.regex,
-.token.important {
-  color: #fd971f;
-}
-
-.token.important,
-.token.bold {
-  font-weight: 700;
-}
-.token.italic {
-  font-style: italic;
+.language-css .token.id,
+.language-css .token.selector > .class,
+.language-css .token.selector > .attribute,
+.language-css .token.selector > .pseudo-class,
+.language-css .token.selector > .pseudo-element {
+  color: #ffc66d;
 }

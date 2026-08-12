@@ -6,10 +6,18 @@
   bottom: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch; // TODO: revisit this later
-  color: #f8f8f2;
+  // Darcula's base foreground/background — the theme partial (`_prism.scss`)
+  // only carries token colours, since its own wrapper selectors expect a
+  // `language-*` class this markup doesn't have.
+  color: #a9b7c6;
   // Opaque: translucent black let the page's checkerboard through, which read
   // as a muddy brown behind the syntax colours.
   background-color: #2b2b2b;
+
+  ::selection {
+    color: inherit;
+    background: rgba(33, 66, 131, 0.85);
+  }
   opacity: 0;
   transform: translateZ(0);
 
