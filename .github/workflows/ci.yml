@@ -61,6 +61,11 @@ jobs:
       - name: Build
         run: npm run build
 
+      # Runs here rather than in a job of its own because the smoke test reads
+      # `build/`, and only a *production* build exercises property mangling.
+      - name: Test
+        run: npm run test:node
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         if: github.ref == 'refs/heads/main'
