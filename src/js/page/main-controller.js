@@ -50,6 +50,7 @@ export default class MainController {
     this._mainMenuUi.emitter.on('error', ({ error }) =>
       this._handleError(error),
     );
+    dropUi.emitter.on('error', ({ error }) => this._handleError(error));
     viewTogglerUi.emitter.on('change', (event) =>
       this._outputUi.set(event.value),
     );
@@ -76,6 +77,11 @@ export default class MainController {
           registration.addEventListener('updatefound', () =>
             this._onUpdateFound(registration),
           );
+        })
+        // Offline support is a bonus — losing it isn't worth interrupting the
+        // user over, but it shouldn't be an unhandled rejection either.
+        .catch((error) => {
+          console.warn('Service worker registration failed', error);
         });
     }
 
@@ -265,14 +271,22 @@ export default class MainController {
   }
 
   async _loadSettings() {
-    const settings = await storage.get('settings');
-    if (settings) this._settingsUi.setSettings(settings);
+    // IndexedDB can be unavailable or blocked; falling back to the defaults
+    // already rendered in the markup is a fine outcome.
+    try {
+      const settings = await storage.get('settings');
+      if (settings) this._settingsUi.setSettings(settings);
+    } catch (error) {
+      console.warn('Could not restore saved settings', error);
+    }
   }
 
   _saveSettings(settings) {
     // doesn't make sense to retain the "show original" option
     const { original, ...settingsToKeep } = settings;
-    storage.set('settings', settingsToKeep);
+    storage.set('settings', settingsToKeep).catch((error) => {
+      console.warn('Could not save settings', error);
+    });
   }
 
   async _compressSvg(settings) {
