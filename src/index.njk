@@ -29,7 +29,11 @@
                     {% include "partials/icons/logo.svg" %}
                     <div class="toolbar-brand-copy">
                         <h1>SVGOMG</h1>
-                        <p>Powered by <a href="https://github.com/svg/svgo">SVGO v{{ SVGO_VERSION }}</a></p>
+                        <p>
+                            {% include "partials/icons/bolt.svg" %}
+                            <span class="powered-by">Powered by</span>
+                            <a href="https://github.com/svg/svgo">SVGO v{{ SVGO_VERSION }}</a>
+                        </p>
                     </div>
                 </div>
                 <div class="toolbar-actions">

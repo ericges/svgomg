@@ -35,6 +35,13 @@
   gap: 0.6rem;
   padding-right: 1rem;
 
+  // More air between the wordmark and the first action once there's room for it.
+  // Left at 1rem below this: the action row is already scrolling by then, and
+  // widening the gutter would only push it further.
+  @media (min-width: 900px) {
+    padding-right: 2rem;
+  }
+
   .logo {
     flex: none;
     height: 100%;
@@ -55,21 +62,46 @@
     font-weight: 700;
   }
 
+  // A footnote under the wordmark, so it drops the bar's 700 weight and a step
+  // of size. The de-emphasis stops there: at 0.75 this is ~4.6:1 on the indigo,
+  // and fading it further would put it under AA.
   p {
     margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    font-size: 0.6875rem;
+    font-weight: 400;
     opacity: 0.75;
     white-space: nowrap;
+  }
+
+  // The bolt stands in for the words "Powered by", which stay in the
+  // accessibility tree below so the line still reads as a sentence.
+  .icon {
+    flex: none;
+    width: 0.9em;
+    height: 0.9em;
+    fill: currentcolor;
+  }
+
+  .powered-by {
+    @include utils.visually-hidden();
   }
 
   a:link,
   a:visited {
     color: inherit;
     text-decoration: underline;
+    // Still underlined, so the link doesn't rely on colour alone — just not
+    // shouting it.
+    text-decoration-color: rgba(#fff, 0.4);
   }
 
   a:hover,
   a:active {
     color: #fff;
+    text-decoration-color: currentcolor;
   }
 }
 
