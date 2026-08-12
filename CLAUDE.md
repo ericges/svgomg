@@ -22,7 +22,7 @@ There are **no unit tests and no test runner**; `npm test` is lint + build, whic
 
 `npm run dev` serves as well as watches — don't start a second server on 8080.
 
-Deployment: CI builds every push/PR, but only the **`live`** branch is published to `gh-pages`. `main` is the development branch.
+Deployment: CI builds every push and PR, but only **`main`** is published to GitHub Pages — both the artifact upload and the deploy job are gated on `github.ref == 'refs/heads/main'` in `.github/workflows/ci.yml`. Lint and build must pass first.
 
 ## Build pipeline (gulpfile.mjs)
 

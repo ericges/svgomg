@@ -112,10 +112,16 @@ export default class MainMenu {
     this._loadFileBtn.append(this._spinner.container);
     this._spinner.show();
 
-    this.emitter.emit('svgDataLoad', {
-      data: await readFileAsText(file),
-      filename: file.name,
-    });
+    try {
+      const data = await readFileAsText(file);
+      this.emitter.emit('svgDataLoad', { data, filename: file.name });
+    } catch {
+      // Without this the spinner would run forever on an unreadable file.
+      this.stopSpinner();
+      this.emitter.emit('error', {
+        error: new Error(`Couldn't read ${file.name}`),
+      });
+    }
   }
 
   async _onLoadDemoClick(event) {

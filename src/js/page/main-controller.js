@@ -50,8 +50,14 @@ export default class MainController {
     this._mainMenuUi.emitter.on('error', ({ error }) =>
       this._handleError(error),
     );
+    dropUi.emitter.on('error', ({ error }) => this._handleError(error));
     viewTogglerUi.emitter.on('change', (event) =>
       this._outputUi.set(event.value),
+    );
+    this._copyButtonUi.emitter.on('copy', ({ success }) =>
+      this._toastsUi.show(success ? 'Copy successful' : 'Copy failed', {
+        duration: 2000,
+      }),
     );
     window.addEventListener('keydown', (event) => this._onGlobalKeyDown(event));
     window.addEventListener('paste', (event) => this._onGlobalPaste(event));
@@ -71,6 +77,11 @@ export default class MainController {
           registration.addEventListener('updatefound', () =>
             this._onUpdateFound(registration),
           );
+        })
+        // Offline support is a bonus — losing it isn't worth interrupting the
+        // user over, but it shouldn't be an unhandled rejection either.
+        .catch((error) => {
+          console.warn('Service worker registration failed', error);
         });
     }
 
@@ -142,15 +153,30 @@ export default class MainController {
   }
 
   _onGlobalCopy(event) {
-    const selection = window.getSelection();
-    if (!selection.isCollapsed) return;
+    // Selection APIs don't reflect selections inside form controls — Chrome
+    // reports `isCollapsed` as true while a textarea is fully selected — so the
+    // focused element is the only reliable signal that the copy is the user's.
+    const { activeElement } = document;
+    if (
+      activeElement instanceof HTMLInputElement ||
+      activeElement instanceof HTMLTextAreaElement
+    ) {
+      return;
+    }
 
-    this._toastsUi.show(
-      this._copyButtonUi.copyText() ? 'Copy successful' : 'Nothing to copy',
-      { duration: 2000 },
-    );
+    if (!window.getSelection().isCollapsed) return;
 
+    const { text } = this._copyButtonUi;
+
+    if (!text) {
+      // Leave the copy alone rather than cancelling it with nothing to offer.
+      this._toastsUi.show('Nothing to copy', { duration: 2000 });
+      return;
+    }
+
+    event.clipboardData.setData('text/plain', text);
     event.preventDefault();
+    this._toastsUi.show('Copy successful', { duration: 2000 });
   }
 
   _onUpdateFound(registration) {
@@ -216,6 +242,7 @@ export default class MainController {
   async _onInputChange({ data, filename }) {
     const settings = this._settingsUi.getSettings();
     this._userHasInteracted = true;
+    const previousInput = this._inputItem;
 
     try {
       this._inputItem = await svgo.wrapOriginal(data);
@@ -226,6 +253,9 @@ export default class MainController {
       return;
     }
 
+    // Only once the replacement exists, so a failed load doesn't revoke the
+    // blob URL of the file still on screen.
+    previousInput?.release();
     this._cache.purge();
 
     this._compressSvg(settings);
@@ -241,14 +271,22 @@ export default class MainController {
   }
 
   async _loadSettings() {
-    const settings = await storage.get('settings');
-    if (settings) this._settingsUi.setSettings(settings);
+    // IndexedDB can be unavailable or blocked; falling back to the defaults
+    // already rendered in the markup is a fine outcome.
+    try {
+      const settings = await storage.get('settings');
+      if (settings) this._settingsUi.setSettings(settings);
+    } catch (error) {
+      console.warn('Could not restore saved settings', error);
+    }
   }
 
   _saveSettings(settings) {
     // doesn't make sense to retain the "show original" option
     const { original, ...settingsToKeep } = settings;
-    storage.set('settings', settingsToKeep);
+    storage.set('settings', settingsToKeep).catch((error) => {
+      console.warn('Could not save settings', error);
+    });
   }
 
   async _compressSvg(settings) {

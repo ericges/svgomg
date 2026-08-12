@@ -16,10 +16,31 @@ export default class WorkerMessenger {
     }
   }
 
-  requestResponse(message) {
+  requestResponse(message, { timeout } = {}) {
     return new Promise((resolve, reject) => {
-      message.id = ++this._requestId;
-      this._pending[message.id] = [resolve, reject];
+      const id = ++this._requestId;
+      message.id = id;
+
+      // The work inside the worker is synchronous and uninterruptible, so a
+      // deadline can only be enforced by killing the worker. `release()` rather
+      // than `abort()`: abort bails out once `_pending` is empty, which it is
+      // by the time we've rejected this request, leaving the hung worker alive.
+      const timer =
+        timeout === undefined
+          ? null
+          : setTimeout(() => {
+              this._fulfillPending(
+                id,
+                null,
+                new DOMException(
+                  `Timed out after ${timeout}ms`,
+                  'TimeoutError',
+                ),
+              );
+              this.release();
+            }, timeout);
+
+      this._pending[id] = [resolve, reject, timer];
 
       if (!this._worker) this._startWorker();
       this._worker.postMessage(message);
@@ -71,6 +92,7 @@ export default class WorkerMessenger {
     }
 
     delete this._pending[id];
+    if (resolver[2]) clearTimeout(resolver[2]);
 
     if (error) {
       resolver[1](error);
