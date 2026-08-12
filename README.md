@@ -101,8 +101,6 @@ exactly when the shipped bytes change and there's no version number to bump by h
 Adding an SVGO plugin to the UI is a single entry in [`src/config.json`](./src/config.json) — the
 template renders the checkbox and the `name` attribute carries it through to the worker.
 
-More detail lives in [CLAUDE.md](./CLAUDE.md).
-
 ## Deployment
 
 Every pull request is linted, built and tested, as is every push to `main`. Only **`main`** is
