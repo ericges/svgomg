@@ -52,24 +52,39 @@ addEventListener('activate', (event) => {
   );
 });
 
-async function handleFontRequest(request) {
-  const match = await caches.match(request);
+async function handleFontRequest(event) {
+  const match = await caches.match(event.request);
   if (match) return match;
 
-  const [response, fontCache] = await Promise.all([
-    fetch(request),
-    caches.open(fontCacheName),
-  ]);
+  const response = await fetch(event.request);
 
-  fontCache.put(request, response.clone());
+  // This cache is served cache-first and deliberately survives build changes,
+  // so a transient 404/500 stored here would outlive the outage.
+  if (response.ok) {
+    const copy = response.clone();
+
+    // waitUntil rather than a bare await: it keeps the worker alive for the
+    // write without making the font wait on it.
+    event.waitUntil(
+      (async () => {
+        const fontCache = await caches.open(fontCacheName);
+        await fontCache.put(event.request, copy);
+      })(),
+    );
+  }
+
   return response;
 }
 
 addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
-  if (url.pathname.endsWith('.woff2')) {
-    event.respondWith(handleFontRequest(event.request));
+  if (
+    event.request.method === 'GET' &&
+    url.origin === location.origin &&
+    url.pathname.endsWith('.woff2')
+  ) {
+    event.respondWith(handleFontRequest(event));
     return;
   }
 
