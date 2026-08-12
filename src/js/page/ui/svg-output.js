@@ -1,26 +1,6 @@
 import { domReady, strToEl } from '../utils.js';
 import PanZoom from './pan-zoom.js';
-
-// Beyond this the preview stops being useful and starts costing real memory in
-// the compositor, so oversized SVGs are scaled down rather than laid out fully.
-const MAX_PREVIEW_DIMENSION = 4096;
-
-// SVG's own default size for a replaced element without usable dimensions.
-const DEFAULT_PREVIEW_WIDTH = 300;
-const DEFAULT_PREVIEW_HEIGHT = 150;
-
-// Checked positively so NaN and undefined fall through to the default, which a
-// `<= 0` comparison would not do.
-const isUsable = (value) => Number.isFinite(value) && value > 0;
-
-function previewSize(width, height) {
-  if (!isUsable(width) || !isUsable(height)) {
-    return { width: DEFAULT_PREVIEW_WIDTH, height: DEFAULT_PREVIEW_HEIGHT };
-  }
-
-  const scale = Math.min(1, MAX_PREVIEW_DIMENSION / Math.max(width, height));
-  return { width: width * scale, height: height * scale };
-}
+import { previewSize } from './preview-size.js';
 
 export default class SvgOutput {
   constructor() {

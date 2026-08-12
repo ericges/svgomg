@@ -87,6 +87,15 @@ const xoConfig = [
       },
     },
   },
+  {
+    // The suite runs under `node --test`, so it gets Node's globals rather than
+    // the browser ones above — and stands in for browser APIs (`Worker`) that
+    // Node doesn't have.
+    files: ['test/**/*.js'],
+    languageOptions: {
+      globals: globals.node,
+    },
+  },
 ];
 
 export default xoConfig;

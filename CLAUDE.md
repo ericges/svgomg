@@ -13,16 +13,25 @@ npm install
 npm run dev      # clean + build + watch src/ + serve build/ on localhost:8080 (sirv, dev mode)
 npm run build    # one-off production build (clean-build: terser + cleancss + htmlmin)
 npm start        # serve an existing build/ without building
-npm run lint     # xo (JS) + stylelint (src/styles/)
-npm run fix      # xo --fix
-npm test         # lint + build — this is the whole test suite
+npm run lint      # xo (JS) + stylelint (src/styles/)
+npm run fix       # xo --fix
+npm run test:node # node --test over test/ — needs an existing production build
+npm test          # lint + build + test:node — the whole suite
 ```
 
-There are **no unit tests and no test runner**; `npm test` is lint + build, which is also exactly what CI runs. Verify behaviour changes by hand in `npm run dev`. `src/test-svgs/` holds fixtures for that; only `car-lite.svg` is copied into the build (it backs the "demo" button).
+The test runner is **`node --test`, with no test framework and no new dependencies**; specs live in `test/*.test.js` and are wired up in `package.json`. XO lints them, so `xo.config.mjs` gives `test/**` Node globals rather than the browser ones, and its `node-test` rules require assertions to go through the test context (`t.assert.strictEqual`, not an imported `node:assert`).
+
+Coverage is deliberately narrow: the pure, DOM-free logic plus one production-build smoke test. `test/build-smoke.test.js` reads `build/`, so it needs a build to have run, and it must be a **production** one — a dev build fails its first assertion with a message saying so. It checks the seams a bundler can silently break: that `_` properties really are mangled, that the keys crossing the page↔worker boundary survive in both bundles, that every `src/config.json` plugin renders a checkbox, that `SVGOMG_BUILD_ID` was substituted, and that every hand-written precache entry exists in `build/`.
+
+Everything else is still verified **by hand** in `npm run dev` — anything touching the DOM, the service-worker lifecycle, or real workers has no coverage. `src/test-svgs/` holds fixtures for that; only `car-lite.svg` is copied into the build (it backs the "demo" button).
+
+Two modules exist only so that logic is reachable outside a browser, and should stay that way: `src/js/svgo-worker/dimensions.js` (the worker entry point exports nothing and ends in a `self.onmessage` assignment) and `src/js/page/ui/preview-size.js` (`svg-output.js` imports `utils.js`, which touches `document` at load). Both are siblings of their only consumer, which changes no output filename — bundles are named after their *directory*.
 
 `npm run dev` serves as well as watches — don't start a second server on 8080.
 
-Deployment: CI builds every push and PR, but only **`main`** is published to GitHub Pages — both the artifact upload and the deploy job are gated on `github.ref == 'refs/heads/main'` in `.github/workflows/ci.yml`. Lint and build must pass first.
+CI splits the same work across two jobs rather than running `npm test`: `lint` runs `npm run lint`, and `build` runs `npm run build` then `npm run test:node` — the tests live in that job because the smoke test needs the build output. Adding a check to `npm test` alone therefore gates nothing.
+
+Deployment: CI builds every push and PR, but only **`main`** is published to GitHub Pages — both the artifact upload and the deploy job are gated on `github.ref == 'refs/heads/main'` in `.github/workflows/ci.yml`. Lint, build and tests must pass first.
 
 ## Build pipeline (gulpfile.mjs)
 
@@ -105,7 +114,9 @@ The service worker's static cache is named `svgomg-static-<hash>`, where the has
 - `swJs` must run after every other build task, since it hashes their output. This is the only reason the SW isn't part of `appJs`.
 - Anything that alters output alters the hash, including a dependency upgrade or a change to the minifier config. Rebuilding unchanged sources reproduces the same hash, so an idempotent redeploy doesn't churn users' caches.
 
-`src/js/sw/index.js` precaches a **hand-written asset list** — new runtime assets must be added there manually. Because there's no version, there's no way to tell a breaking update from a safe one, so **every update `skipWaiting()`s**; `MainController._onUpdateFound` then shows either a silent reload (user hasn't interacted) or an "Update available" toast. `.woff2` requests use a separate cache-first-then-fill `svgomg-fonts` cache that survives build changes.
+`src/js/sw/index.js` precaches a **hand-written asset list** — new runtime assets must be added there manually. Because there's no version, there's no way to tell a breaking update from a safe one, so **every update `skipWaiting()`s**; `MainController._onUpdateFound` then shows either a silent reload (user hasn't interacted) or an "Update available" toast, with no "dismiss" — by the time it runs, the old build's cache is already gone, so reloading is the only outcome the app can honour. `.woff2` requests use a separate cache-first-then-fill `svgomg-fonts` cache that survives build changes.
+
+**The immediate activation is a settled decision, not an oversight.** A 2026-08 audit recommended replacing it with a controlled update (leave the new worker waiting, activate on acceptance, reload on `controllerchange`); the repository owner reviewed that and chose to keep the current behaviour, because there is no version number to distinguish a breaking update from a safe one and the residual risk needs a worker message-contract change to bite. Don't re-architect it without a fresh decision from the owner.
 
 `src/js/utils/storage.js` is a tiny hand-rolled IndexedDB key/value store (`svgo-keyval`), used by the page for saved settings.
 
