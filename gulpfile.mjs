@@ -171,9 +171,15 @@ function copy() {
       ],
       // `base` is explicit because gulp resolves it per-glob: without it
       // `src/*.json` would be written to `build/src/` rather than `build/`.
-      { base: 'src' },
+      //
+      // `encoding: false` keeps the bytes intact. gulp 5 (vinyl-fs 4) decodes
+      // file contents as UTF-8 by default, which silently replaces every byte
+      // that isn't valid UTF-8 with U+FFFD — this glob carries PNGs and a
+      // woff2, so the default corrupts them (a PNG's leading 0x89 became
+      // `ef bf bd`, and Chrome then refused to decode the favicon).
+      { base: 'src', encoding: false },
     )
-    .pipe(gulp.dest('build'));
+    .pipe(gulp.dest('build', { encoding: false }));
 }
 
 function css() {
