@@ -4,13 +4,20 @@ export default class SvgFile {
   constructor(text, width, height) {
     this.text = text;
     this._compressedSize = null;
+    this._rawSize = null;
     this._url = null;
     this.width = width;
     this.height = height;
   }
 
   async size({ compress }) {
-    if (!compress) return this.text.length;
+    // String length counts UTF-16 code units, not the UTF-8 bytes an SVG is
+    // actually shipped as, so it under-reports anything non-ASCII. `??=` rather
+    // than `||=` so a legitimately empty file isn't re-encoded every time.
+    if (!compress) {
+      this._rawSize ??= new TextEncoder().encode(this.text).byteLength;
+      return this._rawSize;
+    }
 
     this._compressedSize ||= gzip
       .compress(this.text)
