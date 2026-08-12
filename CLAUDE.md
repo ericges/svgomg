@@ -47,10 +47,11 @@ Five separate Rollup IIFE bundles, one per entry directory under `src/js/` — t
 
 Adding a bundle means adding a `js.bind(...)` line to `appJs`. The service worker is deliberately *not* in `appJs`: it is bundled by the separate `swJs` task, which runs last (see "The service worker and its cache name" below).
 
-Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks → `build/index.html`), `copy` (`.well-known`, `images`, `fonts`, `src/*.json`, `test-svgs/car-lite.svg`).
+Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks: `src/index.njk` → `build/index.html`), `copy` (`.well-known`, `images`, `fonts`, `src/*.json`, `test-svgs/car-lite.svg`).
 
 Four build facts that are easy to trip over:
 
+- `html` globs `src/*.njk` and `gulp-nunjucks` rewrites the extension, so `index.njk` becomes `build/index.html`. The partials under `src/partials/` keep a plain `.html` extension — they're only ever `{% include %}`d, never compiled directly — which is why `watch()` globs `html` alongside `njk`.
 - `html` reads `build/head.css` off disk and inlines it via `{{ headCSS|safe }}`, so it must run *after* `css` (`gulp.series(css, html)`).
 - `swJs` hashes `build/`, so it must run *after* every task that writes there — hence `gulp.series(gulp.parallel(gulp.series(css, html), appJs, copy), swJs)`, and the same ordering in each `watch()` watcher.
 - `IS_DEV_TASK` (argv contains `dev` or `--dev`) disables terser, CleanCSS and html minification. Minification bugs only reproduce under `npm run build`.
@@ -71,7 +72,7 @@ Every class in `src/js/page/ui/` owns a DOM subtree exposed as `this.container` 
 Components get their DOM one of two ways, and it matters:
 
 - **Self-created** (`Output`, `Toasts`, `DownloadButton`, `Ripple`, …) — build markup with `strToEl()` from `src/js/page/utils.js`; usable immediately in the constructor.
-- **Adopted from `index.html`** (`Settings`, `MainMenu`, `Preloader`, `ViewToggler`, …) — `document.querySelector` inside `domReady.then(...)`, so **`this.container` is undefined until DOM ready**. `MainController`'s own DOM wiring is likewise inside a `domReady.then()`.
+- **Adopted from `index.njk`** (`Settings`, `MainMenu`, `Preloader`, `ViewToggler`, …) — `document.querySelector` inside `domReady.then(...)`, so **`this.container` is undefined until DOM ready**. `MainController`'s own DOM wiring is likewise inside a `domReady.then()`.
 
 `utils.js` also provides `transitionToClass`/`transitionFromClass` (add/remove a class and await `transitionend`, with a 1s timeout race) — this is how all the animation sequencing works, including `MainUi.activate()`'s intro animation.
 

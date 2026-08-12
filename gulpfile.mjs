@@ -190,8 +190,9 @@ async function html() {
     fs.readFile(path.join(__dirname, 'build', 'head.css'), 'utf8'),
   ]);
 
+  // `nunjucksCompile` rewrites the extension, so `index.njk` -> `index.html`.
   return gulp
-    .src('src/*.html')
+    .src('src/*.njk')
     .pipe(
       nunjucksCompile({
         plugins: config.plugins,
@@ -277,7 +278,8 @@ function watch() {
   gulp.watch(['src/styles/**/*.scss'], gulp.series(css, html, swJs));
   gulp.watch(['src/js/**/*.js'], allJs);
   gulp.watch(
-    ['src/**/*.{html,svg,woff2}', 'src/*.json'],
+    // `.html` still matters here: the Nunjucks partials keep that extension.
+    ['src/**/*.{html,njk,svg,woff2}', 'src/*.json'],
     gulp.series(gulp.parallel(html, copy, appJs), swJs),
   );
 }

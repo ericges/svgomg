@@ -45,7 +45,7 @@ keeps it that way.
 This fork additionally **removes the telemetry** present upstream. Nothing is measured, logged or
 phoned home.
 
-[csp]: ./src/index.html
+[csp]: ./src/index.njk
 
 > [!NOTE]
 > SVGO is an optimiser, not a sanitiser. Script and style removal are optional and off by default,
