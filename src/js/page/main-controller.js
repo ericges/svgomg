@@ -206,9 +206,13 @@ export default class MainController {
           return;
         }
 
-        // otherwise, show the user an alert
+        // otherwise, show the user an alert. No "dismiss": by the time this
+        // runs the new worker has already `skipWaiting()`d and deleted this
+        // build's static cache, so staying put means running this page's code
+        // against the new build's lazily created workers. Reloading is the only
+        // outcome the app can honour, so it's the only one offered.
         const toast = this._toastsUi.show('Update available', {
-          buttons: ['reload', 'dismiss'],
+          buttons: ['reload'],
         });
         const answer = await toast.answer;
 
