@@ -28,7 +28,10 @@ export default class SvgOutput {
     this.container = strToEl(
       '<div class="svg-output">' +
         '<div class="svg-container">' +
-          '<iframe class="svg-frame" sandbox="allow-scripts" scrolling="no" title="Loaded SVG file"></iframe>' +
+          // No allow-scripts: the page CSP is inherited by this data: document
+          // and already blocks scripts inside the previewed SVG, so dropping
+          // the token makes that explicit. SMIL and CSS animation still run.
+          '<iframe class="svg-frame" sandbox="" scrolling="no" title="Loaded SVG file"></iframe>' +
         '</div>' +
       '</div>'
     );
