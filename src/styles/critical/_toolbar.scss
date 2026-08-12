@@ -196,6 +196,120 @@
   background-color: rgba(#fff, 0.08);
 }
 
+// The demo action is a split button: the label loads the default demo in one
+// click, the caret beside it opens the menu of all of them. Two buttons rather
+// than one so the common case never goes through a menu.
+.toolbar-demo {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+}
+
+// Halves of one pill: each keeps its own hover fill — that's the feedback for
+// which of the two you're about to hit — but only the outer corners are round.
+// Wider than the caret half's 0.45em on purpose, so the two gaps either side of
+// the divider look equal: the caret sits on the shared 24-unit icon grid, whose
+// glyph is inset ~4px inside its 16px box, and that air counts.
+.toolbar-action-split {
+  padding-right: 0.75em;
+
+  &::before {
+    border-radius: 8px 0 0 8px;
+  }
+}
+
+.toolbar-action-caret {
+  padding: 0 0.45em;
+
+  &::before {
+    border-radius: 0 8px 8px 0;
+  }
+
+  // A hairline between the halves, so the split is visible before you hover it.
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 1px;
+    background-color: rgba(#fff, 0.25);
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.15s utils.$easeOutQuint;
+  }
+
+  // Set by ToolbarActions from the popover's own `toggle` event, so the button
+  // keeps the menu's state even when it was closed by clicking elsewhere.
+  &[aria-expanded='true'] {
+    &::before {
+      background-color: rgba(#fff, 0.14);
+    }
+
+    .icon {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// A popover, so it renders in the top layer: `.toolbar-actions` scrolls
+// horizontally and `.app-output` sets `overflow: hidden`, and an in-flow
+// dropdown would be clipped by both. Its `top`/`left` are set by ToolbarActions
+// from the button's viewport rect — nothing here can position it.
+//
+// `display: none` with a `:popover-open` override rather than leaning on the UA
+// rule alone: a browser without popover support drops that whole rule as
+// invalid and so leaves the menu hidden, instead of spilling a permanently open
+// list into the bar. The Demo button still loads the default demo there.
+.demo-menu {
+  display: none;
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 6px 0;
+  min-width: 11em;
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+  list-style: none;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+
+  &:popover-open {
+    display: block;
+  }
+}
+
+.demo-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.55em 1.2em;
+  text-align: left;
+  color: inherit;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  // Same deal as `.toolbar-action.key-focused`: `outline: none` above is only
+  // acceptable because keyboard focus gets its own mark.
+  &.key-focused {
+    background-color: rgba(0, 0, 0, 0.06);
+    box-shadow: inset 0 0 0 2px #3f51b5;
+  }
+}
+
 // The repo link is an icon at every width — its `title` and the hidden label
 // carry the meaning, and the bar is for working on the file, not reading links.
 .toolbar-link .toolbar-action-text {

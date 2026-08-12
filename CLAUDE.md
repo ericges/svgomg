@@ -21,9 +21,9 @@ npm test          # lint + build + test:node — the whole suite
 
 The test runner is **`node --test`, with no test framework and no new dependencies**; specs live in `test/*.test.js` and are wired up in `package.json`. XO lints them, so `xo.config.mjs` gives `test/**` Node globals rather than the browser ones, and its `node-test` rules require assertions to go through the test context (`t.assert.strictEqual`, not an imported `node:assert`).
 
-Coverage is deliberately narrow: the pure, DOM-free logic plus one production-build smoke test. `test/build-smoke.test.js` reads `build/`, so it needs a build to have run, and it must be a **production** one — a dev build fails its first assertion with a message saying so. It checks the seams a bundler can silently break: that `_` properties really are mangled, that the keys crossing the page↔worker boundary survive in both bundles, that every `src/config.json` plugin renders a checkbox, that `SVGOMG_BUILD_ID` was substituted, and that every hand-written precache entry exists in `build/`.
+Coverage is deliberately narrow: the pure, DOM-free logic plus one production-build smoke test. `test/build-smoke.test.js` reads `build/`, so it needs a build to have run, and it must be a **production** one — a dev build fails its first assertion with a message saying so. It checks the seams a bundler can silently break: that `_` properties really are mangled, that the keys crossing the page↔worker boundary survive in both bundles, that every `src/config.json` plugin renders a checkbox, that every `src/config.json` demo renders a menu item and ships as a file, that `SVGOMG_BUILD_ID` was substituted, and that every hand-written precache entry exists in `build/`.
 
-Everything else is still verified **by hand** in `npm run dev` — anything touching the DOM, the service-worker lifecycle, or real workers has no coverage. `src/test-svgs/` holds fixtures for that; only `car-lite.svg` is copied into the build (it backs the "demo" button).
+Everything else is still verified **by hand** in `npm run dev` — anything touching the DOM, the service-worker lifecycle, or real workers has no coverage. `src/test-svgs/` holds fixtures for that; the ones `src/config.json` lists as demos are copied into the build (they back the Demo button and its menu), the rest — including the deliberately truncated `fail.svg` — are not.
 
 Two modules exist only so that logic is reachable outside a browser, and should stay that way: `src/js/svgo-worker/dimensions.js` (the worker entry point exports nothing and ends in a `self.onmessage` assignment) and `src/js/page/ui/preview-size.js` (`svg-output.js` imports `utils.js`, which touches `document` at load). Both are siblings of their only consumer, which changes no output filename — bundles are named after their *directory*.
 
@@ -47,7 +47,7 @@ Five separate Rollup IIFE bundles, one per entry directory under `src/js/` — t
 
 Adding a bundle means adding a `js.bind(...)` line to `appJs`. The service worker is deliberately *not* in `appJs`: it is bundled by the separate `swJs` task, which runs last (see "The service worker and its cache name" below).
 
-Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks: `src/index.njk` → `build/index.html`), `copy` (`.well-known`, `images`, `fonts`, `src/*.json`, `test-svgs/car-lite.svg`).
+Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks: `src/index.njk` → `build/index.html`), `copy` (`.well-known`, `images`, `fonts`, `src/*.json`, and the `test-svgs/` files `src/config.json` lists as demos — it reads that file synchronously to build the exclusion glob).
 
 Five build facts that are easy to trip over:
 
@@ -92,13 +92,14 @@ There is no settings state object. `src/config.json` lists the exposed SVGO plug
 Consequences:
 
 - **Exposing another SVGO plugin = one entry in `src/config.json`.** No JS change.
+- **The demo menu works the same way.** `src/config.json` also has a `demos` array (`file`, `name`); the template renders the split button's menu from it, each item carrying its filename in `data-demo-file`, and `copy` ships exactly those files out of `src/test-svgs/`. `ToolbarActions` names no demo: `loadDemo()` with no `file` reads `data-demo-file` off the button, which the template fills from `demos[0]` — **so the first entry is the default**, the one the bare button loads and the one that loads itself on startup. Reordering the array changes both, and the smoke test insists the default is also the precached one.
 - The `name` attribute is the contract between HTML, the settings object, and the worker's plugin list.
 - Range inputs are wrapped by `MaterialSlider` and must be written through `this._sliderMap.get(input).value`, not `input.value`.
 - Range `input` events are throttled 150ms before `change` is emitted; other inputs emit immediately.
 
 ### Startup: the demo loads itself, and the shell paints settled
 
-There is no start screen and no dismissable overlay. On `domReady`, `MainController` awaits `_loadSettings()` and then calls `this._actionsUi.loadDemo({ auto: true })`, so the app opens with the bundled `test-svgs/car-lite.svg` already optimised. Three things about that are load-bearing:
+There is no start screen and no dismissable overlay. On `domReady`, `MainController` awaits `_loadSettings()` and then calls `this._actionsUi.loadDemo({ auto: true })`, so the app opens with the first demo in `src/config.json` already optimised. Three things about that are load-bearing:
 
 - **`await _loadSettings()` must come first.** `Settings.setSettings()` assigns input values programmatically, which fires no `input` event, so nothing recompresses afterwards — a demo compressed before the restore landed would silently disagree with the panel displaying it.
 - **The `auto` flag must not set `_userHasInteracted`.** That flag decides whether a service-worker update reloads silently or shows an "Update available" toast; if an unprompted demo load counted as interaction, every visitor would get the toast. `auto` also suppresses the spinner (no button was clicked) and both failure paths — a fetch error in `loadDemo`, a parse error in `_onInputChange` — degrade to a `console.warn`, because nobody asked for it.
@@ -126,7 +127,7 @@ The service worker's static cache is named `svgomg-static-<hash>`, where the has
 - `swJs` must run after every other build task, since it hashes their output. This is the only reason the SW isn't part of `appJs`.
 - Anything that alters output alters the hash, including a dependency upgrade or a change to the minifier config. Rebuilding unchanged sources reproduces the same hash, so an idempotent redeploy doesn't churn users' caches.
 
-`src/js/sw/index.js` precaches a **hand-written asset list** — new runtime assets must be added there manually. Because there's no version, there's no way to tell a breaking update from a safe one, so **every update `skipWaiting()`s**; `MainController._onUpdateFound` then shows either a silent reload (user hasn't interacted) or an "Update available" toast, with no "dismiss" — by the time it runs, the old build's cache is already gone, so reloading is the only outcome the app can honour. `.woff2` requests use a separate cache-first-then-fill `svgomg-fonts` cache that survives build changes.
+`src/js/sw/index.js` precaches a **hand-written asset list** — new runtime assets must be added there manually. Of the demo SVGs only the default is on it: the rest are ~950KB of artwork nobody asked for, so they stay network-only and picking one offline fails with the usual error toast. Because there's no version, there's no way to tell a breaking update from a safe one, so **every update `skipWaiting()`s**; `MainController._onUpdateFound` then shows either a silent reload (user hasn't interacted) or an "Update available" toast, with no "dismiss" — by the time it runs, the old build's cache is already gone, so reloading is the only outcome the app can honour. `.woff2` requests use a separate cache-first-then-fill `svgomg-fonts` cache that survives build changes.
 
 **The immediate activation is a settled decision, not an oversight.** A 2026-08 audit recommended replacing it with a controlled update (leave the new worker waiting, activate on acceptance, reload on `controllerchange`); the repository owner reviewed that and chose to keep the current behaviour, because there is no version number to distinguish a breaking update from a safe one and the residual risk needs a worker message-contract change to bite. Don't re-architect it without a fresh decision from the owner.
 
@@ -142,6 +143,8 @@ Two Sass entry points, both in `src/styles/`: `head.scss` (critical CSS, inlined
 | `src/styles/components/` | `all.scss` | everything else |
 
 **The toolbar is critical, and `_main-layout.scss` must not mention `.toolbar`.** The bar is the app's only affordance before `all.css` arrives, so `critical/_toolbar.scss` owns *every* `.toolbar` rule — including the `z-index` and `box-shadow` that used to sit in `_main-layout.scss`. A rule for the bar in the async stylesheet can only ever move it *after* first paint; the old `transform: translateY(-110%)` intro state did exactly that, which is why it's gone. `test/build-smoke.test.js` asserts `.toolbar` appears in `head.css` and not in `all.css`.
+
+The demo picker (`.demo-menu`, `.demo-menu-item`) lives in that same partial, even though its class names would slip past that assertion. It's a `popover`, so it renders in the top layer — it has to, because `.toolbar-actions` scrolls horizontally and `.app-output` sets `overflow: hidden`, and an in-flow dropdown would be clipped by both. `ToolbarActions` positions it from the button's viewport rect on `beforetoggle`, and the `display: none` / `&:popover-open { display: block }` pair is deliberate: it overrides the UA rule such that a browser without popover support drops the second rule as invalid and leaves the menu hidden, rather than spilling a permanently open list into the bar.
 
 **A component belongs to exactly one directory.** The two entry points are separate compilations, so a partial forwarded by both indexes would have its rules emitted into both `head.css` and `all.css`. Adding a component means one `@forward` line in one index.
 

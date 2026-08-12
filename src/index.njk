@@ -48,10 +48,22 @@
                             <span class="toolbar-action-text label-txt">Paste markup</span>
                         </span>
                     </label>
-                    <button class="load-demo unbutton toolbar-action" type="button" title="Load a demo SVG">
-                        {% include "partials/icons/demo.svg" %}
-                        <span class="toolbar-action-text">Demo</span>
-                    </button>
+                    <div class="toolbar-demo">
+                        <button class="load-demo unbutton toolbar-action toolbar-action-split" type="button" title="Load the {{ demos[0].name }} demo" data-demo-file="{{ demos[0].file }}">
+                            {% include "partials/icons/demo.svg" %}
+                            <span class="toolbar-action-text">Demo</span>
+                        </button>
+                        <button class="demo-menu-btn unbutton toolbar-action toolbar-action-caret" type="button" title="Pick a demo SVG" aria-label="Pick a demo SVG" aria-haspopup="true" aria-expanded="false" popovertarget="demo-menu">
+                            {% include "partials/icons/caret.svg" %}
+                        </button>
+                        <ul class="demo-menu" id="demo-menu" popover>
+                            {% for demo in demos %}
+                                <li>
+                                    <button class="demo-menu-item unbutton" type="button" data-demo-file="{{ demo.file }}">{{ demo.name }}</button>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
                 </div>
                 <div class="toolbar-output-nav">
                     <form class="view-toggler">

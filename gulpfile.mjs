@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -153,6 +154,14 @@ const minifyHtml = () =>
   mapContents((source) => htmlMinify(source, buildConfig.htmlmin));
 
 function copy() {
+  // `src/test-svgs/` is mostly hand-testing fixtures — including one that's
+  // deliberately truncated — so only the files the demo menu offers get shipped.
+  // Read synchronously to keep this a plain stream-returning gulp task.
+  const { demos } = JSON.parse(
+    readFileSync(path.join(__dirname, 'src', 'config.json'), 'utf8'),
+  );
+  const demoFiles = demos.map((demo) => demo.file).join('|');
+
   return gulp
     .src(
       [
@@ -164,9 +173,8 @@ function copy() {
         // negative glob only to the globs that follow it, and a magic-free
         // path like `src/CNAME` errors as "not found" if one precedes it.
         //
-        // Exclude the test-svgs files except for `car-lite.svg`
-        // which is used in the demo
-        '!src/test-svgs/!(car-lite.svg)',
+        // Exclude every test-svg that `src/config.json` doesn't list as a demo
+        `!src/test-svgs/!(${demoFiles})`,
         '!src/images/maskable.svg',
       ],
       // `base` is explicit because gulp resolves it per-glob: without it
@@ -201,6 +209,7 @@ async function html() {
     .src('src/*.njk')
     .pipe(
       nunjucksCompile({
+        demos: config.demos,
         plugins: config.plugins,
         headCSS,
         SVGO_VERSION,

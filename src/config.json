@@ -1,4 +1,34 @@
 {
+  "demos": [
+    {
+      "file": "car-lite.svg",
+      "name": "Car"
+    },
+    {
+      "file": "car-lite-green.svg",
+      "name": "Car (green)"
+    },
+    {
+      "file": "car.svg",
+      "name": "Car (unoptimised)"
+    },
+    {
+      "file": "tiger.svg",
+      "name": "Tiger"
+    },
+    {
+      "file": "flag.svg",
+      "name": "Flag"
+    },
+    {
+      "file": "svgo-logo.svg",
+      "name": "SVGO logo"
+    },
+    {
+      "file": "github.svg",
+      "name": "GitHub logo"
+    }
+  ],
   "plugins": [
     {
       "id": "removeDoctype",
