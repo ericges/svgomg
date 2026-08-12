@@ -114,7 +114,9 @@ The service worker's static cache is named `svgomg-static-<hash>`, where the has
 - `swJs` must run after every other build task, since it hashes their output. This is the only reason the SW isn't part of `appJs`.
 - Anything that alters output alters the hash, including a dependency upgrade or a change to the minifier config. Rebuilding unchanged sources reproduces the same hash, so an idempotent redeploy doesn't churn users' caches.
 
-`src/js/sw/index.js` precaches a **hand-written asset list** — new runtime assets must be added there manually. Because there's no version, there's no way to tell a breaking update from a safe one, so **every update `skipWaiting()`s**; `MainController._onUpdateFound` then shows either a silent reload (user hasn't interacted) or an "Update available" toast. `.woff2` requests use a separate cache-first-then-fill `svgomg-fonts` cache that survives build changes.
+`src/js/sw/index.js` precaches a **hand-written asset list** — new runtime assets must be added there manually. Because there's no version, there's no way to tell a breaking update from a safe one, so **every update `skipWaiting()`s**; `MainController._onUpdateFound` then shows either a silent reload (user hasn't interacted) or an "Update available" toast, with no "dismiss" — by the time it runs, the old build's cache is already gone, so reloading is the only outcome the app can honour. `.woff2` requests use a separate cache-first-then-fill `svgomg-fonts` cache that survives build changes.
+
+**The immediate activation is a settled decision, not an oversight.** A 2026-08 audit recommended replacing it with a controlled update (leave the new worker waiting, activate on acceptance, reload on `controllerchange`); the repository owner reviewed that and chose to keep the current behaviour, because there is no version number to distinguish a breaking update from a safe one and the residual risk needs a worker message-contract change to bite. Don't re-architect it without a fresh decision from the owner.
 
 `src/js/utils/storage.js` is a tiny hand-rolled IndexedDB key/value store (`svgo-keyval`), used by the page for saved settings.
 
