@@ -16,7 +16,7 @@ addEventListener('install', (event) => {
       await cache.addAll([
         './',
         'all.css',
-        'fonts/code-latin.woff2',
+        'fonts/JetBrainsMonoNL/JetBrainsMonoNL-Regular-latin.woff2',
         'images/icon.png',
         'js/gzip-worker.js',
         'js/page.js',
