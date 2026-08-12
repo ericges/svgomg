@@ -82,7 +82,6 @@
     flex: none;
     width: 0.9em;
     height: 0.9em;
-    fill: currentcolor;
   }
 
   .powered-by {
@@ -175,7 +174,6 @@
     flex: none;
     width: 20px;
     height: 20px;
-    fill: currentcolor;
   }
 
   // The shared Spinner is appended in here by ToolbarActions. Two class levels,
@@ -312,8 +310,15 @@
 
 // The repo link is an icon at every width — its `title` and the hidden label
 // carry the meaning, and the bar is for working on the file, not reading links.
-.toolbar-link .toolbar-action-text {
-  @include utils.visually-hidden();
+.toolbar-link {
+  // Same value as .toolbar-output-nav's padding, on both sides: the divider
+  // then sits centred in equal air between the toggler and this link, and the
+  // link keeps that same air from the bar's right edge.
+  margin-inline: 0.5rem;
+
+  .toolbar-action-text {
+    @include utils.visually-hidden();
+  }
 }
 
 // The invisible-textarea-over-label trick, inherited from the drawer's
@@ -417,6 +422,11 @@
 
   .toolbar-output-nav {
     padding: 0 0.25rem;
+  }
+
+  // Tracks the padding above — the two have to stay equal.
+  .toolbar-link {
+    margin-inline: 0.25rem;
   }
 }
 
