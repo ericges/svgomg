@@ -6,5 +6,6 @@
 .swarm/
 /build/
 /data/
+agentdb.*
 node_modules/
 ruvector.db
