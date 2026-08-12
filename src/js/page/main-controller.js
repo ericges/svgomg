@@ -53,6 +53,11 @@ export default class MainController {
     viewTogglerUi.emitter.on('change', (event) =>
       this._outputUi.set(event.value),
     );
+    this._copyButtonUi.emitter.on('copy', ({ success }) =>
+      this._toastsUi.show(success ? 'Copy successful' : 'Copy failed', {
+        duration: 2000,
+      }),
+    );
     window.addEventListener('keydown', (event) => this._onGlobalKeyDown(event));
     window.addEventListener('paste', (event) => this._onGlobalPaste(event));
     window.addEventListener('copy', (event) => this._onGlobalCopy(event));
@@ -142,15 +147,30 @@ export default class MainController {
   }
 
   _onGlobalCopy(event) {
-    const selection = window.getSelection();
-    if (!selection.isCollapsed) return;
+    // Selection APIs don't reflect selections inside form controls — Chrome
+    // reports `isCollapsed` as true while a textarea is fully selected — so the
+    // focused element is the only reliable signal that the copy is the user's.
+    const { activeElement } = document;
+    if (
+      activeElement instanceof HTMLInputElement ||
+      activeElement instanceof HTMLTextAreaElement
+    ) {
+      return;
+    }
 
-    this._toastsUi.show(
-      this._copyButtonUi.copyText() ? 'Copy successful' : 'Nothing to copy',
-      { duration: 2000 },
-    );
+    if (!window.getSelection().isCollapsed) return;
 
+    const { text } = this._copyButtonUi;
+
+    if (!text) {
+      // Leave the copy alone rather than cancelling it with nothing to offer.
+      this._toastsUi.show('Nothing to copy', { duration: 2000 });
+      return;
+    }
+
+    event.clipboardData.setData('text/plain', text);
     event.preventDefault();
+    this._toastsUi.show('Copy successful', { duration: 2000 });
   }
 
   _onUpdateFound(registration) {

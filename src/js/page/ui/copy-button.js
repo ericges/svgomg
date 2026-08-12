@@ -1,3 +1,4 @@
+import { createNanoEvents } from 'nanoevents';
 import FloatingActionButton from './floating-action-button.js';
 
 export default class CopyButton extends FloatingActionButton {
@@ -13,32 +14,28 @@ export default class CopyButton extends FloatingActionButton {
         '</svg>',
     });
 
+    this.emitter = createNanoEvents();
     this._text = null;
-    this._pre = document.createElement('pre');
   }
 
-  onClick(event) {
-    super.onClick(event);
-    this.copyText();
+  get text() {
+    return this._text;
   }
 
-  copyText() {
+  onClick() {
+    super.onClick();
+    this.copyText().then((success) => this.emitter.emit('copy', { success }));
+  }
+
+  async copyText() {
     if (!this._text) return false;
 
-    this._pre.textContent = this._text;
-    document.body.append(this._pre);
-    getSelection().removeAllRanges();
-
-    const range = document.createRange();
-    range.selectNode(this._pre);
-
-    window.getSelection().addRange(range);
-
-    document.execCommand('copy');
-    getSelection().removeAllRanges();
-    this._pre.remove();
-
-    return true;
+    try {
+      await navigator.clipboard.writeText(this._text);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   setCopyText(text) {
