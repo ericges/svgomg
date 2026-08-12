@@ -55,9 +55,13 @@ export default class FileDrop {
     const file = event.dataTransfer.files[0];
     if (!file) return;
 
-    this.emitter.emit('svgDataLoad', {
-      data: await readFileAsText(file),
-      filename: file.name,
-    });
+    try {
+      const data = await readFileAsText(file);
+      this.emitter.emit('svgDataLoad', { data, filename: file.name });
+    } catch {
+      this.emitter.emit('error', {
+        error: new Error(`Couldn't read ${file.name}`),
+      });
+    }
   }
 }
