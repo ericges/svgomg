@@ -7,6 +7,11 @@ export default class ResultsCache {
   }
 
   purge() {
+    // The cache owns cleanup of the files it holds, the same way single-slot
+    // eviction in `add()` does. `?? []` because the constructor purges before
+    // `_items` exists.
+    for (const item of this._items ?? []) item?.release();
+
     this._fingerprints = [];
     this._items = [];
     this._index = 0;

@@ -216,6 +216,7 @@ export default class MainController {
   async _onInputChange({ data, filename }) {
     const settings = this._settingsUi.getSettings();
     this._userHasInteracted = true;
+    const previousInput = this._inputItem;
 
     try {
       this._inputItem = await svgo.wrapOriginal(data);
@@ -226,6 +227,9 @@ export default class MainController {
       return;
     }
 
+    // Only once the replacement exists, so a failed load doesn't revoke the
+    // blob URL of the file still on screen.
+    previousInput?.release();
     this._cache.purge();
 
     this._compressSvg(settings);

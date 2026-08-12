@@ -38,5 +38,8 @@ export default class SvgFile {
     if (!this._url) return;
 
     URL.revokeObjectURL(this._url);
+    // Clearing this keeps `release()` idempotent, and stops the `url` getter
+    // handing back an already-revoked URL if the file is displayed again.
+    this._url = null;
   }
 }
