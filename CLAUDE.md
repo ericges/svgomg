@@ -72,7 +72,7 @@ Every class in `src/js/page/ui/` owns a DOM subtree exposed as `this.container` 
 Components get their DOM one of two ways, and it matters:
 
 - **Self-created** (`Output`, `Toasts`, `DownloadButton`, `Ripple`, …) — build markup with `strToEl()` from `src/js/page/utils.js`; usable immediately in the constructor.
-- **Adopted from `index.njk`** (`Settings`, `MainMenu`, `Preloader`, `ViewToggler`, …) — `document.querySelector` inside `domReady.then(...)`, so **`this.container` is undefined until DOM ready**. `MainController`'s own DOM wiring is likewise inside a `domReady.then()`.
+- **Adopted from `index.njk`** (`Settings`, `ToolbarActions`, `Preloader`, `ViewToggler`, …) — `document.querySelector` inside `domReady.then(...)`, so **`this.container` is undefined until DOM ready**. `MainController`'s own DOM wiring is likewise inside a `domReady.then()`.
 
 `utils.js` also provides `transitionToClass`/`transitionFromClass` (add/remove a class and await `transitionend`, with a 1s timeout race) — this is how all the animation sequencing works, including `MainUi.activate()`'s intro animation.
 
@@ -95,11 +95,21 @@ Consequences:
 - Range inputs are wrapped by `MaterialSlider` and must be written through `this._sliderMap.get(input).value`, not `input.value`.
 - Range `input` events are throttled 150ms before `change` is emitted; other inputs emit immediately.
 
+### Startup: the demo loads itself, and the shell paints settled
+
+There is no start screen and no dismissable overlay. On `domReady`, `MainController` awaits `_loadSettings()` and then calls `this._actionsUi.loadDemo({ auto: true })`, so the app opens with the bundled `test-svgs/car-lite.svg` already optimised. Three things about that are load-bearing:
+
+- **`await _loadSettings()` must come first.** `Settings.setSettings()` assigns input values programmatically, which fires no `input` event, so nothing recompresses afterwards — a demo compressed before the restore landed would silently disagree with the panel displaying it.
+- **The `auto` flag must not set `_userHasInteracted`.** That flag decides whether a service-worker update reloads silently or shows an "Update available" toast; if an unprompted demo load counted as interaction, every visitor would get the toast. `auto` also suppresses the spinner (no button was clicked) and both failure paths — a fetch error in `loadDemo`, a parse error in `_onInputChange` — degrade to a `console.warn`, because nobody asked for it.
+- **`_compressSvg` starts with `if (!this._inputItem) return;`.** The settings panel is interactive a few hundred ms before the demo finishes, so it *is* reachable with nothing to compress.
+
+`MainUi.activate()` now fades in only `.output-switcher`; the toolbar, settings panel and action buttons are in place from the first frame. It's called from the `domReady` tail regardless of whether the demo loaded, because there's no drawer left to hide an unactivated shell behind.
+
 ### Compression flow and caching
 
 `MainController._compressSvg(settings)` is the hot path:
 
-1. Stamps a `_latestCompressJobId` (a random number), `await svgo.abort()`, then bails if a newer call landed meanwhile.
+1. Bails immediately if there's no input yet (see above), then stamps a `_latestCompressJobId` (a random number), `await svgo.abort()`, and bails again if a newer call landed meanwhile.
 2. If `settings.original`, shows the input file as-is.
 3. Looks up `settings.fingerprint` in `ResultsCache` (a 10-entry ring buffer). The fingerprint deliberately **excludes `gzip` and `original`**, since neither changes SVGO's output — only how it's measured/displayed.
 4. Otherwise `svgo.process()`, then caches the result. `AbortError` is swallowed; other errors become a toast.
@@ -127,8 +137,10 @@ Two Sass entry points, both in `src/styles/`: `head.scss` (critical CSS, inlined
 
 | directory | index loaded by | when to put a component here |
 |---|---|---|
-| `src/styles/critical/` | `head.scss` | it styles server-rendered markup that must not flash unstyled (`main-menu`, `preloader`) |
+| `src/styles/critical/` | `head.scss` | it styles server-rendered markup that must not flash unstyled (`toolbar`, `view-toggler`, `preloader`) |
 | `src/styles/components/` | `all.scss` | everything else |
+
+**The toolbar is critical, and `_main-layout.scss` must not mention `.toolbar`.** The bar is the app's only affordance before `all.css` arrives, so `critical/_toolbar.scss` owns *every* `.toolbar` rule — including the `z-index` and `box-shadow` that used to sit in `_main-layout.scss`. A rule for the bar in the async stylesheet can only ever move it *after* first paint; the old `transform: translateY(-110%)` intro state did exactly that, which is why it's gone. `test/build-smoke.test.js` asserts `.toolbar` appears in `head.css` and not in `all.css`.
 
 **A component belongs to exactly one directory.** The two entry points are separate compilations, so a partial forwarded by both indexes would have its rules emitted into both `head.css` and `all.css`. Adding a component means one `@forward` line in one index.
 

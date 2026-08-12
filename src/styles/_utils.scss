@@ -3,6 +3,17 @@
   user-select: $spec;
 }
 
+// Removes an element visually while leaving it in the accessibility tree —
+// unlike `display: none`, which would strip a button's accessible name along
+// with its label text.
+@mixin visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+}
+
 // transition & animation
 $easeInQuad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
 $easeInCubic: cubic-bezier(0.55, 0.055, 0.675, 0.19);

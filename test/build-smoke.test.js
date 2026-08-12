@@ -25,6 +25,10 @@ const readBuildFile = async (relativePath) => {
 const inputNamePattern =
   /<input[^>]+\bname=(?<quote>["']?)(?<name>[^\s"'>]+)\k<quote>/g;
 
+// Matches a class name as a whole word, so `menu-item` doesn't hit inside
+// `menu-item-text` and `toolbar` doesn't hit inside `toolbar-brand`.
+const classTokenPattern = (name) => new RegExp(String.raw`\b${name}\b`);
+
 const inputNames = (html) =>
   new Set(html.matchAll(inputNamePattern).map((match) => match.groups.name));
 
@@ -142,6 +146,66 @@ test('every configured SVGO plugin renders a checkbox', async (t) => {
     config.plugins.map((plugin) => plugin.id).filter((id) => !names.has(id)),
     [],
     'configured plugins with no checkbox in the built markup',
+  );
+});
+
+test('the toolbar carries the input actions and the view toggler', async (t) => {
+  // The page bundle finds all of these with `querySelector`, so a class renamed
+  // in the template is a runtime TypeError inside a `domReady.then()` with
+  // nothing else to catch it.
+  const html = await readBuildFile('index.html');
+  const classNames = [
+    'toolbar',
+    'load-file',
+    'load-file-input',
+    'paste-input',
+    'toolbar-paste',
+    'load-demo',
+    'view-toggler',
+  ];
+
+  t.assert.deepStrictEqual(
+    // Class *tokens*, not whole attributes: htmlmin unquotes them and they sit
+    // alongside other classes.
+    classNames.filter((name) => !classTokenPattern(name).test(html)),
+    [],
+    'selectors the page bundle queries that are missing from the built markup',
+  );
+
+  // `ViewToggler` does `container.output[0].checked = true`, which needs a form
+  // whose `output` is a RadioNodeList — one radio and it's a lone element.
+  t.assert.strictEqual(
+    html.matchAll(/name=(?<quote>["']?)output\k<quote>[\s>]/g).toArray().length,
+    2,
+    'the view toggler needs exactly two radios named `output`',
+  );
+});
+
+test('the off-canvas menu is gone, and the toolbar is critical CSS', async (t) => {
+  const html = await readBuildFile('index.html');
+  const drawerClassNames = [
+    'main-menu',
+    'menu-btn',
+    'menu-item',
+    'material-tab',
+  ];
+
+  t.assert.deepStrictEqual(
+    drawerClassNames.filter((name) => classTokenPattern(name).test(html)),
+    [],
+    'drawer markup left behind in the built page',
+  );
+
+  // A partial forwarded from both style indexes emits into both sheets. For the
+  // toolbar that's not just waste: all.css arrives after first paint, so a rule
+  // for the bar in there can only move it once the page is already up.
+  const headCss = await readBuildFile('head.css');
+  const allCss = await readBuildFile('all.css');
+
+  t.assert.match(headCss, /\.toolbar/);
+  t.assert.ok(
+    !allCss.includes('.toolbar'),
+    'toolbar CSS leaked into all.css — it belongs to src/styles/critical/',
   );
 });
 

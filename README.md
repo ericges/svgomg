@@ -33,7 +33,8 @@ change them, so you get the smallest file that still *looks right* — rather th
   what actually travels over the wire.
 - **Read the output.** A syntax-highlighted markup view, with copy-to-clipboard and download.
 - **Works offline.** A service worker caches the app, so it keeps running with no connection.
-- **Drop, paste or pick** a file — or hit the demo to try it without one.
+- **Nothing to set up.** A demo SVG loads by itself, so the app opens with something to look at;
+  drop, paste or pick a file from the toolbar to replace it.
 
 ## Privacy
 

@@ -1,35 +1,27 @@
 import { createNanoEvents } from 'nanoevents';
-import {
-  domReady,
-  transitionFromClass,
-  transitionToClass,
-  readFileAsText,
-} from '../utils.js';
+import { domReady, readFileAsText } from '../utils.js';
 import Spinner from './spinner.js';
 
-export default class MainMenu {
+const DEMO_URL = 'test-svgs/car-lite.svg';
+const DEMO_FILENAME = 'car-lite.svg';
+
+/**
+ * The input actions in the toolbar: open a file, paste markup, load the demo.
+ * All three end in a single `svgDataLoad` event.
+ */
+export default class ToolbarActions {
   constructor() {
     this.emitter = createNanoEvents();
-    this.allowHide = false;
     this._spinner = new Spinner();
 
     domReady.then(() => {
-      this.container = document.querySelector('.main-menu');
+      this.container = document.querySelector('.toolbar');
       this._loadFileInput = this.container.querySelector('.load-file-input');
       this._pasteInput = this.container.querySelector('.paste-input');
-      this._loadDemoBtn = this.container.querySelector('.load-demo');
+      this._pasteLabel = this.container.querySelector('.toolbar-paste');
       this._loadFileBtn = this.container.querySelector('.load-file');
-      this._pasteLabel = this.container.querySelector('.menu-input');
-      this._overlay = this.container.querySelector('.overlay');
-      this._menu = this.container.querySelector('.menu');
-      const menuBtn = document.querySelector('.menu-btn');
+      this._loadDemoBtn = this.container.querySelector('.load-demo');
 
-      menuBtn.addEventListener('click', (event) =>
-        this._onMenuButtonClick(event),
-      );
-      this._overlay.addEventListener('click', (event) =>
-        this._onOverlayClick(event),
-      );
       this._loadFileBtn.addEventListener('click', (event) =>
         this._onLoadFileClick(event),
       );
@@ -45,20 +37,6 @@ export default class MainMenu {
     });
   }
 
-  show() {
-    this.container.classList.remove('hidden');
-    transitionFromClass(this._overlay, 'hidden');
-    transitionFromClass(this._menu, 'hidden');
-  }
-
-  hide() {
-    if (!this.allowHide) return;
-    this.stopSpinner();
-    this.container.classList.add('hidden');
-    transitionToClass(this._overlay, 'hidden');
-    transitionToClass(this._menu, 'hidden');
-  }
-
   stopSpinner() {
     this._spinner.hide();
   }
@@ -72,14 +50,52 @@ export default class MainMenu {
     this._pasteInput.dispatchEvent(new Event('input'));
   }
 
-  _onOverlayClick(event) {
-    event.preventDefault();
-    this.hide();
+  /**
+   * A focused paste field is an opaque overlay sitting in the middle of the bar,
+   * so Escape needs to get out of it.
+   */
+  resetPasteInput() {
+    this._pasteInput.value = '';
+    this._pasteInput.blur();
   }
 
-  _onMenuButtonClick(event) {
-    event.preventDefault();
-    this.show();
+  /**
+   * Fetch and emit the bundled demo SVG. `auto` marks the first-load version:
+   * nothing was clicked, so there's no button to hang a spinner off, and a
+   * visitor who did nothing shouldn't be shown an error for it either.
+   * Never rejects — the caller decides what an empty app looks like.
+   *
+   * @param {{ auto?: boolean }} [options] `auto` for the unprompted first load.
+   */
+  async loadDemo({ auto = false } = {}) {
+    if (!auto) {
+      this._loadDemoBtn.append(this._spinner.container);
+      this._spinner.show();
+    }
+
+    try {
+      const response = await fetch(DEMO_URL);
+      // Without this a 404 would reach SVGO as an HTML error page and surface
+      // as an unrelated parse error.
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+      this.emitter.emit('svgDataLoad', {
+        data: await response.text(),
+        filename: DEMO_FILENAME,
+        auto,
+      });
+    } catch (error) {
+      this.stopSpinner();
+
+      if (auto) {
+        console.warn("Couldn't fetch the demo SVG", error);
+        return;
+      }
+
+      this.emitter.emit('error', {
+        error: new Error("Couldn't fetch demo SVG"),
+      });
+    }
   }
 
   _onTextInputChange() {
@@ -100,6 +116,7 @@ export default class MainMenu {
 
   _onLoadFileClick(event) {
     event.preventDefault();
+    // Without this the action keeps its focus fill after the picker closes.
     event.target.blur();
     this.showFilePicker();
   }
@@ -124,26 +141,9 @@ export default class MainMenu {
     }
   }
 
-  async _onLoadDemoClick(event) {
+  _onLoadDemoClick(event) {
     event.preventDefault();
     event.target.blur();
-    this._loadDemoBtn.append(this._spinner.container);
-    this._spinner.show();
-
-    try {
-      const data = await fetch('test-svgs/car-lite.svg').then((response) =>
-        response.text(),
-      );
-      this.emitter.emit('svgDataLoad', {
-        data,
-        filename: 'car-lite.svg',
-      });
-    } catch {
-      this.stopSpinner();
-
-      const error = new Error("Couldn't fetch demo SVG");
-
-      this.emitter.emit('error', { error });
-    }
+    this.loadDemo();
   }
 }
