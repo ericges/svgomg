@@ -49,13 +49,14 @@ Adding a bundle means adding a `js.bind(...)` line to `appJs`. The service worke
 
 Other tasks: `css` (Sass → `build/all.css` + `build/head.css`), `html` (Nunjucks: `src/index.njk` → `build/index.html`), `copy` (`.well-known`, `images`, `fonts`, `src/*.json`, and the `test-svgs/` files `src/config.json` lists as demos — it reads that file synchronously to build the exclusion glob).
 
-Five build facts that are easy to trip over:
+Seven build facts that are easy to trip over:
 
 - `html` globs `src/*.njk` and `gulp-nunjucks` rewrites the extension, so `index.njk` becomes `build/index.html`. The partials under `src/partials/` keep a plain `.html` extension — they're only ever `{% include %}`d, never compiled directly — which is why `watch()` globs `html` alongside `njk`.
 - `html` reads `build/head.css` off disk and inlines it via `{{ headCSS|safe }}`, so it must run *after* `css` (`gulp.series(css, html)`).
 - `swJs` hashes `build/`, so it must run *after* every task that writes there — hence `gulp.series(gulp.parallel(gulp.series(css, html), appJs, copy), swJs)`, and the same ordering in each `watch()` watcher.
 - `IS_DEV_TASK` (argv contains `dev` or `--dev`) disables terser, CleanCSS and html minification. Minification bugs only reproduce under `npm run build`.
 - `copy` passes an explicit `{ base: 'src' }`. gulp 5 resolves `base` per-glob, so without it `src/*.json` lands in `build/src/` instead of `build/` — which would put `manifest.json` at the wrong URL.
+- A local `rollupSvgString()` transform in the gulpfile turns any `.svg` import into `export default '<the file>'`, so a JS-created component can use the same icon partial the Nunjucks template `{% include %}`s. It's a plugin, not a dependency, and there's nothing to assert in a test: remove it and rollup fails outright trying to parse the SVG as JS.
 - `copy` also passes `encoding: false` to both `src()` and `dest()`, because it carries **binary** files (the PNGs, the woff2). gulp 5 / vinyl-fs 4 decode contents as UTF-8 by default, which replaces every non-UTF-8 byte with U+FFFD — silently and irreversibly. It doesn't fail the build: the files just grow and stop parsing (a PNG's leading `0x89` becomes `ef bf bd`, so the favicon vanished and the code font fell back). Any new glob carrying binary must keep this flag. `cmp -s src/<f> build/<f>` is the check.
 
 The gulpfile is ESM (`gulpfile.mjs`) because `gulp-nunjucks` is ESM-only. CleanCSS and `html-minifier-terser` are driven through a small local `mapContents()` vinyl transform rather than gulp plugin wrappers.
@@ -74,6 +75,8 @@ Components get their DOM one of two ways, and it matters:
 
 - **Self-created** (`Output`, `Toasts`, `DownloadButton`, `Ripple`, …) — build markup with `strToEl()` from `src/js/page/utils.js`; usable immediately in the constructor.
 - **Adopted from `index.njk`** (`Settings`, `ToolbarActions`, `Preloader`, `ViewToggler`, …) — `document.querySelector` inside `domReady.then(...)`, so **`this.container` is undefined until DOM ready**. `MainController`'s own DOM wiring is likewise inside a `domReady.then()`.
+
+**Every icon is a partial in `src/partials/icons/`**, whichever way its component gets its DOM: the template `{% include %}`s them, and the self-created ones `import` them as strings (see the `rollupSvgString()` build fact above). Each partial carries its own `aria-hidden="true"`, `class="icon"` and — critically — its own `fill`/`stroke="currentColor"`, so a component recolours a glyph by setting `color`. Don't put `fill` on `.icon` in CSS: it outranks the presentation attribute, and the stroke icons carry `fill="none"`, so overriding it fills them in solid.
 
 `utils.js` also provides `transitionToClass`/`transitionFromClass` (add/remove a class and await `transitionend`, with a 1s timeout race) — this is how all the animation sequencing works, including `MainUi.activate()`'s intro animation.
 

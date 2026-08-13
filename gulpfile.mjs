@@ -223,6 +223,23 @@ async function html() {
     .pipe(gulp.dest('build'));
 }
 
+// Lets a JS-created component share the Nunjucks icon partials: importing a
+// `.svg` yields its markup as a string, so every icon has exactly one source
+// whether `index.njk` `{% include %}`s it or `strToEl()` builds it at runtime.
+// The partials are hand-written and already carry `class="icon"`, so there's
+// nothing to sanitise or wrap here.
+const rollupSvgString = () => ({
+  name: 'svg-string',
+  transform(code, id) {
+    if (!id.endsWith('.svg')) return null;
+    return {
+      code: `export default ${JSON.stringify(code.trim())};`,
+      // No positions to map — the module is one generated line.
+      map: { mappings: '' },
+    };
+  },
+});
+
 const rollupCaches = new Map();
 
 async function js(entry, outputPath, replacements) {
@@ -234,6 +251,7 @@ async function js(entry, outputPath, replacements) {
       replacements
         ? rollupReplace({ preventAssignment: true, ...replacements })
         : undefined,
+      rollupSvgString(),
       rollupResolve({ browser: true }),
       rollupCommon({ include: /node_modules/ }),
       // Don't use terser on development
