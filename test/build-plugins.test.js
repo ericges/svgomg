@@ -47,6 +47,20 @@ test('currentColor converts however the colour was authored', (t) => {
   t.assert.match(data, /style="fill:none"/);
 });
 
+test('a document with a mask keeps its stylesheets wholesale', (t) => {
+  // The stylesheet is a *sibling* of the mask, yet its rule selects into it —
+  // recolouring `.mask` would change the mask's luminance. No cheap check
+  // tells such rules from harmless ones, so the presence of a mask preserves
+  // every stylesheet; attribute colours outside the mask still convert.
+  const data = compress(
+    '<svg xmlns="http://www.w3.org/2000/svg" color="black"><style>.mask{fill:white}</style><mask id="m"><path class="mask" d="M0 0h10v10z"/></mask><path mask="url(#m)" fill="red" d="M0 0h10v10z"/></svg>',
+    { currentColor: true, plugins: { convertColors: false } },
+  );
+
+  t.assert.match(data, /\.mask\{fill:white\}/);
+  t.assert.match(data, /fill="currentColor"/);
+});
+
 test('currentColor leaves mask content alone', (t) => {
   // Masks read luminance: recolouring their content changes what they hide.
   // `convertColors` skips everything inside one, and so must the companion —

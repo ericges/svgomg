@@ -64,6 +64,32 @@ test('comments cannot smuggle a declaration in', (t) => {
   );
 });
 
+test('none stays none with comments before, after and alongside !important', (t) => {
+  // Comments are token separators, not part of the value: `none /**/` is
+  // still the keyword, and turning it into a paint would make a deliberately
+  // hidden fill visible.
+  t.assert.strictEqual(
+    convertStyleAttribute('fill: none /**/'),
+    'fill:none /**/',
+  );
+  t.assert.strictEqual(
+    convertStyleAttribute('fill: /* pre */ none'),
+    'fill:none',
+  );
+  t.assert.strictEqual(
+    convertStyleAttribute('fill: NONE /* retained */ !important'),
+    'fill:NONE /* retained */!important',
+  );
+});
+
+test('a comment splitting the identifier means it is not the keyword', (t) => {
+  // `no/**/ne` tokenizes as two idents, so it's not `none` — and not hidden.
+  t.assert.strictEqual(
+    convertStyleAttribute('fill: no/**/ne'),
+    'fill:currentColor',
+  );
+});
+
 test('rules nested in at-rules are still reached', (t) => {
   t.assert.strictEqual(
     convertStylesheet('@media (min-width:1px){.a{fill:red}}'),

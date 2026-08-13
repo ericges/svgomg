@@ -29,6 +29,16 @@ const colourProperties = new Set([
   'color',
 ]);
 
+// Whether a raw value is the `none` keyword. Comments are token separators
+// that may sit anywhere around it (`none /* kept on purpose */`), so they're
+// discarded before comparing — against a space, not nothing, since removing a
+// comment must not fuse the tokens around it into one.
+const isNoneKeyword = (rawValue) =>
+  rawValue
+    .replaceAll(/\/\*.*?\*\//gs, ' ')
+    .trim()
+    .toLowerCase() === 'none';
+
 const rewrite = (css, context) => {
   let ast;
 
@@ -45,7 +55,7 @@ const rewrite = (css, context) => {
     visit: 'Declaration',
     enter(declaration) {
       if (!colourProperties.has(declaration.property.toLowerCase())) return;
-      if (declaration.value.value.trim().toLowerCase() === 'none') return;
+      if (isNoneKeyword(declaration.value.value)) return;
 
       declaration.value = { type: 'Raw', value: 'currentColor' };
     },
@@ -58,23 +68,30 @@ export const convertStyleAttribute = (css) => rewrite(css, 'declarationList');
 
 export const convertStylesheet = (css) => rewrite(css, 'stylesheet');
 
+const containsMask = (node) =>
+  (node.type === 'element' && node.name === 'mask') ||
+  (Array.isArray(node.children) &&
+    node.children.some((child) => containsMask(child)));
+
 export const createCurrentColorStylesPlugin = () => ({
   type: 'visitor',
   name: 'current-color-styles',
-  fn() {
+  fn(root) {
     let maskDepth = 0;
+
+    // Masks read luminance, not colour: recolouring their content changes
+    // what the mask hides. `convertColors` leaves everything inside one
+    // alone, and so does this. But a rule in *any* stylesheet — a sibling of
+    // the mask as much as a child — can select into it, and telling which
+    // ones do needs full selector matching. So a document that contains a
+    // mask keeps its stylesheets wholesale, and only attribute colours
+    // outside the mask convert.
+    const keepStylesheets = containsMask(root);
 
     return {
       element: {
         enter(node) {
           if (node.name === 'mask') maskDepth++;
-
-          // Masks read luminance, not colour: recolouring their content
-          // changes what the mask hides. `convertColors` leaves everything
-          // inside one alone, and so does this — including a `<style>`
-          // element nested there. A document-level rule that *selects into*
-          // a mask is still converted, though; telling those apart needs
-          // full selector matching.
           if (maskDepth > 0) return;
 
           if (node.attributes.style !== undefined) {
@@ -83,7 +100,7 @@ export const createCurrentColorStylesPlugin = () => ({
             );
           }
 
-          if (node.name === 'style') {
+          if (node.name === 'style' && !keepStylesheets) {
             for (const child of node.children) {
               if (child.type === 'text' || child.type === 'cdata') {
                 child.value = convertStylesheet(child.value);
