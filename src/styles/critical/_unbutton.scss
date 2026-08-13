@@ -1,0 +1,15 @@
+// Strips a <button> back to its text so it can be styled as something else.
+//
+// Forwarded *first* by critical/_index.scss on purpose: it's a reset, and the
+// components that build on it — .toolbar-action especially — set `display` and
+// `padding` at the same specificity, so they only win by coming later.
+.unbutton {
+  display: inline-block;
+  background-color: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}

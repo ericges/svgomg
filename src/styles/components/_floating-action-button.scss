@@ -1,8 +1,19 @@
+// The same indigo as the toolbar (`critical/_toolbar.scss`) and the results
+// pill, rather than the logo's cyan: these buttons float over the output right
+// under the bar, and a second brand hue there read as a different app's control.
+$accent: #3f51b5;
+
 .floating-action-button {
   width: 40px;
   height: 40px;
   border-radius: 20px;
   background-color: #fff;
+  // The icon partials paint themselves with `currentColor`, so the filled
+  // variants below recolour their glyph by setting `color` alone. Don't add
+  // `fill` to `.icon` here: a CSS declaration outranks the presentation
+  // attribute, and the stroke icons carry `fill="none"` — overriding it fills
+  // them in solid.
+  color: #000;
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25);
   position: relative;
   cursor: pointer;
@@ -30,16 +41,15 @@
     display: block;
     width: 24px;
     height: 24px;
-    fill: #000;
     z-index: 1;
   }
 
   .ripple {
-    background-color: #00bcd4;
+    background-color: $accent;
   }
 
   &.active {
-    background-color: #00bcd4;
+    background-color: $accent;
     color: #fff;
 
     .ripple {
@@ -51,11 +61,8 @@
     width: 56px;
     height: 56px;
     border-radius: 28px;
-    background-color: #00bcd4;
-
-    .icon {
-      fill: #fff;
-    }
+    background-color: $accent;
+    color: #fff;
 
     .spinner {
       position: absolute;

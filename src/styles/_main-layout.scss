@@ -82,17 +82,25 @@
 
 }
 
-// so these UI elements are above output
-.toolbar {
-  z-index: 2;
-}
-.setting {
+// The toolbar is styled entirely from critical/_toolbar.scss — including its
+// z-index and shadow — so that the inlined head.css and this async stylesheet
+// can't disagree about the bar and shift it after first paint. Don't add
+// `.toolbar` rules here.
+
+// Keeps the panel above the output. `.code-output` is deliberately `100vw` wide
+// at >=900px (it reserves room for this panel with a padding-right hack), so
+// without this the markup view paints straight over the settings. z-index works
+// on a statically positioned flex item, which is what this is.
+//
+// This used to be spelled `.setting`, which matches no element — it only
+// appeared to work because the intro animation left a `transform` on `.settings`
+// and that painted it with the positioned elements.
+.settings {
   z-index: 1;
 }
 
 // shadows
-.settings,
-.toolbar {
+.settings {
   box-shadow: 0 0 11px rgba(0, 0, 0, 0.4);
 
   @media (min-width: 640px) {
@@ -100,68 +108,15 @@
   }
 }
 
-// initial state
-.toolbar {
-  transform: translateY(-110%);
-
-  &.transition {
-    transition: transform 0.2s ease-out;
-  }
-
-  &.active {
-    transform: translateZ(0);
-  }
-}
-
-.settings {
-  transform: translateY(110%);
-
-  @media (min-width: 640px) {
-    transform: translateX(115%);
-  }
-
-  &.transition {
-    transition: transform 0.3s ease-out 0.05s;
-
-    @media (min-width: 640px) and (max-width: 900px) {
-      transition: transform 0.3s ease-out 0.2s;
-    }
-  }
-
-  &.active {
-    transform: translateZ(0);
-  }
-}
-
-.action-button-container {
-  transform: translateX(168px);
-
-  @media (min-width: 640px) {
-    transform: translateY(188px);
-  }
-
-  &.transition {
-    transition: transform 0.2s ease-out 0.2s;
-
-    @media (min-width: 640px) and (max-width: 900px) {
-      transition: transform 0.2s ease-out 0.4s;
-    }
-  }
-
-  &.active {
-    transform: translateZ(0);
-  }
-}
-
+// The shell paints settled: the bar, the settings panel and the action buttons
+// are all in place from the first frame, because the demo SVG loads by itself
+// and there's no drawer left to cover an unfinished UI. The output is the only
+// thing that animates, fading in once there's something to show.
 .output-switcher {
   opacity: 0;
 
   &.transition {
-    transition: opacity 0.5s ease-out 0.5s;
-
-    @media (min-width: 640px) and (max-width: 900px) {
-      transition: opacity 0.5s ease-out 0.6s;
-    }
+    transition: opacity 0.3s ease-out;
   }
 
   &.active {

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; manifest-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; frame-src 'self' data:">
+        <title>{{ title }}</title>
+        <meta name="theme-color" content="#303f9f">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="preload" crossorigin as="font" href="fonts/JetBrainsMonoNL/JetBrainsMonoNL-Regular-latin.woff2">
+        <link rel="manifest" href="manifest.json">
+        <link rel="apple-touch-icon" href="{{ iconPath }}">
+        <link rel="icon" href="{{ iconPath }}">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="application-name" content="SVGOMG">
+        <meta name="twitter:card" content="summary">
+        <meta name="description" content="{{ description }}">
+        <meta property="og:description" content="{{ description }}">
+        <meta property="og:image" content="{{ liveBaseUrl }}{{ iconPath }}">
+        <meta property="og:title" content="{{ title }}">
+        <script src="js/page.js" defer></script>
+        <style>{{ headCSS|safe }}</style>
+        <!-- Swapped to rel=stylesheet by page.js; see src/js/page/index.js. -->
+        <link rel="preload" as="style" href="all.css">
+    </head>
+    <body>
+        <div class="app-output">
+            <header class="toolbar">
+                <div class="toolbar-brand">
+                    {% include "partials/icons/logo.svg" %}
+                    <div class="toolbar-brand-copy">
+                        <h1>SVGOMG</h1>
+                        <p>
+                            {% include "partials/icons/bolt.svg" %}
+                            <span class="powered-by">Powered by</span>
+                            <a href="https://github.com/svg/svgo">SVGO v{{ SVGO_VERSION }}</a>
+                        </p>
+                    </div>
+                </div>
+                <div class="toolbar-actions">
+                    <button class="load-file unbutton toolbar-action toolbar-action-primary" type="button" title="Open an SVG file">
+                        {% include "partials/icons/open.svg" %}
+                        <span class="toolbar-action-text">Open SVG</span>
+                    </button>
+                    <label class="toolbar-action toolbar-paste" title="Paste SVG markup">
+                        {% include "partials/icons/paste.svg" %}
+                        <span class="input-area">
+                            <textarea class="paste-input" aria-label="Paste markup" spellcheck="false" autocomplete="off"></textarea>
+                            <span class="toolbar-action-text label-txt">Paste markup</span>
+                        </span>
+                    </label>
+                    <div class="toolbar-demo">
+                        <button class="load-demo unbutton toolbar-action toolbar-action-split" type="button" title="Load the {{ demos[0].name }} demo" data-demo-file="{{ demos[0].file }}">
+                            {% include "partials/icons/demo.svg" %}
+                            <span class="toolbar-action-text">Demo</span>
+                        </button>
+                        <button class="demo-menu-btn unbutton toolbar-action toolbar-action-caret" type="button" title="Pick a demo SVG" aria-label="Pick a demo SVG" aria-haspopup="true" aria-expanded="false" popovertarget="demo-menu">
+                            {% include "partials/icons/caret.svg" %}
+                        </button>
+                        <ul class="demo-menu" id="demo-menu" popover>
+                            {% for demo in demos %}
+                                <li>
+                                    <button class="demo-menu-item unbutton" type="button" data-demo-file="{{ demo.file }}">{{ demo.name }}</button>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+                <div class="toolbar-output-nav">
+                    <form class="view-toggler">
+                        <label class="view-toggler-tab" title="Show the image">
+                            <input type="radio" name="output" value="image" checked>
+                            <span class="selected"></span>
+                            {% include "partials/icons/preview.svg" %}
+                            <span class="toolbar-action-text">Preview</span>
+                        </label>
+                        <label class="view-toggler-tab" title="Show the markup">
+                            <input type="radio" name="output" value="code">
+                            <span class="selected"></span>
+                            {% include "partials/icons/markup.svg" %}
+                            <span class="toolbar-action-text">Markup</span>
+                        </label>
+                    </form>
+                </div>
+                <span class="toolbar-nav-divider" aria-hidden="true"></span>
+                <a href="https://github.com/ericges/svgomg" class="toolbar-action toolbar-link" title="Contribute on GitHub">
+                    {% include "partials/icons/contribute.svg" %}
+                    <span class="toolbar-action-text">Contribute</span>
+                </a>
+                <input type="file" class="load-file-input" accept=".svg" hidden>
+            </header>
+            <div class="main">
+                <div class="output">
+                    <div class="action-button-container">
+                        <div class="minor-action-container"></div>
+                        <div class="results-container"></div>
+                    </div>
+                </div>
+                <div class="settings">
+                    <div class="results-container-mobile"></div>
+                    <div class="settings-scroller">
+                        <section class="global">
+                            <h1 class="settings-sub-heading">Global settings</h1>
+                            <label class="setting-item-toggle">
+                                <input type="checkbox" name="original">
+                                {% include "partials/material-switch.html" %}
+                                Show original
+                            </label>
+                            <label class="setting-item-toggle">
+                                <input type="checkbox" name="gzip" checked>
+                                {% include "partials/material-switch.html" %}
+                                Compare gzipped
+                            </label>
+                            <label class="setting-item-toggle">
+                                <input type="checkbox" name="pretty">
+                                {% include "partials/material-switch.html" %}
+                                Prettify markup
+                            </label>
+                            <label class="setting-item-toggle">
+                                <input type="checkbox" name="multipass">
+                                {% include "partials/material-switch.html" %}
+                                Multipass
+                            </label>
+                            <label class="setting-item-range">
+                                <span class="label-text">Number precision</span>
+                                <input type="range" min="0" max="8" step="1" value="3" name="floatPrecision">
+                            </label>
+                            <label class="setting-item-range">
+                                <span class="label-text">Transform precision</span>
+                                <input type="range" min="0" max="8" step="1" value="5" name="transformPrecision">
+                            </label>
+                        </section>
+                        <section class="plugins">
+                            <h1 class="settings-sub-heading">Features</h1>
+                            {% for plugin in plugins %}
+                                <label class="setting-item-toggle">
+                                    <input type="checkbox" name="{{ plugin.id }}" {% if plugin.enabledByDefault %}checked{% endif %}>
+                                    {% include "partials/material-switch.html" %}
+                                    {{ plugin.name }}
+                                </label>
+                            {% endfor %}
+                        </section>
+                        <div class="setting-reset-row">
+                            <button class="unbutton setting-reset" type="button">Reset all</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="preloader">
+                <div class="spinner">
+                    <div class="spinner-container">
+                        <div class="spinner-layer">
+                            <div class="circle-clipper left">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="gap-patch">
+                                <div class="circle"></div>
+                            </div>
+                            <div class="circle-clipper right">
+                                <div class="circle"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p>Sorry, wasn't ready…</p>
+            </div>
+        </div>
+    </body>
+</html>

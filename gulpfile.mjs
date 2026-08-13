@@ -1,5 +1,6 @@
 import { Buffer } from 'node:buffer';
 import crypto from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
@@ -153,6 +154,14 @@ const minifyHtml = () =>
   mapContents((source) => htmlMinify(source, buildConfig.htmlmin));
 
 function copy() {
+  // `src/test-svgs/` is mostly hand-testing fixtures — including one that's
+  // deliberately truncated — so only the files the demo menu offers get shipped.
+  // Read synchronously to keep this a plain stream-returning gulp task.
+  const { demos } = JSON.parse(
+    readFileSync(path.join(__dirname, 'src', 'config.json'), 'utf8'),
+  );
+  const demoFiles = demos.map((demo) => demo.file).join('|');
+
   return gulp
     .src(
       [
@@ -164,16 +173,21 @@ function copy() {
         // negative glob only to the globs that follow it, and a magic-free
         // path like `src/CNAME` errors as "not found" if one precedes it.
         //
-        // Exclude the test-svgs files except for `car-lite.svg`
-        // which is used in the demo
-        '!src/test-svgs/!(car-lite.svg)',
+        // Exclude every test-svg that `src/config.json` doesn't list as a demo
+        `!src/test-svgs/!(${demoFiles})`,
         '!src/images/maskable.svg',
       ],
       // `base` is explicit because gulp resolves it per-glob: without it
       // `src/*.json` would be written to `build/src/` rather than `build/`.
-      { base: 'src' },
+      //
+      // `encoding: false` keeps the bytes intact. gulp 5 (vinyl-fs 4) decodes
+      // file contents as UTF-8 by default, which silently replaces every byte
+      // that isn't valid UTF-8 with U+FFFD — this glob carries PNGs and a
+      // woff2, so the default corrupts them (a PNG's leading 0x89 became
+      // `ef bf bd`, and Chrome then refused to decode the favicon).
+      { base: 'src', encoding: false },
     )
-    .pipe(gulp.dest('build'));
+    .pipe(gulp.dest('build', { encoding: false }));
 }
 
 function css() {
@@ -190,10 +204,12 @@ async function html() {
     fs.readFile(path.join(__dirname, 'build', 'head.css'), 'utf8'),
   ]);
 
+  // `nunjucksCompile` rewrites the extension, so `index.njk` -> `index.html`.
   return gulp
-    .src('src/*.html')
+    .src('src/*.njk')
     .pipe(
       nunjucksCompile({
+        demos: config.demos,
         plugins: config.plugins,
         headCSS,
         SVGO_VERSION,
@@ -207,6 +223,23 @@ async function html() {
     .pipe(gulp.dest('build'));
 }
 
+// Lets a JS-created component share the Nunjucks icon partials: importing a
+// `.svg` yields its markup as a string, so every icon has exactly one source
+// whether `index.njk` `{% include %}`s it or `strToEl()` builds it at runtime.
+// The partials are hand-written and already carry `class="icon"`, so there's
+// nothing to sanitise or wrap here.
+const rollupSvgString = () => ({
+  name: 'svg-string',
+  transform(code, id) {
+    if (!id.endsWith('.svg')) return null;
+    return {
+      code: `export default ${JSON.stringify(code.trim())};`,
+      // No positions to map — the module is one generated line.
+      map: { mappings: '' },
+    };
+  },
+});
+
 const rollupCaches = new Map();
 
 async function js(entry, outputPath, replacements) {
@@ -218,6 +251,7 @@ async function js(entry, outputPath, replacements) {
       replacements
         ? rollupReplace({ preventAssignment: true, ...replacements })
         : undefined,
+      rollupSvgString(),
       rollupResolve({ browser: true }),
       rollupCommon({ include: /node_modules/ }),
       // Don't use terser on development
@@ -277,7 +311,8 @@ function watch() {
   gulp.watch(['src/styles/**/*.scss'], gulp.series(css, html, swJs));
   gulp.watch(['src/js/**/*.js'], allJs);
   gulp.watch(
-    ['src/**/*.{html,svg,woff2}', 'src/*.json'],
+    // `.html` still matters here: the Nunjucks partials keep that extension.
+    ['src/**/*.{html,njk,svg,woff2}', 'src/*.json'],
     gulp.series(gulp.parallel(html, copy, appJs), swJs),
   );
 }
