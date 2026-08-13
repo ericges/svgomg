@@ -152,7 +152,9 @@
                             </label>
                             <label class="setting-item-text">
                                 <span class="label-text">ID prefix</span>
-                                <input type="text" name="idPrefix" placeholder="none" spellcheck="false" autocomplete="off" autocapitalize="off">
+                                {# The pattern restates the worker's `idPrefixPattern` (id-prefix.js): what
+                                   fails it is never applied, only flagged here. #}
+                                <input type="text" name="idPrefix" placeholder="none" spellcheck="false" autocomplete="off" autocapitalize="off" pattern="\s*[A-Za-z_](\w|-)*\s*" title="Letters, digits, hyphens and underscores; must not start with a digit or hyphen">
                             </label>
                             <label class="setting-item-select">
                                 <span class="label-text">Metadata</span>

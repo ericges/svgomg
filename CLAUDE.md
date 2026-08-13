@@ -25,7 +25,7 @@ Coverage is deliberately narrow: the pure, DOM-free logic plus one production-bu
 
 Everything else is still verified **by hand** in `npm run dev` — anything touching the DOM, the service-worker lifecycle, or real workers has no coverage. `src/test-svgs/` holds fixtures for that; the ones `src/config.json` lists as demos are copied into the build (they back the Demo button and its menu), the rest — including the deliberately truncated `fail.svg` — are not.
 
-Several modules exist only so that logic is reachable outside a browser, and should stay that way: `src/js/svgo-worker/dimensions.js` and `src/js/svgo-worker/ensure-dimensions.js` (the worker entry point exports nothing and ends in a `self.onmessage` assignment), `src/js/page/ui/preview-size.js` and `src/js/page/ui/metadata-stages.js` (`svg-output.js` and `settings.js` reach for `document`), and `src/js/page/migrate-settings.js`. Each is a sibling of its only consumer, which changes no output filename — bundles are named after their *directory*.
+Several modules exist only so that logic is reachable outside a browser, and should stay that way: `src/js/svgo-worker/build-plugins.js`, `dimensions.js`, `ensure-dimensions.js`, `current-color-styles.js` and `id-prefix.js` (the worker entry point exports nothing and ends in a `self.onmessage` assignment), `src/js/page/ui/preview-size.js` and `src/js/page/ui/metadata-stages.js` (`svg-output.js` and `settings.js` reach for `document`), and `src/js/page/migrate-settings.js`. Each is a sibling of its only consumer, which changes no output filename — bundles are named after their *directory*.
 
 `npm run dev` serves as well as watches — don't start a second server on 8080.
 
@@ -94,20 +94,20 @@ There is no settings state object. `src/config.json` lists the exposed SVGO plug
 
 The panel is split into three `<section>`s — View, Output, Optimisation — matching what each setting affects: the viewer, the emitted markup, or the optimisation itself. `gzip` and `original` are the View ones, and the only two `getSettings()` leaves out of the cache fingerprint.
 
-Four controls are **not** one-checkbox-one-plugin, because the underlying plugins are mutually dependent. They live in Output and are mapped to plugin configurations in `buildPlugins()` (`src/js/svgo-worker/index.js`), not in the page:
+Four controls are **not** one-checkbox-one-plugin, because the underlying plugins are mutually dependent. They live in Output and are mapped to plugin configurations in `buildPlugins()` (`src/js/svgo-worker/build-plugins.js`, covered end-to-end by `test/build-plugins.test.js`), not in the page:
 
 | control | drives |
 |---|---|
 | `dimensionAttrs` select (`original`/`viewBox`/`widthHeight`/`both`) | `removeDimensions`, `removeViewBox`, and the local `ensure-dimensions` visitor |
 | `ids` select (`minify`/`removeUnused`/`keep`) | `cleanupIds` with `remove`/`minify` params |
-| `idPrefix` text field | `prefixIds` (with `delim: ''`, so the typed prefix is used verbatim) |
-| `currentColor` toggle | `convertColors`' `currentColor` param, standalone or on top of "Minify colours" |
+| `idPrefix` text field | `prefixIds` (with `delim: ''`, so the typed prefix is used verbatim) — the prefix must satisfy `idPrefixPattern` (`id-prefix.js`, restated as the field's HTML `pattern`) or it is flagged in the panel and never applied, since `prefixIds` would emit invalid IDs and selectors verbatim |
+| `currentColor` toggle | `convertColors`' `currentColor` param, standalone or on top of "Minify colours" — plus the local `current-color-styles` visitor right behind it, because `convertColors` never touches `style` attributes or `<style>` rules |
 
-Two of those need a specific slot in the plugin array, since SVGO runs plugins in array order: `cleanupIds` is inserted where its checkbox used to sit (before `removeRasterImages`, so `removeUselessDefs`/`mergePaths` see cleaned IDs), and `ensure-dimensions` runs first so `sortAttrs`/`cleanupNumericValues` treat the attributes it adds like the input's own.
+Two of those need a specific slot in the plugin array, since SVGO runs plugins in array order: `cleanupIds` is inserted where its checkbox used to sit (before `removeRasterImages`, so `removeUselessDefs`/`mergePaths` see cleaned IDs), and `ensure-dimensions` runs first — for every non-`original` mode, including `viewBox` — so `sortAttrs`/`cleanupNumericValues` treat the attributes it adds like the input's own, and so `removeDimensions` (which can't parse `100px`) always finds a viewBox to fall back on.
 
 The **Metadata select is sugar with no `name`**, so `getSettings()` never sees it: it writes the five `metadata`-flagged checkboxes, which stay the single source of truth, and derives its own value back from them (`src/js/page/ui/metadata-stages.js`) — any combination matching no stage shows as `custom` and reveals the toggles. Picking a stage writes the checkboxes; toggling a checkbox by hand deliberately does *not* re-derive the stage, so the block can't snap shut mid-edit.
 
-Saved settings predate all of this, so `src/js/page/migrate-settings.js` translates the retired `removeViewBox`/`removeDimensions`/`cleanupIds` booleans on load (`_loadSettings`).
+Saved settings predate all of this, so `src/js/page/migrate-settings.js` translates the retired `removeViewBox`/`removeDimensions`/`cleanupIds` booleans on load (`_loadSettings`). Its metadata-default remap only fires for legacy saves — identified by the select keys being absent — so a current user can keep the exact combination the old defaults happened to be.
 
 Consequences:
 

@@ -84,6 +84,16 @@
     border-color: #3f51b5;
     box-shadow: 0 0 0 1px #3f51b5;
   }
+
+  // A prefix its `pattern` rejects is never applied by the worker, so the
+  // field is the one place the user learns why nothing happened.
+  &:invalid {
+    border-color: #d32f2f;
+
+    &:focus {
+      box-shadow: 0 0 0 1px #d32f2f;
+    }
+  }
 }
 
 .setting-item-select select {

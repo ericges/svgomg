@@ -29,6 +29,13 @@ export const migrateSettings = (settings) => {
   const plugins = { ...settings.plugins };
   const migrated = { ...settings, plugins };
 
+  // A save made by this version always carries the select keys, so their
+  // absence is what identifies a legacy save. Only those get the metadata
+  // remap below — a current user must be able to keep the exact combination
+  // the old defaults happened to be.
+  const isLegacySave =
+    settings.ids === undefined && settings.dimensionAttrs === undefined;
+
   if (migrated.dimensionAttrs === undefined) {
     // Both toggles could be on at once; `removeDimensions` ran later and won,
     // so that's the mode this used to amount to. Neither one set leaves the
@@ -44,7 +51,9 @@ export const migrateSettings = (settings) => {
     migrated.ids = plugins.cleanupIds ? 'minify' : 'keep';
   }
 
-  if (isOldMetadataDefault(plugins)) plugins.removeDesc = false;
+  if (isLegacySave && isOldMetadataDefault(plugins)) {
+    plugins.removeDesc = false;
+  }
 
   for (const name of retiredPlugins) delete plugins[name];
 

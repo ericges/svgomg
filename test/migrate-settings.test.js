@@ -98,6 +98,25 @@ test('leaves a deliberate metadata combination alone', (t) => {
   t.assert.strictEqual(migrated.plugins.removeComments, false);
 });
 
+test('leaves a new-format save matching the old metadata defaults alone', (t) => {
+  // The remap exists for legacy saves only. A current user picking this exact
+  // combination by hand — it's expressible via "Custom" — must keep it.
+  const settings = {
+    gzip: true,
+    pretty: false,
+    multipass: false,
+    floatPrecision: '3',
+    transformPrecision: '5',
+    dimensionAttrs: 'original',
+    ids: 'minify',
+    idPrefix: '',
+    currentColor: false,
+    plugins: { ...oldMetadata },
+  };
+
+  t.assert.deepStrictEqual(migrateSettings(settings), settings);
+});
+
 test('passes settings in the new shape through untouched', (t) => {
   const settings = {
     ...oldSettings(),
