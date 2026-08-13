@@ -1,0 +1,445 @@
+@use '../utils';
+
+// This partial owns *every* `.toolbar` rule, including the z-index and the
+// shadow that used to live in _main-layout.scss. The bar is the app's only
+// affordance before all.css arrives, so it's styled from the inlined head.css —
+// and a rule for it in the async stylesheet could only ever disagree with the
+// first paint.
+.toolbar {
+  @include utils.user-select(none);
+  position: relative;
+  // Above .output and its floating action buttons.
+  z-index: 2;
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  height: 52px;
+  background-color: #3f51b5;
+  color: #fff;
+  // Set on the bar rather than on .toolbar-actions so that everything in it —
+  // including the view toggler and the trailing link, which sit outside that
+  // row — shares one type scale, and `1em` paddings come out equal.
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 0 11px rgba(0, 0, 0, 0.4);
+
+  @media (min-width: 640px) {
+    box-shadow: 0 4px 11px rgba(0, 0, 0, 0.3);
+  }
+}
+
+.toolbar-brand {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding-right: 1rem;
+
+  // More air between the wordmark and the first action once there's room for it.
+  // Left at 1rem below this: the action row is already scrolling by then, and
+  // widening the gutter would only push it further.
+  @media (min-width: 900px) {
+    padding-right: 2rem;
+  }
+
+  .logo {
+    flex: none;
+    height: 100%;
+    width: auto;
+    aspect-ratio: 1;
+  }
+}
+
+.toolbar-brand-copy {
+  display: grid;
+  gap: 0.1em;
+  font-size: 0.75rem;
+  line-height: 1.2;
+
+  h1 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+  }
+
+  // A footnote under the wordmark, so it drops the bar's 700 weight and a step
+  // of size. The de-emphasis stops there: at 0.75 this is ~4.6:1 on the indigo,
+  // and fading it further would put it under AA.
+  p {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.3em;
+    font-size: 0.6875rem;
+    font-weight: 400;
+    opacity: 0.75;
+    white-space: nowrap;
+  }
+
+  // The bolt stands in for the words "Powered by", which stay in the
+  // accessibility tree below so the line still reads as a sentence.
+  .icon {
+    flex: none;
+    width: 0.9em;
+    height: 0.9em;
+  }
+
+  .powered-by {
+    @include utils.visually-hidden();
+  }
+
+  a:link,
+  a:visited {
+    color: inherit;
+    text-decoration: underline;
+    // Still underlined, so the link doesn't rely on colour alone — just not
+    // shouting it.
+    text-decoration-color: rgba(#fff, 0.4);
+  }
+
+  a:hover,
+  a:active {
+    color: #fff;
+    text-decoration-color: currentcolor;
+  }
+}
+
+.toolbar-actions {
+  flex: 1;
+  // Without this the row refuses to shrink below its content width and pushes
+  // the brand off the left edge instead of scrolling.
+  min-width: 0;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  // x then y: `overflow-x: auto` alone computes `overflow-y: auto` too, which
+  // would give the bar a vertical scrollbar.
+  overflow: auto hidden;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.toolbar-action {
+  position: relative;
+  // Contains the ::before pill's negative z-index, so it stays above the bar's
+  // own background and below the label.
+  z-index: 0;
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 1em;
+  white-space: nowrap;
+  color: inherit;
+  cursor: pointer;
+  border-radius: 8px;
+
+  &:link,
+  &:visited {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 10px 0;
+    border-radius: 8px;
+    z-index: -1;
+  }
+
+  // :focus-within, not :focus — the paste action's focused node is the textarea
+  // inside it, not the label itself.
+  &:hover::before,
+  &:focus-within::before {
+    background-color: rgba(#fff, 0.14);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  // `trackFocusMethod()` in page/utils.js tags keyboard focus. This rule is
+  // what makes `outline: none` above acceptable — without it, keyboard focus is
+  // invisible on the indigo bar.
+  &.key-focused::before {
+    background-color: rgba(#fff, 0.24);
+    box-shadow: inset 0 0 0 2px #00bcd4;
+  }
+
+  .icon {
+    flex: none;
+    width: 20px;
+    height: 20px;
+  }
+
+  // The shared Spinner is appended in here by ToolbarActions. Two class levels,
+  // deliberately: components/_spinner.scss sets `.spinner { width: 28px }` at
+  // equal specificity and all.css loads after head.css, so a bare `.spinner`
+  // override here would lose.
+  .spinner {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    margin-left: 0.2rem;
+    border-color: #fff;
+  }
+}
+
+// The one class every button label in the bar carries — the actions, the view
+// toggler's two halves and the trailing link. It steps back from the bar's 700
+// so the wordmark stays the only bold thing up here; the labels are still a
+// notch above body weight, which is what keeps them reading as controls.
+.toolbar-action-text {
+  font-weight: 600;
+}
+
+// "Open SVG" is the primary action: a permanent, quieter version of the pill.
+.toolbar-action-primary::before {
+  background-color: rgba(#fff, 0.08);
+}
+
+// The demo action is a split button: the label loads the default demo in one
+// click, the caret beside it opens the menu of all of them. Two buttons rather
+// than one so the common case never goes through a menu.
+.toolbar-demo {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+}
+
+// Halves of one pill: each keeps its own hover fill — that's the feedback for
+// which of the two you're about to hit — but only the outer corners are round.
+// Wider than the caret half's 0.45em on purpose, so the two gaps either side of
+// the divider look equal: the caret sits on the shared 24-unit icon grid, whose
+// glyph is inset ~4px inside its 16px box, and that air counts.
+.toolbar-action-split {
+  padding-right: 0.75em;
+
+  &::before {
+    border-radius: 8px 0 0 8px;
+  }
+}
+
+.toolbar-action-caret {
+  padding: 0 0.45em;
+
+  &::before {
+    border-radius: 0 8px 8px 0;
+  }
+
+  // A hairline between the halves, so the split is visible before you hover it.
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 14px;
+    bottom: 14px;
+    width: 1px;
+    background-color: rgba(#fff, 0.25);
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    transition: transform 0.15s utils.$easeOutQuint;
+  }
+
+  // Set by ToolbarActions from the popover's own `toggle` event, so the button
+  // keeps the menu's state even when it was closed by clicking elsewhere.
+  &[aria-expanded='true'] {
+    &::before {
+      background-color: rgba(#fff, 0.14);
+    }
+
+    .icon {
+      transform: rotate(180deg);
+    }
+  }
+}
+
+// A popover, so it renders in the top layer: `.toolbar-actions` scrolls
+// horizontally and `.app-output` sets `overflow: hidden`, and an in-flow
+// dropdown would be clipped by both. Its `top`/`left` are set by ToolbarActions
+// from the button's viewport rect — nothing here can position it.
+//
+// `display: none` with a `:popover-open` override rather than leaning on the UA
+// rule alone: a browser without popover support drops that whole rule as
+// invalid and so leaves the menu hidden, instead of spilling a permanently open
+// list into the bar. The Demo button still loads the default demo there.
+.demo-menu {
+  display: none;
+  position: fixed;
+  inset: auto;
+  margin: 0;
+  padding: 6px 0;
+  min-width: 11em;
+  max-height: calc(100vh - 70px);
+  overflow-y: auto;
+  list-style: none;
+  color: rgba(0, 0, 0, 0.87);
+  background-color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+
+  &:popover-open {
+    display: block;
+  }
+}
+
+.demo-menu-item {
+  display: block;
+  width: 100%;
+  padding: 0.55em 1.2em;
+  text-align: left;
+  color: inherit;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.06);
+  }
+
+  &:focus {
+    outline: none;
+  }
+
+  // Same deal as `.toolbar-action.key-focused`: `outline: none` above is only
+  // acceptable because keyboard focus gets its own mark.
+  &.key-focused {
+    background-color: rgba(0, 0, 0, 0.06);
+    box-shadow: inset 0 0 0 2px #3f51b5;
+  }
+}
+
+// The repo link is an icon at every width — its `title` and the hidden label
+// carry the meaning, and the bar is for working on the file, not reading links.
+.toolbar-link {
+  // Same value as .toolbar-output-nav's padding, on both sides: the divider
+  // then sits centred in equal air between the toggler and this link, and the
+  // link keeps that same air from the bar's right edge.
+  margin-inline: 0.5rem;
+
+  .toolbar-action-text {
+    @include utils.visually-hidden();
+  }
+}
+
+// The invisible-textarea-over-label trick, inherited from the drawer's
+// .menu-input — but inverted: the label text is now the element in flow (it
+// gives the action its width, which a `width: 100%` textarea inside a
+// `flex: none` box could not) and the textarea is the absolute overlay.
+.toolbar-paste {
+  .input-area {
+    position: relative;
+    display: block;
+    white-space: nowrap;
+  }
+
+  .label-txt {
+    display: block;
+  }
+
+  .paste-input {
+    position: absolute;
+    inset: 0;
+    display: block;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    font: inherit;
+    color: inherit;
+    background-color: transparent;
+    border: none;
+    resize: none;
+    overflow: hidden;
+    opacity: 0;
+    cursor: inherit;
+    // The bar sets user-select: none; this is the one thing in it that is text.
+    @include utils.user-select(text);
+
+    &:focus {
+      outline: none;
+      opacity: 1;
+
+      + .label-txt {
+        opacity: 0;
+        pointer-events: none;
+      }
+    }
+  }
+}
+
+// Belt and braces with the `hidden` attribute in index.njk.
+.load-file-input {
+  display: none;
+}
+
+// Outside .toolbar-actions, so the one control that must always be reachable
+// can't scroll out of view on a narrow screen.
+// `stretch`, so the toggler inside can size itself off the bar height and end
+// up the same box as a .toolbar-action pill.
+.toolbar-output-nav {
+  flex: none;
+  display: flex;
+  align-items: stretch;
+  padding: 0 0.5rem;
+}
+
+.toolbar-nav-divider {
+  flex: none;
+  align-self: center;
+  // Right-aligns the trailing link when the bar has room to spare.
+  margin-left: auto;
+  width: 1px;
+  height: 24px;
+  background-image: linear-gradient(rgba(#fff, 0), rgba(#fff, 0.35), rgba(#fff, 0));
+}
+
+// Icon-only, with the labels visually hidden rather than removed so the buttons
+// keep their accessible names. The view toggler's labels aren't
+// .toolbar-action-text, so Preview/Markup stay readable at every width.
+@media (max-width: 719px) {
+  .toolbar-action .toolbar-action-text {
+    @include utils.visually-hidden();
+  }
+
+  // With the label out of the flow the action would have no width, so the
+  // textarea takes over the whole box instead — tapping the icon still focuses
+  // it and opens a keyboard.
+  .toolbar-paste .input-area {
+    position: absolute;
+    inset: 0;
+  }
+}
+
+@media (max-width: 639px) {
+  .toolbar {
+    height: 48px;
+  }
+
+  .toolbar-action {
+    padding: 0 0.7em;
+    font-size: 0.75rem;
+  }
+
+  .toolbar-output-nav {
+    padding: 0 0.25rem;
+  }
+
+  // Tracks the padding above — the two have to stay equal.
+  .toolbar-link {
+    margin-inline: 0.25rem;
+  }
+}
+
+@media (max-width: 479px) {
+  .toolbar-brand-copy {
+    display: none;
+  }
+}

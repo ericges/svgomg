@@ -16,12 +16,15 @@ addEventListener('install', (event) => {
       await cache.addAll([
         './',
         'all.css',
-        'fonts/code-latin.woff2',
+        'fonts/JetBrainsMonoNL/JetBrainsMonoNL-Regular-latin.woff2',
         'images/icon.png',
         'js/gzip-worker.js',
         'js/page.js',
         'js/prism-worker.js',
         'js/svgo-worker.js',
+        // Only the demo that loads itself on startup. The rest of the demo menu
+        // is ~1MB of artwork nobody asked for, so those stay network-only —
+        // picking one offline fails with the usual toast.
         'test-svgs/car-lite.svg',
       ]);
 

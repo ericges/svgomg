@@ -3,18 +3,10 @@
 @use 'global';
 @use 'critical';
 
-.unbutton {
-  display: inline-block;
-  background-color: transparent;
-  border: none;
-  padding: 0;
-  margin: 0;
-  font: inherit;
-  cursor: pointer;
-  white-space: nowrap;
-}
-
-.toolbar,
+// The toolbar is deliberately absent from this list: it's styled from
+// critical/_toolbar.scss and paints immediately. These two can't be — their
+// contents are styled from ../components, so revealing them before all.css
+// would flash an unstyled settings panel and a full-viewport dark overlay.
 .main,
 .drop-overlay {
   display: none;

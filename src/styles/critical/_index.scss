@@ -1,4 +1,7 @@
 // Components whose CSS must be in the critical path, i.e. inlined into
 // <head> by head.scss. Everything else belongs in ../components.
-@forward 'main-menu';
+// `unbutton` is a reset and must come first — see the note in _unbutton.scss.
+@forward 'unbutton';
+@forward 'toolbar';
+@forward 'view-toggler';
 @forward 'preloader';

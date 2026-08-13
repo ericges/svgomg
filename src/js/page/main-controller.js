@@ -7,7 +7,7 @@ import CopyButton from './ui/copy-button.js';
 import BgFillButton from './ui/bg-fill-button.js';
 import Results from './ui/results.js';
 import Settings from './ui/settings.js';
-import MainMenu from './ui/main-menu.js';
+import ToolbarActions from './ui/toolbar-actions.js';
 import Toasts from './ui/toasts.js';
 import FileDrop from './ui/file-drop.js';
 import Preloader from './ui/preloader.js';
@@ -28,7 +28,7 @@ export default class MainController {
     this._copyButtonUi = new CopyButton();
     this._resultsUi = new Results();
     this._settingsUi = new Settings();
-    this._mainMenuUi = new MainMenu();
+    this._actionsUi = new ToolbarActions();
     this._toastsUi = new Toasts();
 
     const bgFillUi = new BgFillButton();
@@ -43,11 +43,11 @@ export default class MainController {
     this._settingsUi.emitter.on('reset', (oldSettings) =>
       this._onSettingsReset(oldSettings),
     );
-    this._mainMenuUi.emitter.on('svgDataLoad', (event) =>
+    this._actionsUi.emitter.on('svgDataLoad', (event) =>
       this._onInputChange(event),
     );
     dropUi.emitter.on('svgDataLoad', (event) => this._onInputChange(event));
-    this._mainMenuUi.emitter.on('error', ({ error }) =>
+    this._actionsUi.emitter.on('error', ({ error }) =>
       this._handleError(error),
     );
     dropUi.emitter.on('error', ({ error }) => this._handleError(error));
@@ -85,7 +85,7 @@ export default class MainController {
         });
     }
 
-    domReady.then(() => {
+    domReady.then(async () => {
       const container = document.querySelector('.app-output');
       const actionContainer = container.querySelector(
         '.action-button-container',
@@ -93,16 +93,11 @@ export default class MainController {
       const minorActionContainer = container.querySelector(
         '.minor-action-container',
       );
-      const toolbarElement = container.querySelector('.toolbar');
       const outputElement = container.querySelector('.output');
 
-      // elements for intro anim
-      this._mainUi = new MainUi(
-        toolbarElement,
-        actionContainer,
-        this._outputUi.container,
-        this._settingsUi.container,
-      );
+      // The rest of the shell paints settled; the output is the only thing that
+      // waits for a file, so it's the only thing that animates in.
+      this._mainUi = new MainUi(this._outputUi.container);
 
       minorActionContainer.append(
         bgFillUi.container,
@@ -112,40 +107,41 @@ export default class MainController {
       outputElement.append(this._outputUi.container);
       container.append(this._toastsUi.container, dropUi.container);
 
-      // load previous settings
-      this._loadSettings();
+      // Awaited, because `setSettings()` assigns input values without firing
+      // events: nothing recompresses afterwards, so a demo compressed before
+      // the restore lands would disagree with the panel showing it.
+      await this._loadSettings();
 
       // someone managed to hit the preloader, aww
       if (preloaderUi.activated) {
         this._toastsUi.show('Ready now!', { duration: 3000 });
       }
 
-      // for testing
-      // eslint-disable-next-line no-constant-condition
-      if (false) {
-        (async () => {
-          const data = await fetch('test-svgs/car-lite.svg').then((response) =>
-            response.text(),
-          );
-          this._onInputChange({ data, filename: 'car-lite.svg' });
-        })();
+      // Open with something to look at rather than an empty app. Skipped if the
+      // user got there first — a drop or Ctrl+O during the settings restore.
+      if (!this._userHasInteracted) {
+        await this._actionsUi.loadDemo({ auto: true });
       }
+
+      // Whether or not that worked: there's no drawer left to hide an
+      // unactivated shell behind, so the output has to settle either way.
+      this._mainUi.activate();
     });
   }
 
   _onGlobalKeyDown(event) {
     if (event.key === 'o' && (event.ctrlKey || event.metaKey)) {
       event.preventDefault();
-      this._mainMenuUi.showFilePicker();
+      this._actionsUi.showFilePicker();
     }
 
-    if (event.key === 'Escape') this._mainMenuUi.hide();
+    if (event.key === 'Escape') this._actionsUi.resetPasteInput();
   }
 
   _onGlobalPaste(event) {
     const value = event.clipboardData.getData('text');
     if (value.includes('</svg>')) {
-      this._mainMenuUi.setPasteInput(value);
+      this._actionsUi.setPasteInput(value);
       event.preventDefault();
     } else {
       this._toastsUi.show('Pasted value not an SVG', { duration: 2000 });
@@ -243,16 +239,30 @@ export default class MainController {
     }
   }
 
-  async _onInputChange({ data, filename }) {
+  async _onInputChange({ data, filename, auto = false }) {
+    // The demo fetch is a real gap, so a user-driven load that landed while it
+    // was in flight wins.
+    if (auto && this._userHasInteracted) return;
+
     const settings = this._settingsUi.getSettings();
-    this._userHasInteracted = true;
+    // An automatic load isn't interaction: `_onUpdateFound` reads this flag to
+    // choose between a silent reload and an "Update available" toast, and every
+    // visitor would otherwise get the toast.
+    if (!auto) this._userHasInteracted = true;
     const previousInput = this._inputItem;
 
     try {
       this._inputItem = await svgo.wrapOriginal(data);
       this._inputFilename = filename;
     } catch (error) {
-      this._mainMenuUi.stopSpinner();
+      this._actionsUi.stopSpinner();
+
+      // Nobody asked for the automatic demo, so nobody should be told it failed.
+      if (auto) {
+        console.warn('Demo SVG failed to load', error);
+        return;
+      }
+
       this._handleError(new Error(`Load failed: ${error.message}`));
       return;
     }
@@ -265,8 +275,7 @@ export default class MainController {
     this._compressSvg(settings);
     this._outputUi.reset();
     this._mainUi.activate();
-    this._mainMenuUi.allowHide = true;
-    this._mainMenuUi.hide();
+    this._actionsUi.stopSpinner();
   }
 
   _handleError(error) {
@@ -294,6 +303,12 @@ export default class MainController {
   }
 
   async _compressSvg(settings) {
+    // The settings panel is interactive before the first SVG has finished
+    // loading (fetch, then worker startup), so this is reachable with nothing
+    // to compress. Before the abort, so a premature change doesn't cancel a
+    // running job for nothing.
+    if (!this._inputItem) return;
+
     const thisJobId = (this._latestCompressJobId = Math.random());
 
     await svgo.abort();

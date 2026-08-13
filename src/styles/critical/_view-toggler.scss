@@ -1,0 +1,77 @@
+@use '../utils';
+
+// A segmented control: one translucent pill split in two, with the active half
+// filled. Critical-path, like the toolbar that contains it — deferred, it would
+// render as two unstyled labels on first paint.
+.view-toggler {
+  @include utils.user-select(none);
+  display: flex;
+  align-items: stretch;
+  // The same box as a .toolbar-action's pill, which is drawn at `inset: 10px 0`.
+  // Taking the height from the bar instead of hard-coding it keeps the two the
+  // same size at every breakpoint.
+  margin: 10px 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: rgba(#fff, 0.08);
+  line-height: 1;
+
+  input {
+    @include utils.visually-hidden();
+  }
+}
+
+.view-toggler-tab {
+  // Contains .selected's negative z-index so the fill sits behind the label.
+  z-index: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  // Matches .toolbar-action, so the halves read as buttons of the same size.
+  padding: 0 1em;
+  white-space: nowrap;
+  cursor: pointer;
+
+  .icon {
+    flex: none;
+    width: 18px;
+    height: 18px;
+  }
+
+  + .view-toggler-tab {
+    box-shadow: inset 1px 0 0 rgba(#fff, 0.14);
+  }
+
+  .selected {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  :checked + .selected {
+    background-color: rgba(#000, 0.38);
+  }
+
+  // Keyboard focus only, like .toolbar-action — `trackFocusMethod()` tags the
+  // input. A ring left behind by a mouse click reads as a stuck state.
+  .key-focused + .selected {
+    box-shadow: inset 0 0 0 2px #00bcd4;
+  }
+}
+
+// Icon-only, in step with .toolbar-action. Now that each half has an icon the
+// control still reads without its labels, and dropping them keeps it from
+// crowding out the scrolling action row on a narrow screen.
+@media (max-width: 719px) {
+  .view-toggler-tab .toolbar-action-text {
+    @include utils.visually-hidden();
+  }
+}
+
+@media (max-width: 639px) {
+  .view-toggler-tab {
+    padding: 0 0.7em;
+  }
+}

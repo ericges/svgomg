@@ -3,6 +3,17 @@
   color: #fff;
   padding: 12px 16px;
 
+  // The mobile pill is white-on-indigo, so the desktop green/red would be
+  // near-unreadable; these are tints picked to clear 4.5:1 against it
+  // (5.1:1 and 4.7:1 respectively).
+  .decrease {
+    color: #a5f0b5;
+  }
+
+  .increase {
+    color: #ffc9c4;
+  }
+
   @media (min-width: 640px) {
     background-color: #fff;
     color: #000;

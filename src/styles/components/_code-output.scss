@@ -6,8 +6,18 @@
   bottom: 0;
   overflow: auto;
   -webkit-overflow-scrolling: touch; // TODO: revisit this later
-  color: #f8f8f2;
-  background-color: rgba(#000, 0.8);
+  // Darcula's base foreground/background — the theme partial (`_prism.scss`)
+  // only carries token colours, since its own wrapper selectors expect a
+  // `language-*` class this markup doesn't have.
+  color: #a9b7c6;
+  // Opaque: translucent black let the page's checkerboard through, which read
+  // as a muddy brown behind the syntax colours.
+  background-color: #2b2b2b;
+
+  ::selection {
+    color: inherit;
+    background: rgba(33, 66, 131, 0.85);
+  }
   opacity: 0;
   transform: translateZ(0);
 
@@ -26,6 +36,7 @@
     padding: 14px;
 
     @media (min-width: 640px) {
+      padding: 20px 24px;
       // Allow the code area to scroll past the floating action buttons.
       margin-bottom: 200px;
     }
@@ -36,8 +47,15 @@
 
     code {
       font-size: 1rem;
-      // This is a hack
-      padding-right: 380px;
+      // Matches the settings card's page margin at this breakpoint, so the
+      // first line of code starts level with the top of the card.
+      padding: 30px;
+      // This element is full-viewport wide (see above), so the right padding is
+      // the only thing keeping the text clear of that card: 30px page margin +
+      // 340px card (21.1em plus its 1px borders) + 30px of gutter. The gap comes
+      // out ~45px rather than 30px because `100vw` ignores this element's own
+      // scrollbar, and it stays constant at any width.
+      padding-right: 400px;
     }
   }
 
