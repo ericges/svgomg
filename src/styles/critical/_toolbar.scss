@@ -189,6 +189,14 @@
   }
 }
 
+// The one class every button label in the bar carries — the actions, the view
+// toggler's two halves and the trailing link. It steps back from the bar's 700
+// so the wordmark stays the only bold thing up here; the labels are still a
+// notch above body weight, which is what keeps them reading as controls.
+.toolbar-action-text {
+  font-weight: 600;
+}
+
 // "Open SVG" is the primary action: a permanent, quieter version of the pill.
 .toolbar-action-primary::before {
   background-color: rgba(#fff, 0.08);
