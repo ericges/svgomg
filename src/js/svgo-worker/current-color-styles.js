@@ -10,35 +10,53 @@
 // attributes and whatever rules remain in `<style>` elements. It mirrors the
 // plugin's rule for a boolean `currentColor` param: every value except `none`
 // becomes `currentColor`.
+//
+// The CSS goes through css-tree — the parser SVGO's own `prefixIds` uses for
+// the same job — not a regex: `;`, `!` and quotes can legally appear *inside*
+// a value (`url(data:image/svg+xml;base64,…)`, `content: " fill:red"`), so
+// only a real declaration walk can tell a colour apart from text that merely
+// looks like one. Regenerating from the tree normalises whitespace and drops
+// comments, which is what SVGO's own style passes do too.
 
-const colourProperties = [
+import * as csstree from 'css-tree';
+
+const colourProperties = new Set([
   'fill',
   'stroke',
   'stop-color',
   'flood-color',
   'lighting-color',
   'color',
-];
+]);
 
-// A declaration's property is only ever preceded by the start of the text, a
-// `;`, a `{` or whitespace — which keeps `.fill:hover` (a selector) out, and
-// stops bare `color` matching inside `stop-color`. The value starts on its
-// first non-space character and stops before `;`, `}` and `!`, so a trailing
-// `!important` survives the rewrite.
-const declarationPattern = new RegExp(
-  String.raw`(?<before>^|[\s;{])(?<property>${colourProperties.join('|')})(?<separator>\s*:\s*)(?<value>[^\s!;}](?:[^!;}]*[^\s!;}])?)`,
-  'gi',
-);
+const rewrite = (css, context) => {
+  let ast;
 
-export const convertCssColoursToCurrentColor = (css) =>
-  css.replaceAll(declarationPattern, (...args) => {
-    // The named-groups object is the replacer's last argument.
-    const { before, property, separator, value } = args.at(-1);
+  try {
+    // The values stay raw text: whether one is a colour doesn't matter — only
+    // `none` is exempt — so there's nothing to gain from parsing them.
+    ast = csstree.parse(css, { context, parseValue: false });
+  } catch {
+    // Unparseable styles are left exactly as they were, like `prefixIds` does.
+    return css;
+  }
 
-    return value.toLowerCase() === 'none'
-      ? args[0]
-      : `${before}${property}${separator}currentColor`;
+  csstree.walk(ast, {
+    visit: 'Declaration',
+    enter(declaration) {
+      if (!colourProperties.has(declaration.property.toLowerCase())) return;
+      if (declaration.value.value.trim().toLowerCase() === 'none') return;
+
+      declaration.value = { type: 'Raw', value: 'currentColor' };
+    },
   });
+
+  return csstree.generate(ast);
+};
+
+export const convertStyleAttribute = (css) => rewrite(css, 'declarationList');
+
+export const convertStylesheet = (css) => rewrite(css, 'stylesheet');
 
 export const createCurrentColorStylesPlugin = () => ({
   type: 'visitor',
@@ -51,11 +69,16 @@ export const createCurrentColorStylesPlugin = () => ({
         enter(node) {
           if (node.name === 'mask') maskDepth++;
 
-          // Masks read luminance, not colour — `convertColors` leaves
-          // everything inside one alone, and so does this. Stylesheet rules
-          // can't be scoped that way, so they're rewritten regardless.
-          if (maskDepth === 0 && node.attributes.style !== undefined) {
-            node.attributes.style = convertCssColoursToCurrentColor(
+          // Masks read luminance, not colour: recolouring their content
+          // changes what the mask hides. `convertColors` leaves everything
+          // inside one alone, and so does this — including a `<style>`
+          // element nested there. A document-level rule that *selects into*
+          // a mask is still converted, though; telling those apart needs
+          // full selector matching.
+          if (maskDepth > 0) return;
+
+          if (node.attributes.style !== undefined) {
+            node.attributes.style = convertStyleAttribute(
               node.attributes.style,
             );
           }
@@ -63,7 +86,7 @@ export const createCurrentColorStylesPlugin = () => ({
           if (node.name === 'style') {
             for (const child of node.children) {
               if (child.type === 'text' || child.type === 'cdata') {
-                child.value = convertCssColoursToCurrentColor(child.value);
+                child.value = convertStylesheet(child.value);
               }
             }
           }

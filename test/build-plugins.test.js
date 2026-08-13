@@ -47,6 +47,20 @@ test('currentColor converts however the colour was authored', (t) => {
   t.assert.match(data, /style="fill:none"/);
 });
 
+test('currentColor leaves mask content alone', (t) => {
+  // Masks read luminance: recolouring their content changes what they hide.
+  // `convertColors` skips everything inside one, and so must the companion —
+  // for the style attribute and for a stylesheet nested in the mask alike.
+  const data = compress(
+    '<svg xmlns="http://www.w3.org/2000/svg" color="black"><mask id="m"><style>.mask{fill:white}</style><path class="mask" style="fill:#fff" d="M0 0h10v10z"/></mask><path mask="url(#m)" fill="red" d="M0 0h10v10z"/></svg>',
+    { currentColor: true, plugins: { convertColors: false } },
+  );
+
+  t.assert.match(data, /\.mask\{fill:white\}/);
+  t.assert.match(data, /style="fill:#fff"/);
+  t.assert.match(data, /fill="currentColor"/);
+});
+
 const idSvg =
   '<svg xmlns="http://www.w3.org/2000/svg"><style>#shape{fill:red}</style><path id="shape" d="M0 0h1v1z"/></svg>';
 
