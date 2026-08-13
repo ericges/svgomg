@@ -54,7 +54,64 @@
   }
 }
 
-.settings > section:not(:first-child) {
+.setting-item-select,
+.setting-item-text {
+  padding: 10px 16px 16px;
+  display: flex;
+  flex-flow: column;
+  justify-content: center;
+
+  .label-text {
+    margin-bottom: 0.5em;
+  }
+}
+
+.setting-item-select select,
+.setting-item-text input {
+  // 1rem rather than something smaller: under 16px iOS zooms the viewport in
+  // when the control takes focus.
+  font: inherit;
+  font-size: 1rem;
+  color: inherit;
+  width: 100%;
+  padding: 8px 10px;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+
+  &:focus {
+    outline: none;
+    border-color: #3f51b5;
+    box-shadow: 0 0 0 1px #3f51b5;
+  }
+
+  // A prefix its `pattern` rejects is never applied by the worker, so the
+  // field is the one place the user learns why nothing happened.
+  &:invalid {
+    border-color: #d32f2f;
+
+    &:focus {
+      box-shadow: 0 0 0 1px #d32f2f;
+    }
+  }
+}
+
+.setting-item-select select {
+  appearance: none;
+  padding-right: 30px;
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M1 1l4 4 4-4" fill="none" stroke="%23767676" stroke-width="1.5"/></svg>');
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+}
+
+.metadata-custom {
+  // Indented to read as subordinate to the select that governs it. Visibility
+  // is the `hidden` attribute's job — a `display` here would override it.
+  padding-left: 16px;
+}
+
+// The sections live inside the scroller, not directly under `.settings`.
+.settings-scroller > section:not(:first-child) {
   border-top: 1px solid #e7e7e7;
 }
 

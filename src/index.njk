@@ -96,10 +96,17 @@
                     </div>
                 </div>
                 <div class="settings">
+                    {% macro pluginToggle(plugin) %}
+                        <label class="setting-item-toggle">
+                            <input type="checkbox" name="{{ plugin.id }}" {% if plugin.enabledByDefault %}checked{% endif %}>
+                            {% include "partials/material-switch.html" %}
+                            {{ plugin.name }}
+                        </label>
+                    {% endmacro %}
                     <div class="results-container-mobile"></div>
                     <div class="settings-scroller">
-                        <section class="global">
-                            <h1 class="settings-sub-heading">Global settings</h1>
+                        <section>
+                            <h1 class="settings-sub-heading">View</h1>
                             <label class="setting-item-toggle">
                                 <input type="checkbox" name="original">
                                 {% include "partials/material-switch.html" %}
@@ -110,15 +117,13 @@
                                 {% include "partials/material-switch.html" %}
                                 Compare gzipped
                             </label>
+                        </section>
+                        <section>
+                            <h1 class="settings-sub-heading">Output</h1>
                             <label class="setting-item-toggle">
                                 <input type="checkbox" name="pretty">
                                 {% include "partials/material-switch.html" %}
                                 Prettify markup
-                            </label>
-                            <label class="setting-item-toggle">
-                                <input type="checkbox" name="multipass">
-                                {% include "partials/material-switch.html" %}
-                                Multipass
                             </label>
                             <label class="setting-item-range">
                                 <span class="label-text">Number precision</span>
@@ -128,16 +133,62 @@
                                 <span class="label-text">Transform precision</span>
                                 <input type="range" min="0" max="8" step="1" value="5" name="transformPrecision">
                             </label>
+                            <label class="setting-item-select">
+                                <span class="label-text">Size attributes</span>
+                                <select name="dimensionAttrs">
+                                    <option value="original" selected>Keep as they are</option>
+                                    <option value="viewBox">viewBox only</option>
+                                    <option value="widthHeight">width &amp; height only</option>
+                                    <option value="both">Both</option>
+                                </select>
+                            </label>
+                            <label class="setting-item-select">
+                                <span class="label-text">IDs</span>
+                                <select name="ids">
+                                    <option value="minify" selected>Shorten and drop unused</option>
+                                    <option value="removeUnused">Drop unused only</option>
+                                    <option value="keep">Keep as they are</option>
+                                </select>
+                            </label>
+                            <label class="setting-item-text">
+                                <span class="label-text">ID prefix</span>
+                                {# The pattern restates the worker's `idPrefixPattern` (id-prefix.js): what
+                                   fails it is never applied, only flagged here. #}
+                                <input type="text" name="idPrefix" placeholder="none" spellcheck="false" autocomplete="off" autocapitalize="off" pattern="\s*[A-Za-z_](\w|-)*\s*" title="Letters, digits, hyphens and underscores; must not start with a digit or hyphen">
+                            </label>
+                            <label class="setting-item-select">
+                                <span class="label-text">Metadata</span>
+                                <select class="metadata-select">
+                                    <option value="keep">Keep all</option>
+                                    <option value="junk" selected>Drop junk, keep accessibility</option>
+                                    <option value="all">Drop all</option>
+                                    <option value="custom">Custom…</option>
+                                </select>
+                            </label>
+                            <div class="metadata-custom plugins" hidden>
+                                {% for plugin in plugins %}
+                                    {% if plugin.metadata %}{{ pluginToggle(plugin) }}{% endif %}
+                                {% endfor %}
+                            </div>
+                            <label class="setting-item-toggle">
+                                <input type="checkbox" name="currentColor">
+                                {% include "partials/material-switch.html" %}
+                                Colours to currentColor
+                            </label>
                         </section>
-                        <section class="plugins">
-                            <h1 class="settings-sub-heading">Features</h1>
-                            {% for plugin in plugins %}
-                                <label class="setting-item-toggle">
-                                    <input type="checkbox" name="{{ plugin.id }}" {% if plugin.enabledByDefault %}checked{% endif %}>
-                                    {% include "partials/material-switch.html" %}
-                                    {{ plugin.name }}
-                                </label>
-                            {% endfor %}
+                        <section>
+                            <h1 class="settings-sub-heading">Optimisation</h1>
+                            <label class="setting-item-toggle">
+                                <input type="checkbox" name="multipass">
+                                {% include "partials/material-switch.html" %}
+                                Multipass
+                            </label>
+                            <h2 class="settings-sub-heading">Features</h2>
+                            <div class="plugins">
+                                {% for plugin in plugins %}
+                                    {% if not plugin.metadata %}{{ pluginToggle(plugin) }}{% endif %}
+                                {% endfor %}
+                            </div>
                         </section>
                         <div class="setting-reset-row">
                             <button class="unbutton setting-reset" type="button">Reset all</button>
