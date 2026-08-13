@@ -34,12 +34,19 @@ export default class Results {
     if (!comparisonSize) {
       this._diffEl.textContent = '';
     } else if (size === comparisonSize) {
-      this._diffEl.textContent = '100%';
+      this._diffEl.textContent = '±0%';
     } else {
-      this._diffEl.textContent = `${round((size / comparisonSize) * 100, 2)}%`;
-      this._diffEl.classList.add(
-        size > comparisonSize ? 'increase' : 'decrease',
+      const hasIncreased = size > comparisonSize;
+      const change = round(
+        (Math.abs(size - comparisonSize) / comparisonSize) * 100,
+        1,
       );
+
+      // The sign is written out rather than left to `round`, so a change too
+      // small to survive rounding still reads `-0%`/`+0%` and agrees with the
+      // colour — `±0%` above is reserved for genuinely identical sizes.
+      this._diffEl.textContent = `${hasIncreased ? '+' : '-'}${change}%`;
+      this._diffEl.classList.add(hasIncreased ? 'increase' : 'decrease');
     }
   }
 }
