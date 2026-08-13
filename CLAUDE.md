@@ -21,11 +21,11 @@ npm test          # lint + build + test:node — the whole suite
 
 The test runner is **`node --test`, with no test framework and no new dependencies**; specs live in `test/*.test.js` and are wired up in `package.json`. XO lints them, so `xo.config.mjs` gives `test/**` Node globals rather than the browser ones, and its `node-test` rules require assertions to go through the test context (`t.assert.strictEqual`, not an imported `node:assert`).
 
-Coverage is deliberately narrow: the pure, DOM-free logic plus one production-build smoke test. `test/build-smoke.test.js` reads `build/`, so it needs a build to have run, and it must be a **production** one — a dev build fails its first assertion with a message saying so. It checks the seams a bundler can silently break: that `_` properties really are mangled, that the keys crossing the page↔worker boundary survive in both bundles, that every `src/config.json` plugin renders a checkbox, that every `src/config.json` demo renders a menu item and ships as a file, that `SVGOMG_BUILD_ID` was substituted, and that every hand-written precache entry exists in `build/`.
+Coverage is deliberately narrow: the pure, DOM-free logic plus one production-build smoke test. `test/build-smoke.test.js` reads `build/`, so it needs a build to have run, and it must be a **production** one — a dev build fails its first assertion with a message saying so. It checks the seams a bundler can silently break: that `_` properties really are mangled, that the keys crossing the page↔worker boundary survive in both bundles, that every `src/config.json` plugin renders a checkbox and that the plugins the grouped controls absorbed render none, that every `src/config.json` demo renders a menu item and ships as a file, that `SVGOMG_BUILD_ID` was substituted, and that every hand-written precache entry exists in `build/`. Its name-attribute scan matches `<input>` **and** `<select>`, since two settings are selects.
 
 Everything else is still verified **by hand** in `npm run dev` — anything touching the DOM, the service-worker lifecycle, or real workers has no coverage. `src/test-svgs/` holds fixtures for that; the ones `src/config.json` lists as demos are copied into the build (they back the Demo button and its menu), the rest — including the deliberately truncated `fail.svg` — are not.
 
-Two modules exist only so that logic is reachable outside a browser, and should stay that way: `src/js/svgo-worker/dimensions.js` (the worker entry point exports nothing and ends in a `self.onmessage` assignment) and `src/js/page/ui/preview-size.js` (`svg-output.js` imports `utils.js`, which touches `document` at load). Both are siblings of their only consumer, which changes no output filename — bundles are named after their *directory*.
+Several modules exist only so that logic is reachable outside a browser, and should stay that way: `src/js/svgo-worker/dimensions.js` and `src/js/svgo-worker/ensure-dimensions.js` (the worker entry point exports nothing and ends in a `self.onmessage` assignment), `src/js/page/ui/preview-size.js` and `src/js/page/ui/metadata-stages.js` (`svg-output.js` and `settings.js` reach for `document`), and `src/js/page/migrate-settings.js`. Each is a sibling of its only consumer, which changes no output filename — bundles are named after their *directory*.
 
 `npm run dev` serves as well as watches — don't start a second server on 8080.
 
@@ -90,15 +90,33 @@ Each worker's `self.onmessage` follows the same try/catch-and-reply-with-`error.
 
 ### Settings live in the DOM, not in JS
 
-There is no settings state object. `src/config.json` lists the exposed SVGO plugins (`id`, `name`, `enabledByDefault`); the Nunjucks template loops over it to render one checkbox per plugin with `name="{{ plugin.id }}"`. `Settings.getSettings()` reads the inputs back and rebuilds `{ plugins: {...}, floatPrecision, multipass, pretty, gzip, original, fingerprint }`, keyed by those `name` attributes. `Settings.setSettings()` does the reverse when restoring from IndexedDB, and `_onReset()` restores defaults by re-reading each input's *initial HTML attributes*.
+There is no settings state object. `src/config.json` lists the exposed SVGO plugins (`id`, `name`, `enabledByDefault`, and an optional `metadata` flag); the Nunjucks template loops over it to render one checkbox per plugin with `name="{{ plugin.id }}"`. `Settings.getSettings()` reads the inputs back and rebuilds `{ plugins: {...}, floatPrecision, multipass, pretty, gzip, original, dimensionAttrs, ids, idPrefix, currentColor, fingerprint }`, keyed by those `name` attributes. `Settings.setSettings()` does the reverse when restoring from IndexedDB, and `_onReset()` restores defaults by re-reading each input's *initial HTML attributes* (`checked`, `value`, `defaultSelected`).
+
+The panel is split into three `<section>`s — View, Output, Optimisation — matching what each setting affects: the viewer, the emitted markup, or the optimisation itself. `gzip` and `original` are the View ones, and the only two `getSettings()` leaves out of the cache fingerprint.
+
+Four controls are **not** one-checkbox-one-plugin, because the underlying plugins are mutually dependent. They live in Output and are mapped to plugin configurations in `buildPlugins()` (`src/js/svgo-worker/index.js`), not in the page:
+
+| control | drives |
+|---|---|
+| `dimensionAttrs` select (`original`/`viewBox`/`widthHeight`/`both`) | `removeDimensions`, `removeViewBox`, and the local `ensure-dimensions` visitor |
+| `ids` select (`minify`/`removeUnused`/`keep`) | `cleanupIds` with `remove`/`minify` params |
+| `idPrefix` text field | `prefixIds` (with `delim: ''`, so the typed prefix is used verbatim) |
+| `currentColor` toggle | `convertColors`' `currentColor` param, standalone or on top of "Minify colours" |
+
+Two of those need a specific slot in the plugin array, since SVGO runs plugins in array order: `cleanupIds` is inserted where its checkbox used to sit (before `removeRasterImages`, so `removeUselessDefs`/`mergePaths` see cleaned IDs), and `ensure-dimensions` runs first so `sortAttrs`/`cleanupNumericValues` treat the attributes it adds like the input's own.
+
+The **Metadata select is sugar with no `name`**, so `getSettings()` never sees it: it writes the five `metadata`-flagged checkboxes, which stay the single source of truth, and derives its own value back from them (`src/js/page/ui/metadata-stages.js`) — any combination matching no stage shows as `custom` and reveals the toggles. Picking a stage writes the checkboxes; toggling a checkbox by hand deliberately does *not* re-derive the stage, so the block can't snap shut mid-edit.
+
+Saved settings predate all of this, so `src/js/page/migrate-settings.js` translates the retired `removeViewBox`/`removeDimensions`/`cleanupIds` booleans on load (`_loadSettings`).
 
 Consequences:
 
-- **Exposing another SVGO plugin = one entry in `src/config.json`.** No JS change.
+- **Exposing another SVGO plugin = one entry in `src/config.json`.** No JS change — unless it belongs to one of the grouped controls above, which are hand-mapped.
 - **The demo menu works the same way.** `src/config.json` also has a `demos` array (`file`, `name`); the template renders the split button's menu from it, each item carrying its filename in `data-demo-file`, and `copy` ships exactly those files out of `src/test-svgs/`. `ToolbarActions` names no demo: `loadDemo()` with no `file` reads `data-demo-file` off the button, which the template fills from `demos[0]` — **so the first entry is the default**, the one the bare button loads and the one that loads itself on startup. Reordering the array changes both, and the smoke test insists the default is also the precached one.
 - The `name` attribute is the contract between HTML, the settings object, and the worker's plugin list.
 - Range inputs are wrapped by `MaterialSlider` and must be written through `this._sliderMap.get(input).value`, not `input.value`.
-- Range `input` events are throttled 150ms before `change` is emitted; other inputs emit immediately.
+- Range and text `input` events are throttled 150ms before `change` is emitted; other inputs emit immediately.
+- The scroller's `mousedown` handler `preventDefault()`s to stop double-tap text selection, which also suppresses focus — ranges, text fields and selects are exempted by selector. A new control type that takes focus has to be added there.
 
 ### Startup: the demo loads itself, and the shell paints settled
 

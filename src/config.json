@@ -43,12 +43,14 @@
     {
       "id": "removeComments",
       "name": "Remove comments",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "metadata": true
     },
     {
       "id": "removeMetadata",
       "name": "Remove <metadata>",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "metadata": true
     },
     {
       "id": "removeXMLNS",
@@ -58,7 +60,8 @@
     {
       "id": "removeEditorsNSData",
       "name": "Remove editor data",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "metadata": true
     },
     {
       "id": "cleanupAttrs",
@@ -84,11 +87,6 @@
       "id": "convertStyleToAttrs",
       "name": "Style to attributes",
       "enabledByDefault": false
-    },
-    {
-      "id": "cleanupIds",
-      "name": "Clean up IDs",
-      "enabledByDefault": true
     },
     {
       "id": "removeRasterImages",
@@ -129,11 +127,6 @@
       "id": "removeUselessStrokeAndFill",
       "name": "Remove useless stroke & fill",
       "enabledByDefault": true
-    },
-    {
-      "id": "removeViewBox",
-      "name": "Remove viewBox",
-      "enabledByDefault": false
     },
     {
       "id": "cleanupEnableBackground",
@@ -223,17 +216,14 @@
     {
       "id": "removeTitle",
       "name": "Remove <title>",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "metadata": true
     },
     {
       "id": "removeDesc",
       "name": "Remove <desc>",
-      "enabledByDefault": true
-    },
-    {
-      "id": "removeDimensions",
-      "name": "Prefer viewBox to width/height",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "metadata": true
     },
     {
       "id": "removeStyleElement",

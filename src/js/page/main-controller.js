@@ -15,6 +15,7 @@ import ResultsContainer from './ui/results-container.js';
 import ViewToggler from './ui/view-toggler.js';
 import ResultsCache from './results-cache.js';
 import MainUi from './ui/main-ui.js';
+import { migrateSettings } from './migrate-settings.js';
 
 const svgo = new Svgo();
 
@@ -288,7 +289,7 @@ export default class MainController {
     // already rendered in the markup is a fine outcome.
     try {
       const settings = await storage.get('settings');
-      if (settings) this._settingsUi.setSettings(settings);
+      if (settings) this._settingsUi.setSettings(migrateSettings(settings));
     } catch (error) {
       console.warn('Could not restore saved settings', error);
     }

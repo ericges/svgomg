@@ -21,9 +21,10 @@ const readBuildFile = async (relativePath) => {
 };
 
 // The built markup is minified with `removeAttributeQuotes`, so the quotes are
-// optional and the backreference has to allow an empty one.
+// optional and the backreference has to allow an empty one. Selects count as
+// well as inputs: the size-attribute and ID controls are `<select name=…>`.
 const inputNamePattern =
-  /<input[^>]+\bname=(?<quote>["']?)(?<name>[^\s"'>]+)\k<quote>/g;
+  /<(?:input|select)[^>]+\bname=(?<quote>["']?)(?<name>[^\s"'>]+)\k<quote>/g;
 
 // Matches a class name as a whole token. `\b` alone isn't enough: it treats `-`
 // as a boundary, so `menu-item` would hit inside both `menu-item-text` and
@@ -137,6 +138,13 @@ test('settings keys reach the worker under their HTML `name` attributes', async 
     'transformPrecision',
     'multipass',
     'pretty',
+    // `dimensionAttrs` rather than `dimensions` on purpose: the latter is
+    // already a protocol key (above), so it would satisfy this check on its
+    // own and the size-attribute contract would go untested.
+    'dimensionAttrs',
+    'ids',
+    'idPrefix',
+    'currentColor',
   ];
 
   t.assert.deepStrictEqual(
@@ -162,7 +170,9 @@ test('settings keys reach the worker under their HTML `name` attributes', async 
 
 test('every configured SVGO plugin renders a checkbox', async (t) => {
   // Exposing a plugin is meant to be one entry in `src/config.json` and no JS
-  // change, which only holds while the template renders all of them.
+  // change, which only holds while the template renders all of them. They come
+  // out of two loops now — the feature list and the metadata block — so this
+  // also catches a `metadata` flag that no branch picks up.
   const names = inputNames(await readBuildFile('index.html'));
   const config = JSON.parse(
     await fs.readFile(path.join(repoRoot, 'src', 'config.json'), 'utf8'),
@@ -173,6 +183,28 @@ test('every configured SVGO plugin renders a checkbox', async (t) => {
     config.plugins.map((plugin) => plugin.id).filter((id) => !names.has(id)),
     [],
     'configured plugins with no checkbox in the built markup',
+  );
+});
+
+test('plugins the new selects absorbed are no longer checkboxes', async (t) => {
+  // `cleanupIds`, `removeViewBox` and `removeDimensions` are configured from
+  // the "IDs" and "Size attributes" selects now. A checkbox for one of them
+  // would be a second, conflicting control over the same plugin.
+  const names = inputNames(await readBuildFile('index.html'));
+  const config = await readConfig();
+  const absorbed = ['cleanupIds', 'removeViewBox', 'removeDimensions'];
+
+  t.assert.deepStrictEqual(
+    absorbed.filter((id) => names.has(id)),
+    [],
+    'absorbed plugins still rendering their own control',
+  );
+  t.assert.deepStrictEqual(
+    config.plugins
+      .map((plugin) => plugin.id)
+      .filter((id) => absorbed.includes(id)),
+    [],
+    'absorbed plugins still listed in src/config.json',
   );
 });
 
