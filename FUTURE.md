@@ -4,40 +4,11 @@ Ideas that came out of the settings-panel UX work (2026-08) and were deliberatel
 left out of it. Nothing here is committed to — it's a record of the reasoning so
 the next person doesn't have to rediscover it.
 
-The panel now has three categories (View, Output, Optimisation) and four
+The panel now has three categories (View, Output, Optimisation) and five
 non-binary controls: a size-attribute select, an ID mode select with a free-text
-prefix, a staged metadata select with a Custom escape hatch, and a currentColor
-toggle. Both ideas below extend that same pattern.
-
-## A styles select
-
-Five checkboxes describe what is really one pipeline decision:
-`mergeStyles` → `inlineStyles` → `minifyStyles`, plus `convertStyleToAttrs` and
-`removeStyleElement`. Their interactions are not guessable from the labels, and
-some combinations are contradictory (inlining styles and then removing the style
-element does something quite different from either alone).
-
-One select would carry it:
-
-| Option | Plugins |
-|---|---|
-| Keep as they are | none |
-| Minify | `mergeStyles`, `minifyStyles` |
-| Inline into elements | `mergeStyles`, `inlineStyles`, `minifyStyles` |
-| Convert to presentation attributes | the above plus `convertStyleToAttrs` |
-| Remove entirely | `removeStyleElement` |
-
-Notes for whoever builds it:
-
-- Order is load-bearing. `mergeStyles` has to run before `inlineStyles`, which
-  has to run before `convertStyleToAttrs`. The worker builds its plugin array in
-  `config.json` order, so plugins driven by a select need explicit placement —
-  see how `cleanupIds` is slotted in `src/js/svgo-worker/index.js`.
-- `inlineStyles` only moves what it can prove is safe; a stylesheet with media
-  queries or pseudo-classes partly survives. The label should not promise more
-  than that.
-- `removeStyleElement` throws away rules that inlining would have preserved, so
-  it belongs at the end of the scale, not next to "minify".
+prefix, a staged metadata select and a staged styles select — both with a Custom
+escape hatch — and a currentColor toggle. The idea below extends that same
+pattern.
 
 ## Configuration presets
 

@@ -168,11 +168,34 @@ test('settings keys reach the worker under their HTML `name` attributes', async 
   );
 });
 
+test('the page bundle never selects on an attribute the minifier strips', async (t) => {
+  // `removeRedundantAttributes` drops `type=text` — it is the HTML default —
+  // so `input[type=text]` matches nothing in a production build. The scroller's
+  // mousedown exemption used to select on exactly that, which left the ID
+  // prefix field unfocusable by click in every shipped build while working
+  // fine in `npm run dev`. It reads the `type` DOM property instead now.
+  const page = await readBuildFile('js/page.js');
+  const html = await readBuildFile('index.html');
+
+  t.assert.doesNotMatch(
+    page,
+    /input\[type=["']?text/,
+    'the page bundle selects on `input[type=text]`, which the minifier strips',
+  );
+
+  // The premise, so this test explains itself if the minifier config changes.
+  const idPrefix =
+    /<input[^>]+\bname=(?<quote>["']?)idPrefix\k<quote>[^>]*>/.exec(html);
+  t.assert.ok(idPrefix, 'no idPrefix field in the built markup');
+  t.assert.doesNotMatch(idPrefix[0], /\btype=/);
+});
+
 test('every configured SVGO plugin renders a checkbox', async (t) => {
   // Exposing a plugin is meant to be one entry in `src/config.json` and no JS
   // change, which only holds while the template renders all of them. They come
-  // out of two loops now — the feature list and the metadata block — so this
-  // also catches a `metadata` flag that no branch picks up.
+  // out of three loops now — the feature list, the metadata block and the
+  // styles block — so this also catches a `metadata` or `styles` flag that no
+  // branch picks up.
   const names = inputNames(await readBuildFile('index.html'));
   const config = JSON.parse(
     await fs.readFile(path.join(repoRoot, 'src', 'config.json'), 'utf8'),
@@ -206,6 +229,72 @@ test('plugins the new selects absorbed are no longer checkboxes', async (t) => {
     [],
     'absorbed plugins still listed in src/config.json',
   );
+});
+
+test('the settings panel carries the controls the page bundle queries', async (t) => {
+  // `Settings` resolves all of these with `querySelector` inside a
+  // `domReady.then()`, where a null is an uncaught TypeError. The stage blocks
+  // additionally have to carry `plugins`: that class is what puts their
+  // checkboxes in `_pluginInputs`, and so in `getSettings().plugins`.
+  const html = await readBuildFile('index.html');
+  const classNames = [
+    'settings',
+    'settings-scroller',
+    'setting-reset',
+    'plugins',
+    'metadata-select',
+    'metadata-custom',
+    'styles-select',
+    'styles-custom',
+  ];
+
+  t.assert.deepStrictEqual(
+    classNames.filter((name) => !classTokenPattern(name).test(html)),
+    [],
+    'selectors the settings panel queries that are missing from the built markup',
+  );
+
+  // `sortClassName` reorders class attributes, so match the tag and test the
+  // tokens within it rather than the attribute value literally.
+  const stageBlocks = ['metadata-custom', 'styles-custom'].map((name) => {
+    const tag = new RegExp(
+      String.raw`<div[^>]*(?<![\w-])${name}(?![\w-])[^>]*>`,
+    ).exec(html);
+
+    return [name, Boolean(tag) && classTokenPattern('plugins').test(tag[0])];
+  });
+
+  t.assert.deepStrictEqual(
+    stageBlocks.filter(([, isPluginsContainer]) => !isPluginsContainer),
+    [],
+    'stage blocks that are not .plugins containers — their checkboxes would never reach getSettings()',
+  );
+});
+
+test('the plugin checkboxes render in the order the worker runs them', async (t) => {
+  // Document order of `.plugins input` is `_pluginInputs` order is
+  // `Object.entries(settings.plugins)` order is SVGO's execution order.
+  // `test/build-plugins.test.js` pins the resulting array; this pins the
+  // markup it comes from, which is what a moved checkbox would change.
+  const config = await readConfig();
+  const ids = new Set(config.plugins.map((plugin) => plugin.id));
+  const rendered = [...inputNames(await readBuildFile('index.html'))].filter(
+    (name) => ids.has(name),
+  );
+
+  t.assert.deepStrictEqual(rendered.slice(0, 10), [
+    'removeComments',
+    'removeMetadata',
+    'removeEditorsNSData',
+    'removeTitle',
+    'removeDesc',
+    'mergeStyles',
+    'inlineStyles',
+    'minifyStyles',
+    'convertStyleToAttrs',
+    'removeStyleElement',
+  ]);
+  t.assert.strictEqual(rendered.length, config.plugins.length);
 });
 
 test('every configured demo is offered, shipped, and named on the button', async (t) => {

@@ -2,7 +2,7 @@ import { createNanoEvents } from 'nanoevents';
 import { domReady } from '../utils.js';
 import MaterialSlider from './material-slider.js';
 import Ripple from './ripple.js';
-import { deriveMetadataStage, metadataStages } from './metadata-stages.js';
+import { deriveStage, metadataStages, stylesStages } from './setting-stages.js';
 
 export default class Settings {
   constructor() {
@@ -11,7 +11,9 @@ export default class Settings {
 
     domReady.then(() => {
       this.container = document.querySelector('.settings');
-      // Two `.plugins` containers now: the metadata block and the feature list.
+      // Three `.plugins` containers now: the two stage blocks and the feature
+      // list. The stage blocks carry the class on purpose — it's what puts
+      // their checkboxes in `_pluginInputs`, and so in `getSettings().plugins`.
       this._pluginInputs = [
         ...this.container.querySelectorAll('.plugins input'),
       ];
@@ -19,10 +21,23 @@ export default class Settings {
         ...this.container.querySelectorAll('input[name], select[name]'),
       ].filter((element) => !element.closest('.plugins'));
 
-      this._metadataSelect = this.container.querySelector('.metadata-select');
-      this._metadataCustom = this.container.querySelector('.metadata-custom');
-      this._metadataInputs = [
-        ...this._metadataCustom.querySelectorAll('input'),
+      // Both selects are sugar with no `name` of their own, so `getSettings()`
+      // never sees them: each writes the checkboxes in its block and derives
+      // its own value back from them.
+      const stageGroup = (stages, selectClass, customClass) => {
+        const custom = this.container.querySelector(customClass);
+
+        return {
+          stages,
+          select: this.container.querySelector(selectClass),
+          custom,
+          inputs: [...custom.querySelectorAll('input')],
+        };
+      };
+
+      this._stageGroups = [
+        stageGroup(metadataStages, '.metadata-select', '.metadata-custom'),
+        stageGroup(stylesStages, '.styles-select', '.styles-custom'),
       ];
 
       const scroller = this.container.querySelector('.settings-scroller');
@@ -51,25 +66,38 @@ export default class Settings {
       // I think this code will bite me.
       // The exceptions are controls that need the mousedown to focus or open
       // them — preventing it leaves the text field unfocusable.
+      //
+      // Matched on the `type` DOM *property*, not an attribute selector:
+      // `type=text` is the HTML default, so `removeRedundantAttributes` strips
+      // it and `input[type=text]` matches nothing in a production build. The
+      // property still reads 'text'. Checkboxes are deliberately not exempt —
+      // they're visually hidden, so the mousedown lands on their label.
       scroller.addEventListener('mousedown', (event) => {
-        if (
-          event.target.closest('input[type=range], input[type=text], select')
-        ) {
-          return;
-        }
+        const control = event.target.closest('input, select');
 
+        if (control && control.type !== 'checkbox') return;
+
+        // Moving focus is the default action being cancelled here, so without
+        // this focus doesn't just skip the click target — it stays put, and
+        // the last field clicked keeps its ring until another control takes
+        // it. Blurring unconditionally is what the default would have done.
+        document.activeElement?.blur();
         event.preventDefault();
       });
 
-      this._syncMetadataSelect();
+      this._syncStageSelects();
     });
   }
 
   _onChange(event) {
     clearTimeout(this._throttleTimeout);
 
-    if (event.target === this._metadataSelect) {
-      this._applyMetadataStage(event.target.value);
+    const stageGroup = this._stageGroups.find(
+      (candidate) => candidate.select === event.target,
+    );
+
+    if (stageGroup) {
+      this._applyStage(stageGroup, event.target.value);
       this.emitter.emit('change');
       return;
     }
@@ -89,27 +117,30 @@ export default class Settings {
   // reverse: toggling a checkbox by hand leaves the select on 'custom' even if
   // the combination happens to match a stage, so the block doesn't snap shut
   // mid-edit. Deriving is for programmatic restores only.
-  _applyMetadataStage(stage) {
-    const combination = metadataStages[stage];
+  _applyStage(group, stage) {
+    const combination = group.stages[stage];
 
     if (combination) {
-      for (const inputEl of this._metadataInputs) {
+      for (const inputEl of group.inputs) {
         inputEl.checked = combination[inputEl.name];
       }
     }
 
-    this._metadataCustom.hidden = stage !== 'custom';
+    group.custom.hidden = stage !== 'custom';
   }
 
-  _syncMetadataSelect() {
-    const stage = deriveMetadataStage(
-      Object.fromEntries(
-        this._metadataInputs.map((inputEl) => [inputEl.name, inputEl.checked]),
-      ),
-    );
+  _syncStageSelects() {
+    for (const group of this._stageGroups) {
+      const stage = deriveStage(
+        group.stages,
+        Object.fromEntries(
+          group.inputs.map((inputEl) => [inputEl.name, inputEl.checked]),
+        ),
+      );
 
-    this._metadataSelect.value = stage;
-    this._metadataCustom.hidden = stage !== 'custom';
+      group.select.value = stage;
+      group.custom.hidden = stage !== 'custom';
+    }
   }
 
   _onReset() {
@@ -135,8 +166,9 @@ export default class Settings {
       inputEl.checked = inputEl.hasAttribute('checked');
     }
 
-    // The metadata select has no name of its own, so it follows the checkboxes.
-    this._syncMetadataSelect();
+    // The stage selects have no name of their own, so they follow the
+    // checkboxes.
+    this._syncStageSelects();
 
     this.emitter.emit('reset', oldSettings);
     this.emitter.emit('change');
@@ -160,7 +192,7 @@ export default class Settings {
       inputEl.checked = settings.plugins[inputEl.name];
     }
 
-    this._syncMetadataSelect();
+    this._syncStageSelects();
   }
 
   getSettings() {

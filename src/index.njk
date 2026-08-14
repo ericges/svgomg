@@ -170,6 +170,24 @@
                                     {% if plugin.metadata %}{{ pluginToggle(plugin) }}{% endif %}
                                 {% endfor %}
                             </div>
+                            <label class="setting-item-select">
+                                <span class="label-text">Styles</span>
+                                <select class="styles-select">
+                                    <option value="keep">Keep as they are</option>
+                                    <option value="minify">Minify</option>
+                                    <option value="inline" selected>Inline into elements</option>
+                                    <option value="attributes">Convert to presentation attributes</option>
+                                    <option value="remove">Remove entirely</option>
+                                    <option value="custom">Custom…</option>
+                                </select>
+                            </label>
+                            {# The `plugins` class is what keeps these checkboxes in
+                               `_pluginInputs`, and so in `getSettings().plugins`. #}
+                            <div class="styles-custom plugins" hidden>
+                                {% for plugin in plugins %}
+                                    {% if plugin.styles %}{{ pluginToggle(plugin) }}{% endif %}
+                                {% endfor %}
+                            </div>
                             <label class="setting-item-toggle">
                                 <input type="checkbox" name="currentColor">
                                 {% include "partials/material-switch.html" %}
@@ -186,7 +204,7 @@
                             <h2 class="settings-sub-heading">Features</h2>
                             <div class="plugins">
                                 {% for plugin in plugins %}
-                                    {% if not plugin.metadata %}{{ pluginToggle(plugin) }}{% endif %}
+                                    {% if not plugin.metadata and not plugin.styles %}{{ pluginToggle(plugin) }}{% endif %}
                                 {% endfor %}
                             </div>
                         </section>
