@@ -40,6 +40,24 @@ export const defaultPlugins = Object.fromEntries(
   ]),
 );
 
+// The panel's own defaults, as `getSettings()` would hand them over: the same
+// object `buildPlugins()` and `collectNotes()` both take, so a test can drive
+// the real pipeline and the notices it produces from one place.
+export const panelSettings = ({ plugins, ...overrides } = {}) => ({
+  plugins: { ...defaultPlugins, ...plugins },
+  multipass: false,
+  pretty: false,
+  original: false,
+  gzip: true,
+  floatPrecision: '3',
+  transformPrecision: '5',
+  dimensionAttrs: 'original',
+  ids: 'minify',
+  idPrefix: '',
+  currentColor: false,
+  ...overrides,
+});
+
 // Cartesian product of `{ axis: [values] }`, so a settings matrix stays flat
 // instead of nesting one callback per control.
 export const combinations = (axes) => {

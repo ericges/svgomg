@@ -9,50 +9,21 @@
 // reads "on", the output just doesn't change. These rules say so, next to the
 // control they are about.
 //
-// Each rule is derived from the settings and *gated* on what the input really
-// contains (`svgo-worker/document-features.js`, scanned once per file).
-// Without that gate the default settings would put five permanent notices in
-// the panel, including on files where nothing is affected.
+// The evidence comes from `svgo-worker/collision-probes.js`, which records the
+// document as each guarded plugin saw it — one snapshot per subject, taken
+// where that plugin ran. This module holds the other half: **what each
+// plugin's guard makes of that snapshot**, which is not the same question for
+// any two of them. `cleanupIds` needs a `<style>` with rules in it while
+// `removeUselessStrokeAndFill` stops at an empty one; `removeHiddenElems`
+// gives up only part of its job where the others give up all of it. Each rule
+// below states its own reading, and each is pinned against the installed SVGO
+// in `test/collision-probes.test.js`.
+//
+// Every rule is also gated on there having been something to overrule — no
+// point telling anyone their unused CSS rules were kept by a document with no
+// stylesheet.
 
 import { normalizeIdPrefix } from '../../svgo-worker/id-prefix.js';
-
-// Which of the two deoptimising constructs are still in play. Both answers are
-// about pipeline order, and the two are read off different documents (see
-// `MainController._updateDocumentFacts`):
-//
-// - `facts.hasStyleElement` describes the *result*. Every subject here runs
-//   after the Styles block, so a stylesheet still in the output was there for
-//   all of them — and one that isn't was dissolved in time, whether by
-//   "Remove style elements" or by an inlining that happened to succeed. No
-//   settings condition is needed on top: the answer already accounts for them.
-// - `facts.hasScripts` describes the *input*, because `removeScripts` runs
-//   after every subject. On a single pass it is too late to help; only a second
-//   `multipass` pass sees a script-free document. That one is settings-derived,
-//   and `test/setting-notes.test.js` pins the ordering it assumes against
-//   `panelOrder`.
-const liveCauses = (settings, facts) => {
-  const causes = [];
-
-  if (facts.hasStyleElement) causes.push('style');
-
-  if (
-    facts.hasScripts &&
-    !(settings.plugins?.removeScripts && settings.multipass)
-  ) {
-    causes.push('script');
-  }
-
-  return causes;
-};
-
-const listPhrase = (parts) => parts.join(' and ');
-
-const causeText = (causes) =>
-  listPhrase(
-    causes.map((cause) =>
-      cause === 'style' ? 'a <style> element' : 'a script',
-    ),
-  );
 
 // A fix names the control the user has to reach for, in the words the panel
 // uses for it — so these are the panel's strings, not the plugins'.
@@ -65,6 +36,35 @@ const label = {
 };
 
 export const quotedControlLabels = Object.values(label);
+
+// Both of these anticipate the result that is already being computed. The
+// snapshots describe the *last* optimisation, and `Settings` re-renders the
+// moment a control moves — so between picking a fix and the worker coming back
+// with it, the panel would go on advising the option the user just chose. Each
+// condition is a claim about plugin order, pinned in `test/setting-notes.test.js`
+// against `panelOrder`:
+//
+// - `removeStyleElement` runs in the Styles block, ahead of every subject here
+//   except `minifyStyles`, so switching it on clears the stylesheet for all of
+//   them with certainty. (Nothing similar can be said for the other Styles
+//   stages: inlining dissolves the `<style>` only when every rule turned out to
+//   be inlinable, which is exactly why the flag is measured and not derived.)
+// - `removeScripts` runs *after* every subject, so it only helps on a second
+//   `multipass` pass — which is why it takes both.
+const stylesheetSurvives = (settings, present) =>
+  present && !settings.plugins?.removeStyleElement;
+
+const scriptSurvives = (settings, at) =>
+  at.hasScripts && !(settings.plugins?.removeScripts && settings.multipass);
+
+const listPhrase = (parts) => parts.join(' and ');
+
+const causeText = (causes) =>
+  listPhrase(
+    causes.map((cause) =>
+      cause === 'style' ? 'a <style> element' : 'a script',
+    ),
+  );
 
 // The script half asks only for what is still missing: with "Remove scripts"
 // already on, all that's left is the second pass.
@@ -87,17 +87,33 @@ const fixText = (causes, settings) =>
     ),
   )}.`;
 
-// One entry per rule, in panel order; `name` is the `name` attribute of the
+// One entry per rule, in panel order. `name` is the `name` attribute of the
 // control the notice belongs to, which is the panel's existing contract between
-// markup, settings and worker. `note()` returns the text, or an empty string
-// for "nothing to say" — so adding a rule is one entry here plus its test.
+// markup, settings and worker; `subject` is the plugin whose snapshot the rule
+// reads, and a rule with one is skipped entirely when that plugin didn't run.
+// `note()` returns the text, or an empty string for "nothing to say" — so
+// adding a rule is one entry here plus its test.
 export const settingNotes = [
   {
     name: 'ids',
-    note(settings, facts) {
-      if ((settings.ids ?? 'minify') === 'keep') return '';
+    subject: 'cleanupIds',
+    // Guard: a `<style>` *with rules* or a script. Plus one more that has
+    // nothing to do with either — a document whose `<svg>` holds only `<defs>`
+    // is skipped outright.
+    note(settings, at) {
+      if (!at.hasIds) return '';
 
-      const causes = liveCauses(settings, facts);
+      if (at.isDefsOnlyRoot) {
+        return 'IDs are left as they are: SVGO skips this step on a document whose <svg> contains nothing but <defs>.';
+      }
+
+      const causes = [];
+
+      if (stylesheetSurvives(settings, at.hasFilledStyleElement)) {
+        causes.push('style');
+      }
+
+      if (scriptSurvives(settings, at)) causes.push('script');
       if (causes.length === 0) return '';
 
       return `IDs are left as they are: one could be referenced from ${causeText(causes)}, so SVGO backs off. ${fixText(causes, settings)}`;
@@ -117,34 +133,48 @@ export const settingNotes = [
   },
   {
     name: 'minifyStyles',
-    // Its guard is scripts-only, and it runs inside the Styles block — ahead of
-    // `removeStyleElement`, so that control can't help it either way.
-    note(settings, facts) {
-      if (!settings.plugins?.minifyStyles) return '';
+    subject: 'minifyStyles',
+    // Guard: scripts only, and only for the usage-based half — style
+    // attributes and the rules themselves are still minified. It runs inside
+    // the Styles block, *ahead* of `removeStyleElement`, so that control can't
+    // help it either way and its stylesheet is read as measured.
+    note(settings, at) {
+      if (!at.hasFilledStyleElement || !scriptSurvives(settings, at)) return '';
 
-      const causes = liveCauses(settings, facts).filter(
-        (cause) => cause === 'script',
-      );
-
-      if (causes.length === 0) return '';
-
-      return `Unused rules are kept: the SVG has a script that could be using them. ${fixText(causes, settings)}`;
+      return `Unused rules are kept: the SVG has a script that could be using them. ${fixText(['script'], settings)}`;
     },
   },
   {
     name: 'currentColor',
-    note(settings, facts) {
-      if (!settings.currentColor || !facts.hasMask) return '';
+    subject: 'current-color-styles',
+    // Ours, not SVGO's: a rule in any stylesheet can select into a `<mask>`,
+    // and masks read luminance rather than colour.
+    note(settings, at) {
+      if (
+        !settings.currentColor ||
+        !at.hasMask ||
+        !stylesheetSurvives(settings, at.hasFilledStyleElement)
+      ) {
+        return '';
+      }
 
-      return 'Stylesheets are left as they are: the SVG has a <mask>, and a rule could select into it. Presentation attributes are still converted.';
+      return 'Stylesheets are left as they are: the SVG has a <mask>, and a rule could select into it. Colours in attributes are still converted.';
     },
   },
   {
     name: 'removeUselessStrokeAndFill',
-    note(settings, facts) {
-      if (!settings.plugins?.removeUselessStrokeAndFill) return '';
+    subject: 'removeUselessStrokeAndFill',
+    // Guard: *any* `<style>` element — an empty one stops it too — or a
+    // script. The plugin returns nothing at all, so there is no partial
+    // outcome to qualify and nothing to gate on.
+    note(settings, at) {
+      const causes = [];
 
-      const causes = liveCauses(settings, facts);
+      if (stylesheetSurvives(settings, at.hasStyleElement)) {
+        causes.push('style');
+      }
+
+      if (scriptSurvives(settings, at)) causes.push('script');
       if (causes.length === 0) return '';
 
       return `Doing nothing: SVGO switches this off entirely while the SVG has ${causeText(causes)}. ${fixText(causes, settings)}`;
@@ -152,27 +182,41 @@ export const settingNotes = [
   },
   {
     name: 'removeHiddenElems',
-    note(settings, facts) {
-      if (!settings.plugins?.removeHiddenElems) return '';
+    subject: 'removeHiddenElems',
+    // Guard: a `<style>` with rules, or a script — and unlike the others this
+    // one is partial. It only blocks the deferred sweep at the end of the
+    // pass, which is where unreferenced non-rendering definitions and
+    // transparent paths are removed; everything the plugin can decide on the
+    // spot still goes.
+    note(settings, at) {
+      if (!at.hasDeferredHiddenCandidate) return '';
 
-      const causes = liveCauses(settings, facts);
+      const causes = [];
+
+      if (stylesheetSurvives(settings, at.hasFilledStyleElement)) {
+        causes.push('style');
+      }
+
+      if (scriptSurvives(settings, at)) causes.push('script');
       if (causes.length === 0) return '';
 
-      return `Holding back: hidden elements stay while the SVG has ${causeText(causes)}, since something there could reveal them. ${fixText(causes, settings)}`;
+      return `Half of this runs: unused definitions — <mask>, <clipPath>, gradients — and fully transparent paths are kept while the SVG has ${causeText(causes)}, since something there could still refer to them. Zero-sized and hidden elements are removed as usual. ${fixText(causes, settings)}`;
     },
   },
   {
     name: 'moveElemsAttrsToGroup',
-    note(settings, facts) {
-      if (!settings.plugins?.moveElemsAttrsToGroup) return '';
+    subject: 'moveElemsAttrsToGroup',
+    // Guard: *any* `<style>` element, scripts not among its concerns. Only
+    // groups with more than one child are candidates in the first place.
+    note(settings, at) {
+      if (
+        !at.hasMultiChildGroup ||
+        !stylesheetSurvives(settings, at.hasStyleElement)
+      ) {
+        return '';
+      }
 
-      const causes = liveCauses(settings, facts).filter(
-        (cause) => cause === 'style',
-      );
-
-      if (causes.length === 0) return '';
-
-      return `Skipping every group: a selector could rely on the attributes it would move, and the SVG has ${causeText(causes)}. ${fixText(causes, settings)}`;
+      return `Skipping every group: a selector could rely on the attributes it would move, and the SVG has ${causeText(['style'])}. ${fixText(['style'], settings)}`;
     },
   },
 ];
@@ -181,16 +225,25 @@ export const settingNotes = [
  * Every notice that currently holds, in panel order.
  *
  * @param {object} settings A `Settings.getSettings()` object.
- * @param {object} [facts] What the loaded file contains, from the worker's
- * `extract-features` pass. Absent until the first file has been read.
+ * @param {object} [collisions] What each guarded plugin saw when it last ran,
+ * keyed by plugin name (`svgo-worker/collision-probes.js`). Absent until the
+ * first file has been optimised, and while "Show original" is on.
  * @returns {Array<{name: string, text: string}>} One entry per control with something to say.
  */
-export function collectNotes(settings, facts) {
-  // Nothing to warn about with no file, and nothing is being optimised at all
-  // while "Show original" is on.
-  if (!facts || settings.original) return [];
+export function collectNotes(settings, collisions) {
+  // Nothing is being optimised at all while "Show original" is on, so nothing
+  // is being overruled either.
+  if (settings.original) return [];
 
   return settingNotes
-    .map((rule) => ({ name: rule.name, text: rule.note(settings, facts) }))
+    .map((rule) => {
+      // A rule whose plugin didn't run has nothing to explain — including
+      // before the first result, when no plugin has run at all.
+      const at = rule.subject ? collisions?.[rule.subject] : undefined;
+
+      if (rule.subject && !at) return { name: rule.name, text: '' };
+
+      return { name: rule.name, text: rule.note(settings, at) };
+    })
     .filter((note) => note.text !== '');
 }

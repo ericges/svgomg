@@ -1,33 +1,45 @@
 import test from 'node:test';
 import { collectNotes, settingNotes } from '../src/js/page/ui/setting-notes.js';
-import { config, defaultPlugins, panelOrder } from './panel-order.js';
+import { config, panelOrder, panelSettings } from './panel-order.js';
 
-// The panel's own defaults, as `getSettings()` would hand them over.
-const settingsFor = ({ plugins, ...overrides } = {}) => ({
-  plugins: { ...defaultPlugins, ...plugins },
-  multipass: false,
-  pretty: false,
-  original: false,
-  gzip: true,
-  floatPrecision: '3',
-  transformPrecision: '5',
-  dimensionAttrs: 'original',
-  ids: 'minify',
-  idPrefix: '',
-  currentColor: false,
-  ...overrides,
-});
+// The rules in isolation: hand-written snapshots stand in for the probes, so
+// this file is about what each guard *makes of* a document. That the snapshots
+// themselves are true — and that each rule's reading matches the installed
+// SVGO — is `test/collision-probes.test.js`.
+const nothing = {
+  hasStyleElement: false,
+  hasFilledStyleElement: false,
+  hasScripts: false,
+  hasMask: false,
+  hasIds: true,
+  isDefsOnlyRoot: false,
+  hasDeferredHiddenCandidate: true,
+  hasMultiChildGroup: true,
+};
 
-const NOTHING = { hasStyleElement: false, hasScripts: false, hasMask: false };
-const STYLE = { ...NOTHING, hasStyleElement: true };
-const SCRIPT = { ...NOTHING, hasScripts: true };
-const MASK = { ...NOTHING, hasMask: true };
+const EMPTY_STYLE = { ...nothing, hasStyleElement: true };
+const STYLE = {
+  ...nothing,
+  hasStyleElement: true,
+  hasFilledStyleElement: true,
+};
+const SCRIPT = { ...nothing, hasScripts: true };
+const MASK = { ...STYLE, hasMask: true };
 
-const names = (settings, facts) =>
-  collectNotes(settings, facts).map((note) => note.name);
+// Every subject saw the same document — the usual case, since the constructs
+// these guards trip over are rarely removed mid-pipeline.
+const everywhere = (snapshot) =>
+  Object.fromEntries(
+    settingNotes
+      .filter((rule) => rule.subject)
+      .map((rule) => [rule.subject, snapshot]),
+  );
 
-const textFor = (settings, facts, name) =>
-  collectNotes(settings, facts).find((note) => note.name === name)?.text;
+const names = (settings, collisions) =>
+  collectNotes(settings, collisions).map((note) => note.name);
+
+const textFor = (settings, collisions, name) =>
+  collectNotes(settings, collisions).find((note) => note.name === name)?.text;
 
 test('every rule points at a control the panel actually has', (t) => {
   // The `name` is how `Settings._renderNotes()` finds the row to sit under, so
@@ -45,141 +57,210 @@ test('every rule points at a control the panel actually has', (t) => {
   );
 });
 
-test('a file with none of the three constructs says nothing', (t) => {
-  t.assert.deepStrictEqual(names(settingsFor(), NOTHING), []);
+test('a document with none of the three constructs says nothing', (t) => {
+  t.assert.deepStrictEqual(names(panelSettings(), everywhere(nothing)), []);
 });
 
-test('nothing is said before a file has been read', (t) => {
-  // The empty app: no facts, so no claims about a document there isn't one of.
-  t.assert.deepStrictEqual(names(settingsFor(), undefined), []);
+test('nothing is said before the first file has been optimised', (t) => {
+  // The empty app: no plugin has run, so no claims about what one of them saw.
+  t.assert.deepStrictEqual(names(panelSettings(), undefined), []);
+  // Nor about a plugin that isn't in the pipeline at all — "Keep as they are"
+  // leaves `cleanupIds` out, so it gets no probe and no notice.
+  t.assert.strictEqual(
+    names(panelSettings({ ids: 'keep' }), {}).includes('ids'),
+    false,
+  );
 });
 
 test('“Show original” silences everything', (t) => {
   // Nothing is being optimised, so no optimisation is being overruled.
   t.assert.deepStrictEqual(
-    names(settingsFor({ original: true, currentColor: true }), {
-      hasStyleElement: true,
-      hasScripts: true,
-      hasMask: true,
-    }),
+    names(
+      panelSettings({ original: true, currentColor: true }),
+      everywhere(MASK),
+    ),
     [],
   );
 });
 
-test('a stylesheet that survived the pipeline deoptimises four controls', (t) => {
-  t.assert.deepStrictEqual(names(settingsFor(), STYLE), [
+test('a stylesheet with rules deoptimises four controls', (t) => {
+  t.assert.deepStrictEqual(names(panelSettings(), everywhere(STYLE)), [
     'ids',
     'removeUselessStrokeAndFill',
     'removeHiddenElems',
     'moveElemsAttrsToGroup',
   ]);
+});
 
-  // The flag is read off the *result* (`_updateDocumentFacts`), so no settings
-  // condition rides on top of it. Whatever dissolved the stylesheet arrives
-  // here as the fact being false — including the default Styles stage, which
-  // clears it whenever every rule turned out to be inlinable and leaves it
-  // whenever one didn't.
-  t.assert.deepStrictEqual(names(settingsFor(), NOTHING), []);
-  t.assert.deepStrictEqual(
-    names(settingsFor({ plugins: { removeStyleElement: true } }), NOTHING),
-    [],
-  );
+test('an empty <style> only stops the two plugins it really stops', (t) => {
+  // `cleanupIds` and `removeHiddenElems` want a stylesheet with children in
+  // it; the other two bail on the element itself. Reporting all four was this
+  // feature's first bug: SVGO minified the IDs while the panel said it hadn't.
+  t.assert.deepStrictEqual(names(panelSettings(), everywhere(EMPTY_STYLE)), [
+    'removeUselessStrokeAndFill',
+    'moveElemsAttrsToGroup',
+  ]);
 });
 
 test('a script deoptimises four controls, one of them a different four', (t) => {
   // `moveElemsAttrsToGroup` guards on stylesheets only; `minifyStyles` on
   // scripts only. So neither document produces the same list.
-  t.assert.deepStrictEqual(names(settingsFor(), SCRIPT), [
+  t.assert.deepStrictEqual(
+    names(
+      panelSettings(),
+      everywhere({ ...SCRIPT, hasFilledStyleElement: true }),
+    ),
+    ['ids', 'minifyStyles', 'removeUselessStrokeAndFill', 'removeHiddenElems'],
+  );
+
+  // Without a stylesheet there are no rules for `minifyStyles` to have kept.
+  t.assert.deepStrictEqual(names(panelSettings(), everywhere(SCRIPT)), [
     'ids',
-    'minifyStyles',
     'removeUselessStrokeAndFill',
     'removeHiddenElems',
   ]);
 });
 
+test('a subject with nothing to work on is not reported', (t) => {
+  const barren = {
+    ...STYLE,
+    hasIds: false,
+    hasDeferredHiddenCandidate: false,
+    hasMultiChildGroup: false,
+  };
+
+  // `removeUselessStrokeAndFill` is the exception on purpose: it returns
+  // nothing at all, so "doing nothing" is true of the whole document.
+  t.assert.deepStrictEqual(names(panelSettings(), everywhere(barren)), [
+    'removeUselessStrokeAndFill',
+  ]);
+});
+
+test('a defs-only document is reported whatever else is going on', (t) => {
+  const defsOnly = { ...nothing, isDefsOnlyRoot: true };
+
+  t.assert.match(
+    textFor(panelSettings(), everywhere(defsOnly), 'ids'),
+    /nothing but <defs>/,
+  );
+});
+
+test('the notices anticipate a fix the result hasn’t caught up with yet', (t) => {
+  // The snapshots describe the *last* optimisation, and the panel re-renders
+  // the moment a control moves. Without this the notices would go on advising
+  // the option the user just picked until the worker came back.
+  t.assert.deepStrictEqual(
+    names(
+      panelSettings({ plugins: { removeStyleElement: true } }),
+      everywhere(STYLE),
+    ),
+    [],
+  );
+
+  // `minifyStyles` is the exception: it runs *before* `removeStyleElement`, so
+  // that choice never reaches it.
+  t.assert.deepStrictEqual(
+    names(
+      panelSettings({
+        plugins: { removeStyleElement: true },
+      }),
+      everywhere({ ...STYLE, hasScripts: true }),
+    ),
+    ['ids', 'minifyStyles', 'removeUselessStrokeAndFill', 'removeHiddenElems'],
+  );
+});
+
 test('clearing scripts only helps on a second pass', (t) => {
-  const withRemoval = settingsFor({ plugins: { removeScripts: true } });
+  const withRemoval = panelSettings({ plugins: { removeScripts: true } });
 
   // `removeScripts` runs after every subject, so a single pass still sees the
   // script — the notice stands, and asks for the pass that would clear it.
-  t.assert.deepStrictEqual(names(withRemoval, SCRIPT), [
+  t.assert.deepStrictEqual(names(withRemoval, everywhere(SCRIPT)), [
     'ids',
-    'minifyStyles',
     'removeUselessStrokeAndFill',
     'removeHiddenElems',
   ]);
   t.assert.match(
-    textFor(withRemoval, SCRIPT, 'removeUselessStrokeAndFill'),
+    textFor(withRemoval, everywhere(SCRIPT), 'removeUselessStrokeAndFill'),
     /Multipass/,
   );
   t.assert.doesNotMatch(
-    textFor(withRemoval, SCRIPT, 'removeUselessStrokeAndFill'),
+    textFor(withRemoval, everywhere(SCRIPT), 'removeUselessStrokeAndFill'),
     /Remove scripts/,
   );
 
   t.assert.deepStrictEqual(
-    names({ ...withRemoval, multipass: true }, SCRIPT),
+    names({ ...withRemoval, multipass: true }, everywhere(SCRIPT)),
     [],
   );
   // Multipass alone changes nothing: every pass still finds the script.
   t.assert.strictEqual(
-    names(settingsFor({ multipass: true }), SCRIPT).length,
-    4,
+    names(panelSettings({ multipass: true }), everywhere(SCRIPT)).length,
+    3,
   );
 });
 
 test('both constructs at once are named in one notice', (t) => {
-  const facts = { ...NOTHING, hasStyleElement: true, hasScripts: true };
-  const text = textFor(settingsFor(), facts, 'removeUselessStrokeAndFill');
+  const facts = everywhere({ ...STYLE, hasScripts: true });
+  const text = textFor(panelSettings(), facts, 'removeUselessStrokeAndFill');
 
   t.assert.match(text, /<style> element and a script/);
   t.assert.match(text, /Remove style elements.*Remove scripts/s);
 });
 
 test('currentColor is only mentioned when a mask makes it hold back', (t) => {
-  t.assert.deepStrictEqual(names(settingsFor({ currentColor: true }), MASK), [
-    'currentColor',
-  ]);
-  // The toggle off, or no mask: the conservative branch never runs.
-  t.assert.deepStrictEqual(names(settingsFor(), MASK), []);
-  t.assert.deepStrictEqual(
-    names(settingsFor({ currentColor: true }), NOTHING),
-    [],
-  );
-});
-
-test('the IDs select is quiet on “Keep as they are”', (t) => {
-  // Nothing to deoptimise: `cleanupIds` isn't in the pipeline at all.
   t.assert.strictEqual(
-    names(settingsFor({ ids: 'keep' }), STYLE).includes('ids'),
+    names(panelSettings({ currentColor: true }), everywhere(MASK)).includes(
+      'currentColor',
+    ),
+    true,
+  );
+  // The toggle off, or no mask: the conservative branch never runs.
+  t.assert.strictEqual(
+    names(panelSettings(), everywhere(MASK)).includes('currentColor'),
     false,
   );
   t.assert.strictEqual(
-    names(settingsFor({ ids: 'removeUnused' }), STYLE).includes('ids'),
-    true,
+    names(panelSettings({ currentColor: true }), everywhere(STYLE)).includes(
+      'currentColor',
+    ),
+    false,
+  );
+  // A mask but no stylesheet: nothing was held back.
+  t.assert.strictEqual(
+    names(
+      panelSettings({ currentColor: true }),
+      everywhere({ ...nothing, hasMask: true }),
+    ).includes('currentColor'),
+    false,
   );
 });
 
 test('a rejected ID prefix is explained, whatever the file contains', (t) => {
-  // The one rule that needs no document facts — the prefix is either usable by
-  // `prefixIds` or it is dropped.
-  t.assert.deepStrictEqual(names(settingsFor({ idPrefix: '1abc' }), NOTHING), [
-    'idPrefix',
-  ]);
-  t.assert.deepStrictEqual(names(settingsFor({ idPrefix: 'a b' }), NOTHING), [
-    'idPrefix',
-  ]);
+  // The one rule that reads no snapshot — the prefix is either usable by
+  // `prefixIds` or it is dropped, so it holds before the first result too.
   t.assert.deepStrictEqual(
-    names(settingsFor({ idPrefix: 'svgomg_' }), NOTHING),
+    names(panelSettings({ idPrefix: '1abc' }), undefined),
+    ['idPrefix'],
+  );
+  t.assert.deepStrictEqual(
+    names(panelSettings({ idPrefix: 'a b' }), undefined),
+    ['idPrefix'],
+  );
+  t.assert.deepStrictEqual(
+    names(panelSettings({ idPrefix: 'svgomg_' }), undefined),
     [],
   );
-  t.assert.deepStrictEqual(names(settingsFor({ idPrefix: '  ' }), NOTHING), []);
+  t.assert.deepStrictEqual(
+    names(panelSettings({ idPrefix: '  ' }), undefined),
+    [],
+  );
 });
 
 test('the order the messages assume is the order the panel produces', (t) => {
-  // Both neutralising conditions in `liveCauses()` are claims about pipeline
-  // order, and the pipeline is the panel's DOM order. Moving a checkbox between
-  // blocks would leave the messages advising a fix that no longer works.
+  // Both anticipating conditions are claims about pipeline order, and the
+  // pipeline is the panel's DOM order. Moving a checkbox between blocks would
+  // leave the messages advising a fix that no longer works.
   const at = (id) => panelOrder.indexOf(id);
   const subjects = [
     // `cleanupIds` has no checkbox; `buildPlugins` inserts it at this entry.

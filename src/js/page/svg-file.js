@@ -7,18 +7,18 @@ export default class SvgFile {
    * @param {string} text The markup.
    * @param {number} width Pixel width, for sizing the preview.
    * @param {number} height Pixel height.
-   * @param {object} [features] What this document contains, for the settings
-   * panel's collision notices. Both the input and every result carry their own,
-   * and the panel reads different flags off each — see `setting-notes.js`.
+   * @param {object} [collisions] What each guarded plugin saw when it ran, for
+   * the settings panel's collision notices — see `svgo-worker/collision-probes.js`.
+   * Only a result has one: the input has been through no plugins.
    */
-  constructor(text, width, height, features) {
+  constructor(text, width, height, collisions) {
     this.text = text;
     this._compressedSize = null;
     this._rawSize = null;
     this._url = null;
     this.width = width;
     this.height = height;
-    this.features = features;
+    this.collisions = collisions;
   }
 
   async size({ compress }) {

@@ -10,10 +10,10 @@ export default class Settings {
   constructor() {
     this.emitter = createNanoEvents();
     this._throttleTimeout = null;
-    // What the loaded file contains, for the collision notices. Undefined until
-    // `MainController` has a file to describe, which is also what keeps the
-    // notices off an app that has nothing open.
-    this._documentFacts = undefined;
+    // What each guarded plugin saw when it last ran, for the collision notices.
+    // Undefined until `MainController` has an optimised file to describe, which
+    // is also what keeps the notices off an app that has nothing open.
+    this._collisions = undefined;
     this._renderedNotes = '';
 
     domReady.then(() => {
@@ -98,13 +98,14 @@ export default class Settings {
   }
 
   /**
-   * What the input file contains, from the worker's `extract-features` pass.
-   * The collision notices are gated on it — see `setting-notes.js`.
+   * The document each guarded plugin saw, from the probes the worker ran
+   * alongside the optimisation. The collision notices are gated on it — see
+   * `setting-notes.js`.
    *
-   * @param {object} facts `{ hasStyleElement, hasScripts, hasMask }`.
+   * @param {object} [collisions] Keyed by plugin name; null between files.
    */
-  setDocumentFacts(facts) {
-    this._documentFacts = facts;
+  setCollisions(collisions) {
+    this._collisions = collisions;
     this._renderNotes();
   }
 
@@ -158,25 +159,25 @@ export default class Settings {
    * A notice sits *after* the control's `<label>`, never inside it — the label
    * is the click target for its own checkbox. One exception: a checkbox in a
    * collapsed stage block has no visible row of its own, so its notice goes to
-   * the select that stands in for the block.
+   * the select that stands in for the block — and is described by that select
+   * too, since the checkbox it belongs to is `hidden` and reaches nobody.
    *
    * @param {Element} control The input or select the notice is about.
-   * @returns {Element} The element to insert the notice after.
+   * @returns {{host: Element, describedBy: Element}} Where the notice goes, and the control it explains to assistive technology.
    */
-  _noteHost(control) {
+  _noteTargets(control) {
     const group = this._stageGroups.find((candidate) =>
       candidate.custom.contains(control),
     );
+    const visible = group?.custom.hidden ? group.select : control;
 
-    return group?.custom.hidden
-      ? group.select.closest('label')
-      : control.closest('label');
+    return { host: visible.closest('label'), describedBy: visible };
   }
 
   _renderNotes() {
     if (!this.container) return;
 
-    const notes = collectNotes(this.getSettings(), this._documentFacts);
+    const notes = collectNotes(this.getSettings(), this._collisions);
     // Re-rendering identical notes on every keystroke would tear them off the
     // panel and put them straight back.
     const rendered = JSON.stringify(notes);
@@ -208,8 +209,18 @@ export default class Settings {
 
       // textContent, not markup: the messages name constructs like `<style>`.
       note.querySelector('span').textContent = text;
-      control.setAttribute('aria-describedby', id);
-      this._noteHost(control).after(note);
+
+      const { host, describedBy } = this._noteTargets(control);
+      // Appended, not assigned: one collapsed stage block can host the notices
+      // of more than one of its checkboxes, and its select then describes them
+      // all.
+      const described = describedBy.getAttribute('aria-describedby');
+
+      describedBy.setAttribute(
+        'aria-describedby',
+        described ? `${described} ${id}` : id,
+      );
+      host.after(note);
     }
   }
 
