@@ -127,8 +127,10 @@ const hasScripts = (node) => {
     // eslint-disable-next-line no-script-url
     const scriptScheme = 'javascript:';
     // CodeQL reads the line below as an incomplete sanitiser and asks for
-    // `data:` and `vbscript:` too. Both suppressions are deliberate, and
-    // widening the test would be a bug rather than a fix:
+    // `data:` and `vbscript:` too (`js/incomplete-url-scheme-check`). The
+    // alert is dismissed as a false positive rather than suppressed here —
+    // in-source markers turned out not to be honoured — and widening the test
+    // would be a bug rather than a fix:
     //
     // - this decides the wording of a settings-panel notice and nothing else
     //   (`scriptSurvives()` in `page/ui/setting-notes.js`). Nothing is blocked,
@@ -142,8 +144,6 @@ const hasScripts = (node) => {
       ([name, value]) =>
         (name === 'href' || name.endsWith(':href')) &&
         value !== undefined &&
-        // lgtm[js/incomplete-url-scheme-check]
-        // codeql[js/incomplete-url-scheme-check]
         String(value).trimStart().toLowerCase().startsWith(scriptScheme),
     );
 
