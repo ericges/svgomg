@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<!-- An ordinary comment: `removeComments` deletes this one. -->
+<!--! A banner comment: `removeComments` keeps this one, by default. -->
+<!--
+  SVGOMG kitchen sink.
+
+  Every construct in here exists to give one exposed optimisation something to
+  do, so that toggling any single control in the settings panel visibly changes
+  the output. `test/kitchen-sink.test.js` runs each plugin over this file on its
+  own and fails if one of them turns out to be a no-op, so please don't trim a
+  tile without checking what it was covering.
+
+  One deliberate limitation: `current-color-styles.js` refuses to rewrite any
+  stylesheet while a mask exists anywhere in the document, because a rule could
+  select into the mask. This file has to have a mask, so "Use currentColor"
+  demonstrates that conservative branch — attribute colours outside the mask
+  convert, stylesheets are left wholesale, and the mask keeps its literal
+  #000/#fff. The converting branch is covered in test/build-plugins.test.js.
+-->
+<svg
+    version="1.1"
+    zoomAndPan="magnify"
+    xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+    xmlns:ns1="http://example.com/never-referenced"
+    baseProfile="full"
+    width="480px"
+    height="360px"
+    viewBox="0 0 480.0000 360.0000"
+    bogusattr="removeUnknownsAndDefaults eats this"
+>
+    <title>SVGOMG kitchen sink</title>
+    <!--
+      `removeDesc` is conservative by default: it only drops empty descriptions
+      and editor boilerplate ("Created with …"), because a hand-written one is
+      an accessibility feature. So this one goes and the one inside <symbol>
+      stays — which is what the checkbox really does.
+    -->
+    <desc>Created with a text editor. A test card carrying every SVG construct the exposed optimisations act on.</desc>
+
+    <metadata>
+        <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
+            <rdf:Description>
+                <dc:title>SVGOMG kitchen sink</dc:title>
+                <dc:rights>Public domain.</dc:rights>
+            </rdf:Description>
+        </rdf:RDF>
+    </metadata>
+
+    <sodipodi:namedview id="ks-namedview" inkscape:zoom="1.4" inkscape:cx="240" inkscape:cy="180" showgrid="false"/>
+
+    <!--
+      Two stylesheets, so `mergeStyles` has something to merge. The first can be
+      inlined away (its class matches exactly one element, which is what
+      `inlineStyles` needs by default); the second cannot, so a stylesheet
+      survives for `minifyStyles` to compress and `removeStyleElement` to drop.
+    -->
+    <style type="text/css">
+        /* Matched exactly once, so `inlineStyles` folds it into the element. */
+        .ks-solo {
+            fill:   #AABBCC;
+            stroke: #000000;
+        }
+    </style>
+    <style>
+        @media (min-width: 1px) {
+            .ks-media { fill: #ff6600; }
+        }
+        .ks-hover:hover { fill: #00aaff; }
+    </style>
+
+    <!-- Deliberately unsorted: `sortDefsChildren` reorders all of this. -->
+    <defs>
+        <path id="ks-curve" d="M168 262 Q204 240 250 262"/>
+
+        <marker id="ks-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+            <path d="M0 0 10 5 0 10z" fill="#417505"/>
+        </marker>
+
+        <linearGradient id="ks-grad-two" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#4a90d9" stop-opacity="1"/>
+            <stop offset="1" stop-color="#bd10e0"/>
+        </linearGradient>
+
+        <!-- No id, so nothing can reference it: `removeUselessDefs` drops it. -->
+        <rect width="6" height="6" fill="#000000"/>
+
+        <symbol id="ks-symbol" viewBox="0 0 10 10">
+            <desc>A purple triangle, drawn through &lt;use&gt;. Hand-written, so it survives.</desc>
+            <path d="M5 0 10 10 0 10z" fill="#bd10e0"/>
+        </symbol>
+
+        <filter id="ks-blur" x="-25%" y="-25%" width="150%" height="150%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.2" result="ks-b"/>
+            <feOffset dx="1" dy="1" in="ks-b" result="ks-o"/>
+            <feColorMatrix type="saturate" values="0.4" in="ks-o" result="ks-c"/>
+            <feBlend mode="normal" in="SourceGraphic" in2="ks-c" result="ks-n"/>
+            <feMerge>
+                <feMergeNode in="ks-c"/>
+                <feMergeNode in="ks-n"/>
+            </feMerge>
+        </filter>
+
+        <!-- One stop: `convertOneStopGradients` folds it into a plain fill. -->
+        <linearGradient id="ks-grad-one">
+            <stop offset="0" stop-color="#5ea9ff"/>
+        </linearGradient>
+
+        <clipPath id="ks-clip">
+            <circle cx="358" cy="221" r="9"/>
+        </clipPath>
+
+        <pattern id="ks-pattern" width="6" height="6" patternUnits="userSpaceOnUse">
+            <rect width="3" height="3" fill="#50e3c2"/>
+            <rect x="3" y="3" width="3" height="3" fill="#50e3c2"/>
+        </pattern>
+
+        <!-- currentColor deliberately stops at the edge of a mask. -->
+        <mask id="ks-mask">
+            <rect x="372" y="211" width="20" height="20" fill="#ffffff"/>
+            <circle cx="382" cy="221" r="5" fill="#000000"/>
+        </mask>
+
+        <!-- Inherits its stops through xlink, for `removeXlink`. -->
+        <radialGradient id="ks-grad-radial" xlink:href="#ks-grad-two" cx="0.5" cy="0.5" r="0.5"/>
+
+        <path id="ks-motion" d="M16 344 H140"/>
+
+        <rect id="ks-reused-shape" width="14" height="14" fill="#417505"/>
+
+        <!-- Referenced by nothing, so the three "IDs" modes all differ here. -->
+        <rect id="ks-orphan" width="4" height="4" fill="#d0021b"/>
+    </defs>
+
+    <rect width="480" height="360" fill="#fdfdfd"/>
+    <path fill="none" stroke="#dde3ea" d="M0 28H480M0 111H480M0 194H480M160 28V360M320 28V360"/>
+
+    <text x="12" y="19" font-family="sans-serif" font-size="11" font-weight="bold" fill="#1b2733">SVGOMG kitchen sink — every exposed optimisation</text>
+
+    <!-- Entirely outside the viewBox: `removeOffCanvasPaths` deletes it. -->
+    <path fill="#000000" d="M-240-240h40v40h-40z"/>
+
+    <g font-family="sans-serif" font-size="8" fill="#55606d">
+        <text x="8" y="42">shapes</text>
+        <text x="168" y="42">paths</text>
+        <text x="328" y="42">groups</text>
+        <text x="8" y="125">colour</text>
+        <text x="168" y="125">numbers</text>
+        <text x="328" y="125">stroke &amp; fill</text>
+        <text x="8" y="208">hidden</text>
+        <text x="168" y="208">text</text>
+        <text x="328" y="208">references</text>
+        <text x="8" y="291">animation</text>
+        <text x="168" y="291">containers</text>
+        <text x="328" y="291">scripts</text>
+    </g>
+
+    <!-- shapes: everything `convertShapeToPath` and friends rewrite -->
+    <rect x="8" y="52" width="20" height="18" fill="#4a90d9"/>
+    <circle cx="42" cy="61" r="9" fill="#7ed321"/>
+    <ellipse cx="66" cy="61" rx="8.0000" ry="8.0000" fill="#f5a623"/>
+    <line x1="82" y1="70" x2="98" y2="52" stroke="#d0021b" stroke-width="2"/>
+    <polyline points="104.00000,70.00000 112.50000,52.25000 121.00000,70.00000" fill="none" stroke="#9013fe" stroke-width="2"/>
+    <polygon points="128,70 138,52 148,70" fill="#50e3c2"/>
+
+    <!-- paths: whitespace, redundant commands, duplicates, an empty d -->
+    <path fill="#4a90d9" d="M 168 52
+        L 188 52
+        L 188 70
+        L 168 70
+        Z"/>
+    <path fill="#7ed321" d="M 194 52 L 214 52 L 214 70 L 194 70 L 194 52 C 194 52 194 61 194 70 Z"/>
+    <path fill="#f5a623" d="M220 52h9v18h-9z"/>
+    <path fill="#f5a623" d="M232 52h9v18h-9z"/>
+    <g transform="translate(246 52)"><path fill="#bd10e0" d="M0 0h12v18H0z"/></g>
+    <g transform="translate(262 52)"><path fill="#bd10e0" d="M0 0h12v18H0z"/></g>
+    <path d=""/>
+
+    <!-- groups -->
+    <g><g><g><rect x="328" y="52" width="18" height="18" fill="#4a90d9"/></g></g></g>
+    <g>
+        <rect fill="#50e3c2" x="350" y="52" width="14" height="18"/>
+        <rect fill="#50e3c2" x="368" y="52" width="14" height="18"/>
+        <rect fill="#50e3c2" x="386" y="52" width="14" height="18"/>
+    </g>
+    <g transform="translate(404 52) translate(0 0) scale(1.0000)">
+        <path fill="#f8e71c" d="M0 0h14v18H0z"/>
+        <path fill="#f8e71c" d="M18 0h14v18H18z"/>
+    </g>
+    <!-- `stop-color` means nothing on a <g>: `removeNonInheritableGroupAttrs` -->
+    <g stop-color="#ff0000">
+        <rect x="440" y="52" width="14" height="18" fill="#9b9b9b"/>
+    </g>
+    <g></g>
+    <rect id="" fill="" x="458" y="52" width="14" height="18"/>
+
+    <!-- colour -->
+    <rect x="8" y="135" width="20" height="20" fill="#FF0000"/>
+    <rect x="32" y="135" width="20" height="20" fill="rgb(0, 128, 255)"/>
+    <rect x="56" y="135" width="20" height="20" class="ks-solo"/>
+    <rect x="80" y="135" width="20" height="20" style="fill:#003366;stroke:#000000;stroke-width:1"/>
+    <rect x="104" y="135" width="20" height="20" class="ks-media" fill="#888888"/>
+    <rect x="128" y="135" width="20" height="20" class="ks-hover" fill="#cccccc"/>
+
+    <!-- numbers -->
+    <rect x="168.00000" y="135.5000" width="+40" height="20.250000" fill="#9013fe" fill-opacity="0.50"/>
+    <rect x="216" y="135" width="24.000" height="20.000" fill="#4a90d9" stroke-width="1.5000" stroke="#1b2733"/>
+    <text x="248" y="150" font-family="sans-serif" font-size="8" fill="#55606d">10.00000</text>
+
+    <!-- stroke &amp; fill -->
+    <rect x="328" y="135" width="24" height="20" fill="#f5a623" stroke="none" stroke-width="4" stroke-dasharray="3 3" stroke-linejoin="round"/>
+    <circle cx="370" cy="145" r="10" fill="none" fill-rule="evenodd" fill-opacity="0.6" stroke="#417505" stroke-width="2"/>
+    <rect x="392" y="135" width="24" height="20" fill="#7ed321" fill-opacity="1" clip-rule="nonzero"/>
+
+    <!-- hidden: only the last rect is meant to be visible -->
+    <rect x="8" y="218" width="18" height="18" fill="#4a90d9" display="none"/>
+    <rect x="30" y="218" width="18" height="18" fill="#7ed321" opacity="0"/>
+    <rect x="52" y="218" width="0" height="18" fill="#f5a623"/>
+    <circle cx="80" cy="227" r="0" fill="#d0021b"/>
+    <rect x="96" y="218" width="18" height="18" fill="#9013fe" visibility="hidden"/>
+    <rect x="118" y="218" width="18" height="18" fill="#c8ced6"/>
+
+    <!-- text -->
+    <text x="168" y="228" font-family="sans-serif" font-size="9" fill="#1b2733">Hello <tspan fill="#d0021b" font-weight="bold">tspan</tspan></text>
+    <text font-family="sans-serif" font-size="8" fill="#55606d"><textPath xlink:href="#ks-curve">textPath along a curve</textPath></text>
+    <text></text>
+    <text x="168" y="240"><tspan></tspan></text>
+
+    <!-- references -->
+    <use xlink:href="#ks-symbol" x="328" y="212" width="18" height="18"/>
+    <rect x="348" y="211" width="20" height="20" fill="url(#ks-grad-two)" clip-path="url(#ks-clip)"/>
+    <rect x="372" y="211" width="20" height="20" fill="url(#ks-pattern)" mask="url(#ks-mask)"/>
+    <circle cx="404" cy="221" r="9" fill="url(#ks-grad-one)" filter="url(#ks-blur)"/>
+    <circle cx="428" cy="221" r="9" fill="url(#ks-grad-radial)"/>
+    <image xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAgAAAAIAQMAAAD+wSzIAAAABlBMVEX///+/v7+jQ3Y5AAAADklEQVQI12P4AIX8EAgALgAD/aNpbtEAAAAASUVORK5CYII=" x="446" y="212" width="18" height="18"/>
+    <path d="M328 252 H360" fill="none" stroke="#417505" stroke-width="2" marker-end="url(#ks-arrow)"/>
+    <use href="#ks-reused-shape" x="372" y="245"/>
+
+    <!-- animation -->
+    <rect x="8" y="300" width="18" height="18" fill="#4a90d9">
+        <animate attributeName="opacity" values="1;0.3;1" dur="4s" repeatCount="indefinite"/>
+    </rect>
+    <g transform="translate(48 309)">
+        <rect x="-9" y="-9" width="18" height="18" fill="#f5a623">
+            <animateTransform attributeName="transform" type="rotate" values="0;360" dur="12s" repeatCount="indefinite"/>
+        </rect>
+    </g>
+    <rect x="70" y="300" width="18" height="18" fill="#9013fe">
+        <set attributeName="fill" to="#d0021b" begin="3s" dur="2s"/>
+    </rect>
+    <circle r="4" fill="#7ed321">
+        <animateMotion dur="8s" repeatCount="indefinite">
+            <mpath xlink:href="#ks-motion"/>
+        </animateMotion>
+    </circle>
+
+    <!-- containers -->
+    <a xlink:href="https://github.com/svg/svgo" target="_blank">
+        <rect x="168" y="300" width="30" height="14" fill="#4a90d9"/>
+        <text x="172" y="310" font-family="sans-serif" font-size="7" fill="#ffffff">link</text>
+    </a>
+    <switch>
+        <text systemLanguage="zz" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Nonexistent" x="204" y="310" font-family="sans-serif" font-size="7">unreachable</text>
+        <text x="204" y="310" font-family="sans-serif" font-size="7" fill="#55606d">switch</text>
+    </switch>
+    <svg x="240" y="298" width="64" height="44" viewBox="0 0 64 44" enable-background="new 0 0 64 44">
+        <circle cx="12" cy="12" r="9" fill="#bd10e0"/>
+        <rect x="26" y="4" width="16" height="16" fill="#50e3c2"/>
+    </svg>
+    <foreignObject x="168" y="318" width="120" height="20">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="font:7px sans-serif;color:#55606d">foreignObject</div>
+    </foreignObject>
+    <view id="ks-view" viewBox="0 0 480 360"/>
+
+    <!-- scripts -->
+    <script type="text/javascript">/* `removeScripts` deletes this whole element. */ void 0;</script>
+    <rect x="328" y="300" width="30" height="14" fill="#d0021b" onclick="void 0"/>
+    <a href="javascript:void 0">
+        <text x="364" y="310" font-family="sans-serif" font-size="7" fill="#4a90d9">js: href</text>
+    </a>
+    <text x="328" y="328" font-family="sans-serif" font-size="7" fill="#55606d">script + onclick + javascript:</text>
+</svg>

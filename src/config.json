@@ -27,6 +27,10 @@
     {
       "file": "github.svg",
       "name": "GitHub logo"
+    },
+    {
+      "file": "kitchen-sink.svg",
+      "name": "Kitchen sink"
     }
   ],
   "plugins": [
