@@ -8,6 +8,7 @@
 import { createCurrentColorStylesPlugin } from './current-color-styles.js';
 import { createEnsureDimensionsPlugin } from './ensure-dimensions.js';
 import { normalizeIdPrefix } from './id-prefix.js';
+import { pluginOrder } from './plugin-order.js';
 
 // The "IDs" select drives `cleanupIds`, which is why it's no longer one of
 // the checkboxes. Fall back to the app default for the seconds-long window
@@ -74,7 +75,13 @@ export function buildPlugins(settings) {
   );
   let hasPlacedIdsPlugin = false;
 
-  for (const [name, enabled] of Object.entries(settings.plugins)) {
+  // The canonical order, not the map's own: what the page sends carries no
+  // ordering contract any more, and a key `pluginOrder` doesn't list — say, a
+  // retired plugin from a stale pre-migration page in the service-worker skew
+  // window — is dropped rather than run as a generic plugin.
+  for (const name of pluginOrder) {
+    const isEnabled = Boolean(settings.plugins[name]);
+
     // `cleanupIds` has no checkbox to mark its place any more, but the place
     // still matters: `removeUselessDefs` and `mergePaths` run later and want
     // unused IDs already gone. This is the entry that followed it in
@@ -88,9 +95,9 @@ export function buildPlugins(settings) {
     // when "Minify colours" is off — with every minification param disabled,
     // leaving nothing but the colour swap.
     const isColourSwapOnly =
-      name === 'convertColors' && !enabled && Boolean(settings.currentColor);
+      name === 'convertColors' && !isEnabled && Boolean(settings.currentColor);
 
-    if (!enabled && !isColourSwapOnly) continue;
+    if (!isEnabled && !isColourSwapOnly) continue;
 
     const plugin = {
       name,
@@ -133,6 +140,8 @@ export function buildPlugins(settings) {
     }
   }
 
+  // Unreachable while `removeRasterImages` is in `pluginOrder`; kept so a
+  // future reorder can't silently drop `cleanupIds` from the pipeline.
   if (idsPlugin && !hasPlacedIdsPlugin) plugins.push(idsPlugin);
 
   // The removal goes last, once everything above has had its say.

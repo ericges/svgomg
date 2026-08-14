@@ -41,10 +41,10 @@ export const quotedControlLabels = Object.values(label);
 // snapshots describe the *last* optimisation, and `Settings` re-renders the
 // moment a control moves — so between picking a fix and the worker coming back
 // with it, the panel would go on advising the option the user just chose. Each
-// condition is a claim about plugin order, pinned in `test/setting-notes.test.js`
-// against `panelOrder`:
+// condition is a claim about pipeline order — `config.json`'s array order, see
+// `plugin-order.js` — pinned in `test/setting-notes.test.js`:
 //
-// - `removeStyleElement` runs in the Styles block, ahead of every subject here
+// - `removeStyleElement` runs tenth, ahead of every subject here
 //   except `minifyStyles`, so switching it on clears the stylesheet for all of
 //   them with certainty. (Nothing similar can be said for the other Styles
 //   stages: inlining dissolves the `<style>` only when every rule turned out to

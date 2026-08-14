@@ -2,8 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 
 // Not a `.test.js` file, so `npm run test:node` never runs it as a suite — it
-// is the one place that knows how `src/config.json` maps onto the order SVGO
-// actually receives.
+// is the shared vocabulary for driving the pipeline the app really assembles.
 const repoRoot = path.join(import.meta.dirname, '..');
 
 export const readSource = (relativePath) =>
@@ -11,24 +10,18 @@ export const readSource = (relativePath) =>
 
 export const config = JSON.parse(await readSource('config.json'));
 
-// `src/index.njk` renders the plugin checkboxes in three loops — the metadata
-// block, then the styles block, then the feature list — and `_pluginInputs` is
-// `.plugins input` in document order, which becomes `Object.entries(settings
-// .plugins)` and then SVGO's execution order. So a test that walks
-// `config.plugins` straight through is running a pipeline the app never
-// assembles: with everything enabled the two orders disagree by 14 bytes on
-// the kitchen-sink fixture, and `removeStyleElement` moves from tenth to
-// thirty-ninth, which is the whole point of grouping the style plugins.
-export const panelPlugins = [
-  ...config.plugins.filter((plugin) => plugin.metadata),
-  ...config.plugins.filter((plugin) => plugin.styles),
-  ...config.plugins.filter((plugin) => !plugin.metadata && !plugin.styles),
-];
+// The pipeline order is `src/config.json`'s array order, which
+// `buildPlugins()` walks for itself (`src/js/svgo-worker/plugin-order.js`) —
+// the panel's DOM order stopped mattering when the two were decoupled. The
+// old names survive so the suites read the same; `panelOrder` re-exports the
+// module the worker actually uses, so what the tests pin is what runs.
+export const panelPlugins = config.plugins;
 
-export const panelOrder = panelPlugins.map((plugin) => plugin.id);
+export { pluginOrder as panelOrder } from '../src/js/svgo-worker/plugin-order.js';
 
-// `buildPlugins` iterates the `plugins` object's own entries, so a plugin left
-// out of it never runs — an absent key is not the same as `false`.
+// `buildPlugins` walks the canonical order and reads each key off the map, so
+// an absent key is simply disabled — these list every id explicitly to switch
+// them on.
 export const allPlugins = Object.fromEntries(
   panelPlugins.map(({ id }) => [id, true]),
 );

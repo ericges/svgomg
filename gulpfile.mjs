@@ -240,6 +240,23 @@ const rollupSvgString = () => ({
   },
 });
 
+// Same trick for JSON: `plugin-order.js` reads the canonical pipeline order
+// out of `src/config.json`, importing it `with { type: 'json' }` so Node can
+// load it natively under `node --test`. Rollup 4 parses that attribute but
+// still needs a plugin to turn the file into a module — JSON is a valid JS
+// expression, so inlining it is enough.
+const rollupJsonModule = () => ({
+  name: 'json-module',
+  transform(code, id) {
+    if (!id.endsWith('.json')) return null;
+    return {
+      code: `export default ${code};`,
+      // No positions to map — the module is one generated expression.
+      map: { mappings: '' },
+    };
+  },
+});
+
 const rollupCaches = new Map();
 
 async function js(entry, outputPath, replacements) {
@@ -252,6 +269,7 @@ async function js(entry, outputPath, replacements) {
         ? rollupReplace({ preventAssignment: true, ...replacements })
         : undefined,
       rollupSvgString(),
+      rollupJsonModule(),
       rollupResolve({ browser: true }),
       rollupCommon({ include: /node_modules/ }),
       // Don't use terser on development

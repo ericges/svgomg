@@ -16,9 +16,9 @@ import {
 const fixture = await readSource('test-svgs/kitchen-sink.svg');
 
 // The defaults keep every checkbox out of the way, exactly as in
-// `test/build-plugins.test.js`; each test opts into what it's about. `plugins`
-// comes from `./panel-order.js` rather than `config.plugins`, because SVGO runs
-// the array in order and the panel's order is not the config file's.
+// `test/build-plugins.test.js`; each test opts into what it's about. The
+// `plugins` maps come from `./panel-order.js`, and their key order is
+// irrelevant — `buildPlugins` walks the canonical order for itself.
 const compress = (overrides = {}) => {
   const settings = {
     floatPrecision: '3',
@@ -41,8 +41,12 @@ const compress = (overrides = {}) => {
 // event handler could be supplying the very fill they'd remove. This fixture
 // has both on purpose (something has to cover `removeStyleElement` and
 // `removeScripts`), so these two are measured against a document those plugins
-// have already been cleared out of. That deoptimisation is why the panel runs
-// `removeStyleElement` tenth; see the plugin-order note in CLAUDE.md.
+// have already been cleared out of. Cleared under `multipass`, because
+// `buildPlugins` walks the canonical order no matter how the map is arranged:
+// `removeScripts` runs fortieth — after both subjects — so the script is only
+// gone on a second pass, which is exactly the fix the panel advises. That
+// deoptimisation is why the pipeline runs `removeStyleElement` tenth; see the
+// plugin-order note in CLAUDE.md.
 const styleDeoptimised = new Set([
   'removeUselessStrokeAndFill',
   'moveElemsAttrsToGroup',
@@ -84,7 +88,7 @@ test('every configured plugin changes the kitchen-sink fixture', (t) => {
   // — which is what the witness and sentinel tests below are for.
   const baselines = {
     plain: compress(),
-    cleared: compress({ plugins: cleared }),
+    cleared: compress({ plugins: cleared, multipass: true }),
   };
 
   const inert = panelPlugins
@@ -93,6 +97,7 @@ test('every configured plugin changes the kitchen-sink fixture', (t) => {
       const isDeoptimised = styleDeoptimised.has(id);
       const data = compress({
         plugins: isDeoptimised ? { ...cleared, [id]: true } : { [id]: true },
+        multipass: isDeoptimised,
       });
       return data === baselines[isDeoptimised ? 'cleared' : 'plain'];
     });
