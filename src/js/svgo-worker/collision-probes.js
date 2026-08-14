@@ -19,6 +19,11 @@
 // are the guards' raw inputs, and `setting-notes.js` applies each plugin's own
 // reading of them.
 
+import {
+  stylesheetHasConvertibleColours,
+  stylesheetHasRules,
+} from './current-color-styles.js';
+
 // SVGO's `hasScripts()` (lib/svgo/tools.js) tests a fixed list of event
 // attributes, so this is that list — the union of the five event groups in
 // `plugins/_collections.js`, deduplicated. A `startsWith('on')` approximation
@@ -26,7 +31,7 @@
 // document carrying one would be told its IDs were left alone while SVGO
 // happily minified them. `test/collision-probes.test.js` reads the collection
 // straight out of `node_modules` and fails if the two ever diverge.
-const scriptEventAttributes = new Set([
+export const scriptEventAttributes = new Set([
   'onbegin',
   'onend',
   'onrepeat',
@@ -100,7 +105,7 @@ const scriptEventAttributes = new Set([
 // `elemsGroups.nonRendering` from the same collection: the elements
 // `removeHiddenElems` defers to the end of its pass and only removes if the
 // guard let it. Pinned by the same parity test.
-const nonRenderingElements = new Set([
+export const nonRenderingElements = new Set([
   'clipPath',
   'filter',
   'linearGradient',
@@ -136,22 +141,14 @@ const hasScripts = (node) => {
   );
 };
 
-// `removeHiddenElems` also defers a `<path>` whose computed opacity is `0`.
-// Computing style properly would mean a stylesheet cascade for one boolean, so
-// this reads the two places the value is written by hand. Under-reading it
-// costs a notice that isn't shown; over-reading would cost a wrong one, which
-// is why the comparison is as strict as SVGO's own (`value === '0'`).
-const hasZeroOpacity = (node) => {
-  if (node.attributes.opacity === '0') return true;
-
-  return String(node.attributes.style ?? '')
-    .split(';')
-    .some((declaration) => {
-      const [property, value] = declaration.split(':');
-
-      return property?.trim() === 'opacity' && value?.trim() === '0';
-    });
-};
+// `removeHiddenElems` also defers a `<path>` whose *computed* opacity is `0`,
+// and that one is deliberately not recorded. Reading the attribute instead of
+// the cascade is not an approximation that only errs towards silence: a
+// `style="opacity:0;opacity:1"` path is opaque, since CSS takes the last
+// declaration, and a document containing one would have been told a
+// transparent path was kept. Computing it properly means the stylesheet
+// cascade SVGO builds internally, so the fact is dropped and the notice speaks
+// only of the definitions below — which need no cascade to be certain of.
 
 // The `<svg>` is defs-only when every one of its children is a `<defs>`
 // element — a text node counts against it, exactly as in `cleanupIds`, so a
@@ -166,18 +163,27 @@ const blankSnapshot = () => ({
   // Any `<style>` element at all. `removeUselessStrokeAndFill` and
   // `moveElemsAttrsToGroup` bail on one of these…
   hasStyleElement: false,
-  // …while `cleanupIds`, `removeHiddenElems` and `minifyStyles` want children
-  // in it. The difference is an empty `<style>`, on which the first pair really
-  // does stop and the second really doesn't.
+  // …while `cleanupIds`, `removeHiddenElems` and `minifyStyles` want *children*
+  // in it — SVGO's guards say `children.length !== 0` and nothing more, so this
+  // means exactly that and not "has rules". The difference is an empty
+  // `<style>`, on which the first pair really does stop and the second really
+  // doesn't.
   hasFilledStyleElement: false,
   hasScripts: false,
   hasMask: false,
   // What each subject would have had to work on, so a notice is only shown
-  // where there was something to overrule.
+  // where there was something to overrule. Each is as exact as the guard it
+  // gates: a mirror of SVGO's own test, or a question put to the same code the
+  // pipeline runs.
   hasIds: false,
   isDefsOnlyRoot: false,
-  hasDeferredHiddenCandidate: false,
+  hasNonRenderingElement: false,
   hasMultiChildGroup: false,
+  // Derived from the stylesheet text at the end of the pass, because both take
+  // a CSS parse and neither is answerable node by node. A `<style>` holding
+  // nothing but a comment has children, no rules, and nothing to convert.
+  hasStyleRules: false,
+  hasConvertibleStylesheet: false,
 });
 
 /**
@@ -187,6 +193,7 @@ const blankSnapshot = () => ({
  */
 const createProbe = () => {
   const snapshot = blankSnapshot();
+  let stylesheet = '';
 
   const plugin = {
     type: 'visitor',
@@ -194,7 +201,14 @@ const createProbe = () => {
     fn() {
       return {
         root: {
+          exit() {
+            snapshot.hasStyleRules =
+              stylesheet !== '' && stylesheetHasRules(stylesheet);
+            snapshot.hasConvertibleStylesheet =
+              stylesheet !== '' && stylesheetHasConvertibleColours(stylesheet);
+          },
           enter(root) {
+            stylesheet = '';
             // Reset per pass, so multipass leaves the last pass's answer
             // standing rather than "seen at some point": a stylesheet cleared
             // on pass one is gone for everything that runs on pass two.
@@ -211,8 +225,15 @@ const createProbe = () => {
           enter(node) {
             if (node.name === 'style') {
               snapshot.hasStyleElement = true;
+
               if (node.children.length > 0) {
                 snapshot.hasFilledStyleElement = true;
+
+                for (const child of node.children) {
+                  if (child.type === 'text' || child.type === 'cdata') {
+                    stylesheet += `${child.value}\n`;
+                  }
+                }
               }
             } else if (node.name === 'mask') {
               snapshot.hasMask = true;
@@ -224,11 +245,8 @@ const createProbe = () => {
               snapshot.hasScripts = true;
             }
 
-            if (
-              nonRenderingElements.has(node.name) ||
-              (node.name === 'path' && hasZeroOpacity(node))
-            ) {
-              snapshot.hasDeferredHiddenCandidate = true;
+            if (nonRenderingElements.has(node.name)) {
+              snapshot.hasNonRenderingElement = true;
             }
 
             if (node.name === 'g' && node.children.length > 1) {

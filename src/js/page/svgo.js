@@ -37,13 +37,14 @@ export default class Svgo extends WorkerMessenger {
           data: svgText,
         });
 
-        // return final result
-        return new SvgFile(
-          data,
-          dimensions.width,
-          dimensions.height,
-          collisions,
-        );
+        // return final result. The report is stamped with the fingerprint of
+        // the settings that produced it, so the panel can tell a description
+        // of the current pipeline from one of the pipeline before last —
+        // `getSettings()` builds the same string for the cache to look up by.
+        return new SvgFile(data, dimensions.width, dimensions.height, {
+          fingerprint: settings.fingerprint,
+          subjects: collisions,
+        });
       });
 
     return this._currentJob;

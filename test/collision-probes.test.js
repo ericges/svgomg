@@ -9,6 +9,8 @@ import {
 } from '../node_modules/svgo/plugins/_collections.js';
 import {
   collisionSubjects,
+  nonRenderingElements,
+  scriptEventAttributes,
   withCollisionProbes,
 } from '../src/js/svgo-worker/collision-probes.js';
 import { buildPlugins } from '../src/js/svgo-worker/build-plugins.js';
@@ -74,6 +76,16 @@ test('the copied event-attribute list is still SVGO’s', (t) => {
       'graphicalEvent',
     ].flatMap((group) => [...attrsGroups[group]]),
   );
+  // Set equality, both directions: a one-sided check would pass on a copy that
+  // had grown an extra name, which is the mistake the prefix shortcut was.
+  const alphabetical = (a, b) => a.localeCompare(b);
+
+  t.assert.deepStrictEqual(
+    [...scriptEventAttributes].toSorted(alphabetical),
+    [...svgo].toSorted(alphabetical),
+  );
+
+  // And the copy is really the one the probe consults.
   const unrecognised = [...svgo].filter(
     (attribute) => !probeOnly(wrap(`<rect ${attribute}="x"/>`)).hasScripts,
   );
@@ -87,8 +99,15 @@ test('the copied event-attribute list is still SVGO’s', (t) => {
 });
 
 test('the copied non-rendering element list is still SVGO’s', (t) => {
+  const alphabetical = (a, b) => a.localeCompare(b);
+
+  t.assert.deepStrictEqual(
+    [...nonRenderingElements].toSorted(alphabetical),
+    [...elemsGroups.nonRendering].toSorted(alphabetical),
+  );
+
   const missing = [...elemsGroups.nonRendering].filter(
-    (name) => !probeOnly(wrap(`<${name} id="x"/>`)).hasDeferredHiddenCandidate,
+    (name) => !probeOnly(wrap(`<${name} id="x"/>`)).hasNonRenderingElement,
   );
 
   t.assert.deepStrictEqual(missing, []);
@@ -235,24 +254,51 @@ test('minifyStyles says nothing about rules a document hasn’t got', (t) => {
 
   // The unused rule really is still there, which is what the notice claims.
   t.assert.match(withRules.data, /\.unused/);
-  t.assert.match(withRules.noteFor('minifyStyles'), /Unused rules are kept/);
+  t.assert.match(withRules.noteFor('minifyStyles'), /without the usage check/);
 });
 
-test('removeHiddenElems is only reported for the half that stops', (t) => {
+test('a stylesheet of nothing but a comment is not a stylesheet with rules', (t) => {
+  // A `<style>` with a child but no rule: SVGO's guards count the child, and
+  // nothing was pruned because there was nothing to prune.
+  const commentOnly = run(
+    wrap(
+      '<style>/* only a comment */</style><script>x</script><rect width="1" height="1"/>',
+    ),
+    withStyles('minify'),
+  );
+
+  t.assert.doesNotMatch(commentOnly.data, /<style/);
+  t.assert.strictEqual(commentOnly.noteFor('minifyStyles'), undefined);
+});
+
+test('currentColor is quiet about a stylesheet holding no colour', (t) => {
+  const noColours = run(
+    wrap(
+      '<style>.x{stroke-width:2}</style><defs><mask id="m"><rect width="1" height="1"/></mask></defs><rect class="x" mask="url(#m)" fill="red" width="1" height="1"/>',
+    ),
+    withStyles('keep', { currentColor: true }),
+  );
+
+  // The rule survives untouched either way, so nothing was held back.
+  t.assert.match(noColours.data, /stroke-width:2/);
+  t.assert.strictEqual(noColours.noteFor('currentColor'), undefined);
+});
+
+test('removeHiddenElems is only reported for the step that stops', (t) => {
   const both = run(
     wrap(
-      '<style>.a{fill:red}</style><rect width="0" height="10"/><path opacity="0" d="M0 0h1"/>',
+      '<style>.a{fill:red}</style><rect width="0" height="10"/><mask id="m"><rect width="1" height="1"/></mask>',
     ),
     withStyles('keep'),
   );
 
-  // The zero-sized rectangle goes either way; only the deferred path stays.
-  t.assert.doesNotMatch(both.data, /<rect/);
-  t.assert.match(both.data, /opacity="0"/);
-  t.assert.match(both.noteFor('removeHiddenElems'), /Half of this runs/);
+  // The zero-sized rectangle goes either way; the definition stays.
+  t.assert.doesNotMatch(both.data, /<rect width="0"/);
+  t.assert.match(both.data, /<mask/);
+  t.assert.match(both.noteFor('removeHiddenElems'), /last step is skipped/);
   t.assert.match(both.noteFor('removeHiddenElems'), /Zero-sized/);
 
-  // Nothing the deferred sweep would have looked at: no claim to make.
+  // Nothing the sweep would have looked at: no claim to make.
   const nothingDeferred = run(
     wrap('<style>.a{fill:red}</style><rect width="0" height="10"/>'),
     withStyles('keep'),
@@ -260,6 +306,36 @@ test('removeHiddenElems is only reported for the half that stops', (t) => {
 
   t.assert.doesNotMatch(nothingDeferred.data, /<rect/);
   t.assert.strictEqual(nothingDeferred.noteFor('removeHiddenElems'), undefined);
+});
+
+test('removeHiddenElems claims nothing about what would have been removed', (t) => {
+  // A referenced `<mask>` is kept whether or not the guard fires, so a notice
+  // calling it an unused definition kept *by the collision* would be false.
+  // What is true, and all the message says, is that the reference check itself
+  // is skipped.
+  const referenced = run(
+    wrap(
+      '<style>.x{fill:red}</style><defs><mask id="m"><rect width="1" height="1"/></mask></defs><rect mask="url(#m)" width="1" height="1"/>',
+    ),
+    withStyles('keep'),
+  );
+  const note = referenced.noteFor('removeHiddenElems');
+
+  t.assert.match(referenced.data, /<mask/);
+  t.assert.match(note, /stops working out whether anything still refers/);
+  t.assert.doesNotMatch(note, /unused/);
+
+  // The other half of the retired guess: CSS takes the last declaration, so
+  // this path is opaque and was never a candidate. Nothing claims it was.
+  const opaque = run(
+    wrap(
+      '<style>.x{fill:red}</style><path style="opacity:0;opacity:1" d="M0 0h1"/>',
+    ),
+    withStyles('keep'),
+  );
+
+  t.assert.match(opaque.data, /opacity:1/);
+  t.assert.strictEqual(opaque.noteFor('removeHiddenElems'), undefined);
 });
 
 test('a defs-only document is reported even with no stylesheet in sight', (t) => {
@@ -291,6 +367,12 @@ test('moveElemsAttrsToGroup needs a group worth moving anything out of', (t) => 
   t.assert.match(
     grouped.noteFor('moveElemsAttrsToGroup'),
     /Skipping every group/,
+  );
+  // Whether the children shared anything liftable is the plugin's comparison,
+  // not a claim the notice makes.
+  t.assert.doesNotMatch(
+    grouped.noteFor('moveElemsAttrsToGroup'),
+    /attributes it would move/,
   );
 
   const ungrouped = run(

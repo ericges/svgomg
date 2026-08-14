@@ -177,15 +177,41 @@ export default class Settings {
   _renderNotes() {
     if (!this.container) return;
 
-    const notes = collectNotes(this.getSettings(), this._collisions);
+    const settings = this.getSettings();
+    const notes = collectNotes(settings, this._collisions?.subjects);
+    // The report describes the settings it was produced under. Anything else
+    // changed upstream of a subject — enabling "Remove metadata" on a file
+    // whose script sits inside it, say — can only be answered by the run
+    // that's already on its way, so until it lands the notices are marked as
+    // describing the previous one rather than silently reinterpreted.
+    const isPending =
+      Boolean(this._collisions) &&
+      this._collisions.fingerprint !== settings.fingerprint;
+
     // Re-rendering identical notes on every keystroke would tear them off the
-    // panel and put them straight back.
-    const rendered = JSON.stringify(notes);
+    // panel and put them straight back. Where each note *goes* is part of that
+    // sameness: expanding a stage block moves its notices from the block's
+    // select onto the checkboxes that just became visible, without a word of
+    // the text changing.
+    const rendered = JSON.stringify([
+      notes,
+      this._stageGroups.map((group) => group.custom.hidden),
+    ]);
 
-    if (rendered === this._renderedNotes) return;
+    if (rendered !== this._renderedNotes) {
+      this._renderedNotes = rendered;
+      this._insertNotes(notes);
+    }
 
-    this._renderedNotes = rendered;
+    // Never part of the key: toggling a class leaves the elements in place, so
+    // the styling can hold off long enough that a quick recompression never
+    // shows it at all.
+    for (const note of this.container.querySelectorAll('.setting-note')) {
+      note.classList.toggle('pending', isPending);
+    }
+  }
 
+  _insertNotes(notes) {
     for (const stale of this.container.querySelectorAll('.setting-note')) {
       stale.remove();
     }

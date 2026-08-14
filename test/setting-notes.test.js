@@ -13,15 +13,22 @@ const nothing = {
   hasMask: false,
   hasIds: true,
   isDefsOnlyRoot: false,
-  hasDeferredHiddenCandidate: true,
+  hasNonRenderingElement: true,
   hasMultiChildGroup: true,
+  hasStyleRules: false,
+  hasConvertibleStylesheet: false,
 };
 
 const EMPTY_STYLE = { ...nothing, hasStyleElement: true };
+// A stylesheet with something in it: children, at least one rule, and a colour
+// the currentColor pass would have rewritten. The three are separate facts —
+// `<style>/* a comment */</style>` has the first and neither of the others.
 const STYLE = {
   ...nothing,
   hasStyleElement: true,
   hasFilledStyleElement: true,
+  hasStyleRules: true,
+  hasConvertibleStylesheet: true,
 };
 const SCRIPT = { ...nothing, hasScripts: true };
 const MASK = { ...STYLE, hasMask: true };
@@ -108,7 +115,11 @@ test('a script deoptimises four controls, one of them a different four', (t) => 
   t.assert.deepStrictEqual(
     names(
       panelSettings(),
-      everywhere({ ...SCRIPT, hasFilledStyleElement: true }),
+      everywhere({
+        ...SCRIPT,
+        hasFilledStyleElement: true,
+        hasStyleRules: true,
+      }),
     ),
     ['ids', 'minifyStyles', 'removeUselessStrokeAndFill', 'removeHiddenElems'],
   );
@@ -121,11 +132,55 @@ test('a script deoptimises four controls, one of them a different four', (t) => 
   ]);
 });
 
+test('switching a subject off clears its notice without waiting for a run', (t) => {
+  // The report still describes a pipeline that ran the plugin, so each rule
+  // re-reads its own control rather than trusting the probe's presence.
+  t.assert.deepStrictEqual(
+    names(
+      panelSettings({
+        ids: 'keep',
+        plugins: {
+          minifyStyles: false,
+          removeUselessStrokeAndFill: false,
+          removeHiddenElems: false,
+          moveElemsAttrsToGroup: false,
+        },
+      }),
+      everywhere({ ...STYLE, hasScripts: true }),
+    ),
+    [],
+  );
+});
+
+test('a stylesheet of nothing but a comment prunes nothing and says nothing', (t) => {
+  // `hasFilledStyleElement` means "has children", which is what SVGO's own
+  // guards test — but it is not evidence that `minifyStyles` had a rule whose
+  // pruning was disabled, and SVGO removes such a stylesheet outright.
+  const commentOnly = {
+    ...nothing,
+    hasScripts: true,
+    hasStyleElement: true,
+    hasFilledStyleElement: true,
+  };
+
+  t.assert.strictEqual(
+    names(panelSettings(), everywhere(commentOnly)).includes('minifyStyles'),
+    false,
+  );
+  t.assert.strictEqual(
+    names(
+      panelSettings(),
+      everywhere({ ...commentOnly, hasStyleRules: true }),
+    ).includes('minifyStyles'),
+    true,
+  );
+});
+
 test('a subject with nothing to work on is not reported', (t) => {
   const barren = {
     ...STYLE,
     hasIds: false,
-    hasDeferredHiddenCandidate: false,
+    hasNonRenderingElement: false,
     hasMultiChildGroup: false,
   };
 
@@ -231,6 +286,15 @@ test('currentColor is only mentioned when a mask makes it hold back', (t) => {
     names(
       panelSettings({ currentColor: true }),
       everywhere({ ...nothing, hasMask: true }),
+    ).includes('currentColor'),
+    false,
+  );
+  // A stylesheet with no colour in it: likewise nothing was held back, which
+  // takes the same predicate the pass rewrites by to know.
+  t.assert.strictEqual(
+    names(
+      panelSettings({ currentColor: true }),
+      everywhere({ ...MASK, hasConvertibleStylesheet: false }),
     ).includes('currentColor'),
     false,
   );

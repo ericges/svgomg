@@ -7,9 +7,10 @@ export default class SvgFile {
    * @param {string} text The markup.
    * @param {number} width Pixel width, for sizing the preview.
    * @param {number} height Pixel height.
-   * @param {object} [collisions] What each guarded plugin saw when it ran, for
-   * the settings panel's collision notices — see `svgo-worker/collision-probes.js`.
-   * Only a result has one: the input has been through no plugins.
+   * @param {object} [collisions] `{ fingerprint, subjects }` — what each
+   * guarded plugin saw when it ran, and the settings that produced it, for the
+   * panel's collision notices (`svgo-worker/collision-probes.js`). Only a
+   * result has one: the input has been through no plugins.
    */
   constructor(text, width, height, collisions) {
     this.text = text;

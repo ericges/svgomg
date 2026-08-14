@@ -51,6 +51,16 @@ export const quotedControlLabels = Object.values(label);
 //   be inlinable, which is exactly why the flag is measured and not derived.)
 // - `removeScripts` runs *after* every subject, so it only helps on a second
 //   `multipass` pass — which is why it takes both.
+//
+// Each rule re-checks its own control for the same reason: switching a subject
+// off, or setting IDs to "Keep as they are", takes that plugin out of the next
+// pipeline, so its notice goes at once rather than a job later.
+//
+// What none of that covers is a setting that changes the document *upstream* of
+// a subject — enabling "Remove metadata" on a file whose `<script>` sits inside
+// `<metadata>`, say. Only re-running the pipeline can answer that, so the panel
+// marks the whole set as pending instead: `Settings._renderNotes()` compares
+// the fingerprint the report was produced under with the current one.
 const stylesheetSurvives = (settings, present) =>
   present && !settings.plugins?.removeStyleElement;
 
@@ -101,7 +111,7 @@ export const settingNotes = [
     // nothing to do with either — a document whose `<svg>` holds only `<defs>`
     // is skipped outright.
     note(settings, at) {
-      if (!at.hasIds) return '';
+      if ((settings.ids ?? 'minify') === 'keep' || !at.hasIds) return '';
 
       if (at.isDefsOnlyRoot) {
         return 'IDs are left as they are: SVGO skips this step on a document whose <svg> contains nothing but <defs>.';
@@ -139,9 +149,18 @@ export const settingNotes = [
     // the Styles block, *ahead* of `removeStyleElement`, so that control can't
     // help it either way and its stylesheet is read as measured.
     note(settings, at) {
-      if (!at.hasFilledStyleElement || !scriptSurvives(settings, at)) return '';
+      if (
+        !settings.plugins?.minifyStyles ||
+        !at.hasStyleRules ||
+        !scriptSurvives(settings, at)
+      ) {
+        return '';
+      }
 
-      return `Unused rules are kept: the SVG has a script that could be using them. ${fixText(['script'], settings)}`;
+      // Not "unused rules are kept": whether any rule *is* unused is csso's
+      // answer, not one this can reach. What's certain is that the check is
+      // switched off.
+      return `Minifying without the usage check: the SVG has a script that could be using a rule, so SVGO keeps every selector instead of dropping the ones nothing matches. ${fixText(['script'], settings)}`;
     },
   },
   {
@@ -150,10 +169,13 @@ export const settingNotes = [
     // Ours, not SVGO's: a rule in any stylesheet can select into a `<mask>`,
     // and masks read luminance rather than colour.
     note(settings, at) {
+      // Gated on a colour this pass would really have rewritten, which
+      // `current-color-styles.js` answers with the predicate it rewrites by —
+      // so the notice appears exactly when something was held back.
       if (
         !settings.currentColor ||
         !at.hasMask ||
-        !stylesheetSurvives(settings, at.hasFilledStyleElement)
+        !stylesheetSurvives(settings, at.hasConvertibleStylesheet)
       ) {
         return '';
       }
@@ -168,6 +190,8 @@ export const settingNotes = [
     // script. The plugin returns nothing at all, so there is no partial
     // outcome to qualify and nothing to gate on.
     note(settings, at) {
+      if (!settings.plugins?.removeUselessStrokeAndFill) return '';
+
       const causes = [];
 
       if (stylesheetSurvives(settings, at.hasStyleElement)) {
@@ -183,13 +207,20 @@ export const settingNotes = [
   {
     name: 'removeHiddenElems',
     subject: 'removeHiddenElems',
-    // Guard: a `<style>` with rules, or a script — and unlike the others this
-    // one is partial. It only blocks the deferred sweep at the end of the
-    // pass, which is where unreferenced non-rendering definitions and
-    // transparent paths are removed; everything the plugin can decide on the
-    // spot still goes.
+    // Guard: a `<style>` with children, or a script — and unlike the others
+    // this one is partial. It blocks only the sweep at the end of the pass,
+    // where non-rendering definitions are removed *if nothing refers to them*;
+    // everything the plugin can decide on the spot still goes.
+    //
+    // So the message describes the step that stops, and nothing beyond it.
+    // Which of those definitions is unused, and whether any would have gone,
+    // is the reference analysis that sweep performs — a referenced `<mask>` is
+    // kept either way, so "unused definitions are kept" would be a claim about
+    // an outcome nothing here measured.
     note(settings, at) {
-      if (!at.hasDeferredHiddenCandidate) return '';
+      if (!settings.plugins?.removeHiddenElems || !at.hasNonRenderingElement) {
+        return '';
+      }
 
       const causes = [];
 
@@ -200,23 +231,26 @@ export const settingNotes = [
       if (scriptSurvives(settings, at)) causes.push('script');
       if (causes.length === 0) return '';
 
-      return `Half of this runs: unused definitions — <mask>, <clipPath>, gradients — and fully transparent paths are kept while the SVG has ${causeText(causes)}, since something there could still refer to them. Zero-sized and hidden elements are removed as usual. ${fixText(causes, settings)}`;
+      return `Its last step is skipped: while the SVG has ${causeText(causes)}, SVGO stops working out whether anything still refers to definitions like <mask>, <clipPath> and gradients, and leaves them all where they are. Zero-sized and hidden elements are removed as usual. ${fixText(causes, settings)}`;
     },
   },
   {
     name: 'moveElemsAttrsToGroup',
     subject: 'moveElemsAttrsToGroup',
     // Guard: *any* `<style>` element, scripts not among its concerns. Only
-    // groups with more than one child are candidates in the first place.
+    // groups with more than one child are candidates in the first place —
+    // whether any of them share an attribute worth lifting is the plugin's own
+    // comparison, so the message stops at the step, not its result.
     note(settings, at) {
       if (
+        !settings.plugins?.moveElemsAttrsToGroup ||
         !at.hasMultiChildGroup ||
         !stylesheetSurvives(settings, at.hasStyleElement)
       ) {
         return '';
       }
 
-      return `Skipping every group: a selector could rely on the attributes it would move, and the SVG has ${causeText(['style'])}. ${fixText(['style'], settings)}`;
+      return `Skipping every group: while the SVG has ${causeText(['style'])}, SVGO won't lift shared attributes onto a group, since a selector could rely on where they sit. ${fixText(['style'], settings)}`;
     },
   },
 ];

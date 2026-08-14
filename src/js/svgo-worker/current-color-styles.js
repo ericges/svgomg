@@ -39,6 +39,12 @@ const isNoneKeyword = (rawValue) =>
     .trim()
     .toLowerCase() === 'none';
 
+// What a rewrite would touch: the one place that decides it, so the panel's
+// "left as they are" notice can ask the same question this pass answers.
+const isConvertible = (declaration) =>
+  colourProperties.has(declaration.property.toLowerCase()) &&
+  !isNoneKeyword(declaration.value.value);
+
 const rewrite = (css, context) => {
   let ast;
 
@@ -54,8 +60,7 @@ const rewrite = (css, context) => {
   csstree.walk(ast, {
     visit: 'Declaration',
     enter(declaration) {
-      if (!colourProperties.has(declaration.property.toLowerCase())) return;
-      if (isNoneKeyword(declaration.value.value)) return;
+      if (!isConvertible(declaration)) return;
 
       declaration.value = { type: 'Raw', value: 'currentColor' };
     },
@@ -67,6 +72,70 @@ const rewrite = (css, context) => {
 export const convertStyleAttribute = (css) => rewrite(css, 'declarationList');
 
 export const convertStylesheet = (css) => rewrite(css, 'stylesheet');
+
+/**
+ * Whether a stylesheet holds a colour this pass would have rewritten.
+ *
+ * Comparing the rewritten text against the original wouldn't answer it:
+ * regenerating from the tree normalises whitespace and drops comments, so a
+ * stylesheet of nothing but a comment would come back changed. The panel needs
+ * the question this asks — was anything actually held back — rather than
+ * whether the bytes differ.
+ *
+ * @param {string} css The stylesheet text.
+ * @returns {boolean} True if at least one declaration would become `currentColor`.
+ */
+export function stylesheetHasConvertibleColours(css) {
+  let ast;
+
+  try {
+    ast = csstree.parse(css, { context: 'stylesheet', parseValue: false });
+  } catch {
+    // Unparseable styles are left alone by `rewrite`, so nothing is held back.
+    return false;
+  }
+
+  let isFound = false;
+
+  csstree.walk(ast, {
+    visit: 'Declaration',
+    enter(declaration) {
+      if (isConvertible(declaration)) isFound = true;
+    },
+  });
+
+  return isFound;
+}
+
+/**
+ * Whether a stylesheet holds at least one rule — which is not the same as
+ * holding text. `<style>/* a comment *\/</style>` has a child node and no
+ * rules, and SVGO removes it outright.
+ *
+ * @param {string} css The stylesheet text.
+ * @returns {boolean} True if at least one style rule is present.
+ */
+export function stylesheetHasRules(css) {
+  let ast;
+
+  try {
+    ast = csstree.parse(css, { context: 'stylesheet', parseValue: false });
+  } catch {
+    // Unparseable, so nothing downstream can prune it either.
+    return false;
+  }
+
+  let isFound = false;
+
+  csstree.walk(ast, {
+    visit: 'Rule',
+    enter() {
+      isFound = true;
+    },
+  });
+
+  return isFound;
+}
 
 const containsMask = (node) =>
   (node.type === 'element' && node.name === 'mask') ||
