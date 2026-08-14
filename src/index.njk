@@ -89,6 +89,20 @@
                 <input type="file" class="load-file-input" accept=".svg" hidden>
             </header>
             <div class="main">
+                {# The app opens with no file, so this sheet is what's below the bar
+                   at first paint. It's the first child of `.main` because the CSS
+                   hides the settings panel and the action buttons off its `active`
+                   class with sibling selectors; `EmptyState` drops that class — and
+                   the sheet — on the first load. #}
+                <div class="empty-state active">
+                    <div class="empty-state-card">
+                        {% include "partials/icons/open.svg" %}
+                        <h2>Open an SVG</h2>
+                        <p>Drop a file anywhere on this page, pick one with <span class="nowrap"><b>Open SVG</b> (<kbd>Ctrl</kbd> + <kbd>O</kbd>)</span>, or paste markup into the toolbar.</p>
+                        <p>No file to hand? Load a <b>Demo</b>.</p>
+                        <p class="empty-state-note">Nothing is uploaded — your file never leaves this browser.</p>
+                    </div>
+                </div>
                 <div class="output">
                     <div class="action-button-container">
                         <div class="minor-action-container"></div>

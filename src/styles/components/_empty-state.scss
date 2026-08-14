@@ -1,0 +1,93 @@
+// The empty canvas. The app opens with no file at all, so this opaque sheet is
+// everything below the toolbar until one is loaded — plain white, because the
+// page's checkerboard is there to read a transparent SVG against and there is
+// no SVG yet.
+//
+// It covers `.main` rather than sitting in its flow, so `.output` keeps its box
+// and the preview iframe is never inside a `display: none` subtree when its
+// `src` is set. z-index 3 clears `.settings` (1) and `.action-button-container`
+// (2); `.drop-overlay` is a later sibling of `.main` at the same z-index, so
+// "Drop it!" still paints over this.
+.empty-state {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background-color: #fff;
+  color: rgba(0, 0, 0, 0.6);
+  text-align: center;
+  opacity: 0;
+
+  &.transition {
+    transition: opacity 0.3s ease-out;
+  }
+
+  &.active {
+    opacity: 1;
+  }
+}
+
+// Both blocks belong to the file that isn't there yet: a panel of options for
+// nothing, and a Download button pointing at nothing. `EmptyState.hide()`
+// removes `active` before it starts fading, so they settle into place behind an
+// opaque sheet rather than appearing out of it.
+.empty-state.active ~ .settings {
+  display: none;
+}
+
+.empty-state.active ~ .output .action-button-container {
+  display: none;
+}
+
+.empty-state-card {
+  max-width: 26em;
+
+  // The shared `.icon` sizes live in critical/_toolbar.scss, scoped to the bar —
+  // out here the SVG has a viewBox and nothing else to size it.
+  .icon {
+    width: 40px;
+    height: 40px;
+    color: #3f51b5;
+  }
+
+  h2 {
+    margin: 0.4em 0 0;
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  p {
+    margin: 0.8em 0 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  b {
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.8);
+  }
+
+  // The shortcut belongs to the action it names, so the two don't get split
+  // across a line break.
+  .nowrap {
+    white-space: nowrap;
+  }
+
+  kbd {
+    padding: 0.1em 0.4em;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+    font-size: 0.8em;
+  }
+}
+
+.empty-state-note {
+  color: rgba(0, 0, 0, 0.45);
+}

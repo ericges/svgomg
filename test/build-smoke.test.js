@@ -344,8 +344,8 @@ test('every configured demo is offered, shipped, and named on the button', async
     'demos offered in the menu that build/test-svgs/ does not carry',
   );
 
-  // The bare button — and the automatic first load through it — take their file
-  // from this attribute, so the first configured demo is the default.
+  // The bare button takes its file from this attribute, so the first configured
+  // demo is the default.
   const button = /<button[^>]+\bload-demo\b[^>]*>/.exec(html);
   t.assert.ok(button, 'no `.load-demo` button in the built markup');
   t.assert.deepStrictEqual(
@@ -354,13 +354,37 @@ test('every configured demo is offered, shipped, and named on the button', async
     'the Demo button does not default to the first configured demo',
   );
 
-  // That one demo loads itself on startup, so it's the only one that has to be
-  // there offline — but it does have to be, or a returning visitor's app opens
-  // empty. The rest are network-only on purpose.
+  // That one is what the bare button loads, so it's the only one that has to be
+  // there offline — but it does have to be, or the button fails for a returning
+  // visitor with no connection. The rest are network-only on purpose.
   const assets = precachedAssets(await readBuildFile('sw.js'));
   t.assert.ok(
     assets?.includes(`test-svgs/${demos[0].file}`),
     'the default demo is not in the service worker precache list',
+  );
+});
+
+test('the app opens on the empty state, ahead of everything it hides', async (t) => {
+  // Nothing loads itself any more: the app opens on this sheet, and `EmptyState`
+  // dismisses it on the first file by removing `active`. That one class does
+  // three things at once (components/_empty-state.scss): it makes the sheet
+  // visible, and it takes the settings panel and the action buttons out of the
+  // layout — the latter two through sibling selectors, which only reach elements
+  // that come *after* it. Both are contracts the stylesheet can't state itself.
+  const html = await readBuildFile('index.html');
+  const sheet = /<div[^>]+\bempty-state\b[^>]*>/.exec(html);
+
+  t.assert.ok(sheet, 'no `.empty-state` in the built markup');
+  t.assert.ok(
+    classTokenPattern('active').test(sheet[0]),
+    'the empty state renders without `active`, so it renders invisible',
+  );
+
+  const hidden = ['settings-scroller', 'action-button-container'];
+  t.assert.deepStrictEqual(
+    hidden.filter((name) => html.indexOf(name) < html.indexOf('empty-state')),
+    [],
+    'markup the empty state hides that the sibling selectors cannot reach',
   );
 });
 
