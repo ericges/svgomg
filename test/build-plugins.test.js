@@ -1,6 +1,7 @@
 import test from 'node:test';
 import { optimize } from 'svgo';
 import { buildPlugins } from '../src/js/svgo-worker/build-plugins.js';
+import { panelOrder } from './panel-order.js';
 
 // Runs the exact plugin array the worker would hand to SVGO, so what's
 // asserted is the assembled pipeline, not any one plugin in isolation. The
@@ -145,6 +146,15 @@ const pluginOrder = [
   'removeDeprecatedAttrs',
   'removeXlink',
 ];
+
+test('the pinned order is the one the panel actually renders', (t) => {
+  // Closes the loop on the order: this literal is what the assertions below
+  // read, `panelOrder` is `src/config.json` partitioned the way `index.njk`
+  // loops over it, and `test/build-smoke.test.js` checks the built markup comes
+  // out in that same order. Without this, adding a plugin to `config.json`
+  // silently leaves the pinned array describing a pipeline that no longer runs.
+  t.assert.deepStrictEqual(pluginOrder, panelOrder);
+});
 
 test('the assembled array keeps panel order, with the selects slotted in', (t) => {
   const plugins = buildPlugins({

@@ -31,14 +31,20 @@ export default class Svgo extends WorkerMessenger {
     this._currentJob = this._currentJob
       .catch(() => {})
       .then(async () => {
-        const { data, dimensions } = await this.requestResponse({
+        const { data, dimensions, collisions } = await this.requestResponse({
           action: 'process',
           settings,
           data: svgText,
         });
 
-        // return final result
-        return new SvgFile(data, dimensions.width, dimensions.height);
+        // return final result. The report is stamped with the fingerprint of
+        // the settings that produced it, so the panel can tell a description
+        // of the current pipeline from one of the pipeline before last —
+        // `getSettings()` builds the same string for the cache to look up by.
+        return new SvgFile(data, dimensions.width, dimensions.height, {
+          fingerprint: settings.fingerprint,
+          subjects: collisions,
+        });
       });
 
     return this._currentJob;

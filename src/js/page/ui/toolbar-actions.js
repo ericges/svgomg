@@ -81,23 +81,19 @@ export default class ToolbarActions {
   }
 
   /**
-   * Fetch and emit one of the bundled demo SVGs. `auto` marks the first-load
-   * version: nothing was clicked, so there's no button to hang a spinner off,
-   * and a visitor who did nothing shouldn't be shown an error for it either.
-   * Never rejects — the caller decides what an empty app looks like.
+   * Fetch and emit one of the bundled demo SVGs. Never rejects — a failed fetch
+   * becomes an `error` event like any other bad input.
    *
    * `file` is a filename from `src/test-svgs/`, and defaults to the one the
    * template put on the button.
    *
-   * @param {{ auto?: boolean, file?: string }} [options] `auto` for the unprompted first load.
+   * @param {{ file?: string }} [options] The demo to load; the default one otherwise.
    */
-  async loadDemo({ auto = false, file } = {}) {
+  async loadDemo({ file } = {}) {
     const demoFile = file ?? this._loadDemoBtn.dataset.demoFile;
 
-    if (!auto) {
-      this._loadDemoBtn.append(this._spinner.container);
-      this._spinner.show();
-    }
+    this._loadDemoBtn.append(this._spinner.container);
+    this._spinner.show();
 
     try {
       const response = await fetch(DEMO_DIRECTORY + demoFile);
@@ -108,16 +104,9 @@ export default class ToolbarActions {
       this.emitter.emit('svgDataLoad', {
         data: await response.text(),
         filename: demoFile,
-        auto,
       });
-    } catch (error) {
+    } catch {
       this.stopSpinner();
-
-      if (auto) {
-        console.warn("Couldn't fetch the demo SVG", error);
-        return;
-      }
-
       this.emitter.emit('error', {
         error: new Error("Couldn't fetch demo SVG"),
       });

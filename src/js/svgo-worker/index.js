@@ -1,9 +1,13 @@
 import { optimize } from 'svgo/browser';
 import { buildPlugins } from './build-plugins.js';
 import { createDimensionsExtractor } from './dimensions.js';
+import { withCollisionProbes } from './collision-probes.js';
 
 function compress(svgInput, settings) {
-  const plugins = buildPlugins(settings);
+  // Each subject gets a probe immediately ahead of it, so the panel's collision
+  // notices are backed by the document that plugin actually saw — see
+  // `collision-probes.js` for why neither the input nor the result will do.
+  const [collisions, plugins] = withCollisionProbes(buildPlugins(settings));
 
   // multipass optimization
   const [dimensions, extractDimensionsPlugin] = createDimensionsExtractor();
@@ -18,7 +22,7 @@ function compress(svgInput, settings) {
 
   if (error) throw new Error(error);
 
-  return { data, dimensions };
+  return { data, dimensions, collisions };
 }
 
 const actions = {

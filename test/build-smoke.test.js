@@ -1,6 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { quotedControlLabels } from '../src/js/page/ui/setting-notes.js';
+import { panelOrder } from './panel-order.js';
 
 // These assertions read `build/`, so they need a *production* build:
 // `npm run build`. A dev build (`npm run dev`) skips terser, which the
@@ -190,6 +192,27 @@ test('the page bundle never selects on an attribute the minifier strips', async 
   t.assert.doesNotMatch(idPrefix[0], /\btype=/);
 });
 
+test('the preview iframe ships with an empty sandbox', async (t) => {
+  // The preview renders untrusted SVG, and one of the bundled demos —
+  // `kitchen-sink.svg` — carries a <script>, an `onclick` and a `javascript:`
+  // href on purpose, so this attribute is load-bearing rather than theoretical.
+  // `sandbox=""` grants nothing; adding `allow-scripts` would let a dropped
+  // file run code in the app's origin. Pinned here because the iframe is built
+  // by `strToEl` in the page bundle, where no markup test would see it.
+  const page = await readBuildFile('js/page.js');
+
+  t.assert.match(
+    page,
+    /<iframe[^>]+\bsandbox=(?<quote>["'])\k<quote>/,
+    'the preview iframe lost its empty `sandbox` attribute',
+  );
+  t.assert.doesNotMatch(
+    page,
+    /\bsandbox=["'][^"']*allow-scripts/,
+    'the preview iframe grants allow-scripts — untrusted SVG could run code',
+  );
+});
+
 test('every configured SVGO plugin renders a checkbox', async (t) => {
   // Exposing a plugin is meant to be one entry in `src/config.json` and no JS
   // change, which only holds while the template renders all of them. They come
@@ -271,30 +294,38 @@ test('the settings panel carries the controls the page bundle queries', async (t
   );
 });
 
+test('the collision notices quote controls the panel really offers', async (t) => {
+  // A notice's fix names a control by its label — "set Styles to “Remove style
+  // elements”". Nothing else ties those strings to the template, so renaming an
+  // option would leave the advice pointing at a control that no longer exists
+  // under that name.
+  const html = await readBuildFile('index.html');
+
+  t.assert.deepStrictEqual(
+    quotedControlLabels.filter((label) => !html.includes(label)),
+    [],
+    'labels the notices quote that are missing from the built markup',
+  );
+});
+
 test('the plugin checkboxes render in the order the worker runs them', async (t) => {
   // Document order of `.plugins input` is `_pluginInputs` order is
   // `Object.entries(settings.plugins)` order is SVGO's execution order.
-  // `test/build-plugins.test.js` pins the resulting array; this pins the
-  // markup it comes from, which is what a moved checkbox would change.
+  // `test/build-plugins.test.js` pins the resulting array against `panelOrder`;
+  // this pins the markup it comes from against the same thing, which is what a
+  // moved checkbox would change.
+  //
+  // The whole array, not a prefix of it: checking the first ten names and the
+  // total length leaves the 34 feature checkboxes free to render in any order,
+  // and `panelOrder` is a prediction from `src/config.json` rather than a
+  // reading of the template — so nothing else here would notice.
   const config = await readConfig();
   const ids = new Set(config.plugins.map((plugin) => plugin.id));
   const rendered = [...inputNames(await readBuildFile('index.html'))].filter(
     (name) => ids.has(name),
   );
 
-  t.assert.deepStrictEqual(rendered.slice(0, 10), [
-    'removeComments',
-    'removeMetadata',
-    'removeEditorsNSData',
-    'removeTitle',
-    'removeDesc',
-    'mergeStyles',
-    'inlineStyles',
-    'minifyStyles',
-    'convertStyleToAttrs',
-    'removeStyleElement',
-  ]);
-  t.assert.strictEqual(rendered.length, config.plugins.length);
+  t.assert.deepStrictEqual(rendered, panelOrder);
 });
 
 test('every configured demo is offered, shipped, and named on the button', async (t) => {
@@ -328,8 +359,8 @@ test('every configured demo is offered, shipped, and named on the button', async
     'demos offered in the menu that build/test-svgs/ does not carry',
   );
 
-  // The bare button — and the automatic first load through it — take their file
-  // from this attribute, so the first configured demo is the default.
+  // The bare button takes its file from this attribute, so the first configured
+  // demo is the default.
   const button = /<button[^>]+\bload-demo\b[^>]*>/.exec(html);
   t.assert.ok(button, 'no `.load-demo` button in the built markup');
   t.assert.deepStrictEqual(
@@ -338,13 +369,37 @@ test('every configured demo is offered, shipped, and named on the button', async
     'the Demo button does not default to the first configured demo',
   );
 
-  // That one demo loads itself on startup, so it's the only one that has to be
-  // there offline — but it does have to be, or a returning visitor's app opens
-  // empty. The rest are network-only on purpose.
+  // That one is what the bare button loads, so it's the only one that has to be
+  // there offline — but it does have to be, or the button fails for a returning
+  // visitor with no connection. The rest are network-only on purpose.
   const assets = precachedAssets(await readBuildFile('sw.js'));
   t.assert.ok(
     assets?.includes(`test-svgs/${demos[0].file}`),
     'the default demo is not in the service worker precache list',
+  );
+});
+
+test('the app opens on the empty state, ahead of everything it hides', async (t) => {
+  // Nothing loads itself any more: the app opens on this sheet, and `EmptyState`
+  // dismisses it on the first file by removing `active`. That one class does
+  // three things at once (components/_empty-state.scss): it makes the sheet
+  // visible, and it takes the settings panel and the action buttons out of the
+  // layout — the latter two through sibling selectors, which only reach elements
+  // that come *after* it. Both are contracts the stylesheet can't state itself.
+  const html = await readBuildFile('index.html');
+  const sheet = /<div[^>]+\bempty-state\b[^>]*>/.exec(html);
+
+  t.assert.ok(sheet, 'no `.empty-state` in the built markup');
+  t.assert.ok(
+    classTokenPattern('active').test(sheet[0]),
+    'the empty state renders without `active`, so it renders invisible',
+  );
+
+  const hidden = ['settings-scroller', 'action-button-container'];
+  t.assert.deepStrictEqual(
+    hidden.filter((name) => html.indexOf(name) < html.indexOf('empty-state')),
+    [],
+    'markup the empty state hides that the sibling selectors cannot reach',
   );
 });
 

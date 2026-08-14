@@ -22,6 +22,9 @@
 }
 
 .main {
+  // Containing block for `.empty-state`, which covers this whole area until a
+  // file is loaded. `.drop-overlay` isn't a descendant, so nothing else moves.
+  position: relative;
   flex: 1;
   display: flex;
   flex-flow: column;
@@ -108,10 +111,11 @@
   }
 }
 
-// The shell paints settled: the bar, the settings panel and the action buttons
-// are all in place from the first frame, because the demo SVG loads by itself
-// and there's no drawer left to cover an unfinished UI. The output is the only
-// thing that animates, fading in once there's something to show.
+// The shell paints settled: the bar and — once there's a file — the settings
+// panel and the action buttons are simply in place, with no drawer left to
+// cover an unfinished UI. The output is the only thing that animates, fading in
+// from `_onInputChange` once there's something to show. Until then the app is
+// empty and `.empty-state` covers all of this.
 .output-switcher {
   opacity: 0;
 
