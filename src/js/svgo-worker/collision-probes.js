@@ -193,7 +193,18 @@ const blankSnapshot = () => ({
  */
 const createProbe = () => {
   const snapshot = blankSnapshot();
-  let stylesheet = '';
+  // Two lists, not one buffer, and not one list either: each consumer parses a
+  // different unit, and concatenating them is not semantics-preserving. An
+  // unclosed comment in one `<style>` would swallow the rules of the next,
+  // which no plugin here would ever see, because none of them parses more than
+  // one source at a time.
+  //
+  // - `minifyStyles` minifies `styleNode.children[0]`, and only when that first
+  //   child is text or cdata — so one string per `<style>` element, or none.
+  // - `current-color-styles` calls `convertStylesheet()` on *every* text or
+  //   cdata child, so one string per child.
+  let minifiedSources = [];
+  let convertedSources = [];
 
   const plugin = {
     type: 'visitor',
@@ -202,13 +213,16 @@ const createProbe = () => {
       return {
         root: {
           exit() {
-            snapshot.hasStyleRules =
-              stylesheet !== '' && stylesheetHasRules(stylesheet);
-            snapshot.hasConvertibleStylesheet =
-              stylesheet !== '' && stylesheetHasConvertibleColours(stylesheet);
+            snapshot.hasStyleRules = minifiedSources.some((css) =>
+              stylesheetHasRules(css),
+            );
+            snapshot.hasConvertibleStylesheet = convertedSources.some((css) =>
+              stylesheetHasConvertibleColours(css),
+            );
           },
           enter(root) {
-            stylesheet = '';
+            minifiedSources = [];
+            convertedSources = [];
             // Reset per pass, so multipass leaves the last pass's answer
             // standing rather than "seen at some point": a stylesheet cleared
             // on pass one is gone for everything that runs on pass two.
@@ -229,9 +243,15 @@ const createProbe = () => {
               if (node.children.length > 0) {
                 snapshot.hasFilledStyleElement = true;
 
+                const [first] = node.children;
+
+                if (first.type === 'text' || first.type === 'cdata') {
+                  minifiedSources.push(first.value);
+                }
+
                 for (const child of node.children) {
                   if (child.type === 'text' || child.type === 'cdata') {
-                    stylesheet += `${child.value}\n`;
+                    convertedSources.push(child.value);
                   }
                 }
               }

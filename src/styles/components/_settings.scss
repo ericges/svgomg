@@ -131,14 +131,25 @@
     color: #3f51b5;
   }
 
-  // The notes still describe the previous run while a new one is in flight.
-  // The delay is the point: a recompression that finishes inside it never
-  // shows this at all, so ordinary toggling doesn't make the panel flicker,
-  // and only a wait long enough to notice is announced as one.
-  transition: opacity 0.2s 0.6s;
+  // No delay here, so a note that was dimmed comes back the moment its result
+  // lands — the wait is over, and there is nothing left to hedge.
+  transition: opacity 0.2s;
 
+  // The notes still describe the previous run while a new one is in flight.
+  // The delay belongs to this direction only: a recompression that finishes
+  // inside it never dims at all, so ordinary toggling doesn't make the panel
+  // flicker, and only a wait long enough to notice is marked as one.
   &.pending {
     opacity: 0.4;
+    transition-delay: 0.6s;
+  }
+
+  // Dimming says "hold on" to someone who can see it and nothing at all to
+  // anyone who can't. The note is an `aria-describedby` target, so the same
+  // caveat is put in words inside it, where it is read out with the advice it
+  // qualifies — and left empty the rest of the time, so it says nothing then.
+  .setting-note-pending-label {
+    @include utils.visually-hidden();
   }
 }
 

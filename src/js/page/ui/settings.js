@@ -205,9 +205,13 @@ export default class Settings {
 
     // Never part of the key: toggling a class leaves the elements in place, so
     // the styling can hold off long enough that a quick recompression never
-    // shows it at all.
+    // shows it at all. The label carries the same caveat in words, for the
+    // reader the dimming doesn't reach.
     for (const note of this.container.querySelectorAll('.setting-note')) {
       note.classList.toggle('pending', isPending);
+      note.querySelector('.setting-note-pending-label').textContent = isPending
+        ? ' (still describing the previous run)'
+        : '';
     }
   }
 
@@ -230,11 +234,11 @@ export default class Settings {
 
       const id = `setting-note-${name}`;
       const note = strToEl(
-        `<p class="setting-note" id="${id}">${infoIconSvg}<span></span></p>`,
+        `<p class="setting-note" id="${id}">${infoIconSvg}<span><span class="setting-note-text"></span><span class="setting-note-pending-label"></span></span></p>`,
       );
 
       // textContent, not markup: the messages name constructs like `<style>`.
-      note.querySelector('span').textContent = text;
+      note.querySelector('.setting-note-text').textContent = text;
 
       const { host, describedBy } = this._noteTargets(control);
       // Appended, not assigned: one collapsed stage block can host the notices

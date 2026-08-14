@@ -271,6 +271,35 @@ test('a stylesheet of nothing but a comment is not a stylesheet with rules', (t)
   t.assert.strictEqual(commentOnly.noteFor('minifyStyles'), undefined);
 });
 
+test('two <style> elements are two stylesheets, not one', (t) => {
+  // Every plugin here parses one source at a time, so the probe must too.
+  // Concatenating them lets an unclosed comment in the first swallow the rules
+  // of the second — a stylesheet no plugin ever sees, and a collision the
+  // panel would then miss. `mergeStyles` is off, which is what leaves two
+  // elements standing for `minifyStyles` to read separately.
+  const unmatched = run(
+    wrap(
+      '<style>/*</style><style>.used{fill:red}.unused{fill:blue}</style><script>x</script><rect class="used" width="1" height="1"/>',
+    ),
+    { plugins: { ...stylesStages.minify, mergeStyles: false } },
+  );
+
+  // The unmatched selector really did survive, because the script switched the
+  // usage check off. Both halves of the contract, in one document.
+  t.assert.match(unmatched.data, /\.unused/);
+  t.assert.match(unmatched.noteFor('minifyStyles'), /without the usage check/);
+
+  const heldBack = run(
+    wrap(
+      '<style>/*</style><style>.used{fill:red}</style><defs><mask id="m"><rect width="1" height="1"/></mask></defs><rect class="used" mask="url(#m)" width="1" height="1"/>',
+    ),
+    withStyles('keep', { currentColor: true }),
+  );
+
+  t.assert.match(heldBack.data, /fill:red/);
+  t.assert.match(heldBack.noteFor('currentColor'), /<mask>/);
+});
+
 test('currentColor is quiet about a stylesheet holding no colour', (t) => {
   const noColours = run(
     wrap(
