@@ -94,3 +94,106 @@ test('a valid prefix is trimmed and reaches stylesheet selectors too', (t) => {
   t.assert.match(data, /id="svgomg_shape"/);
   t.assert.match(data, /#svgomg_shape\{/);
 });
+
+// The order `Settings.getSettings()` yields, which is the panel's DOM order:
+// the metadata block, then the styles block, then the feature list, each in
+// `config.json` order. SVGO runs plugins in array order, so moving a checkbox
+// between those blocks reorders the pipeline — this pins the result.
+const pluginOrder = [
+  'removeComments',
+  'removeMetadata',
+  'removeEditorsNSData',
+  'removeTitle',
+  'removeDesc',
+  'mergeStyles',
+  'inlineStyles',
+  'minifyStyles',
+  'convertStyleToAttrs',
+  'removeStyleElement',
+  'removeDoctype',
+  'removeXMLProcInst',
+  'removeXMLNS',
+  'cleanupAttrs',
+  'removeRasterImages',
+  'removeUselessDefs',
+  'cleanupNumericValues',
+  'cleanupListOfValues',
+  'convertColors',
+  'removeUnknownsAndDefaults',
+  'removeNonInheritableGroupAttrs',
+  'removeUselessStrokeAndFill',
+  'cleanupEnableBackground',
+  'removeHiddenElems',
+  'removeEmptyText',
+  'convertShapeToPath',
+  'moveElemsAttrsToGroup',
+  'moveGroupAttrsToElems',
+  'collapseGroups',
+  'convertPathData',
+  'convertEllipseToCircle',
+  'convertTransform',
+  'removeEmptyAttrs',
+  'removeEmptyContainers',
+  'mergePaths',
+  'removeUnusedNS',
+  'reusePaths',
+  'sortAttrs',
+  'sortDefsChildren',
+  'removeScripts',
+  'removeOffCanvasPaths',
+  'convertOneStopGradients',
+  'removeDeprecatedAttrs',
+  'removeXlink',
+];
+
+test('the assembled array keeps panel order, with the selects slotted in', (t) => {
+  const plugins = buildPlugins({
+    floatPrecision: '3',
+    transformPrecision: '5',
+    dimensionAttrs: 'viewBox',
+    ids: 'minify',
+    idPrefix: 'svgomg_',
+    currentColor: true,
+    plugins: Object.fromEntries(pluginOrder.map((name) => [name, true])),
+  });
+  const at = (name) => pluginOrder.indexOf(name);
+
+  t.assert.deepStrictEqual(
+    plugins.map((plugin) => plugin.name),
+    [
+      // Before everything, so what it adds is treated like the input's own.
+      'ensure-dimensions',
+      ...pluginOrder.slice(0, at('removeRasterImages')),
+      // Where its checkbox used to sit, so `removeUselessDefs` and `mergePaths`
+      // see cleaned IDs.
+      'cleanupIds',
+      ...pluginOrder.slice(at('removeRasterImages'), at('convertColors') + 1),
+      // Right behind `convertColors`, which never looks past attributes.
+      'current-color-styles',
+      ...pluginOrder.slice(at('convertColors') + 1),
+      'removeDimensions',
+      'prefixIds',
+    ],
+  );
+});
+
+test('removing the stylesheet stops holding back the plugins behind it', (t) => {
+  // `cleanupIds`, `moveElemsAttrsToGroup` and `removeHiddenElems` all bail out
+  // when they see a `<style>`: any selector could rely on what they'd touch.
+  // Grouping the five style plugins under the Styles select moved
+  // `removeStyleElement` from the end of the array to the front, so "Remove
+  // entirely" no longer leaves the rest of the pipeline hobbled by a
+  // stylesheet that is about to be deleted anyway.
+  const data = compress(
+    '<svg xmlns="http://www.w3.org/2000/svg"><style>#a{fill:red}</style><g id="a"><path d="M0 0h10v10z"/><path d="M0 0h5v5z"/></g></svg>',
+    {
+      ids: 'minify',
+      plugins: Object.fromEntries(
+        pluginOrder.map((name) => [name, name === 'removeStyleElement']),
+      ),
+    },
+  );
+
+  t.assert.doesNotMatch(data, /<style/);
+  t.assert.doesNotMatch(data, /\bid=/);
+});
