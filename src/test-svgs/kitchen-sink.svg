@@ -243,11 +243,18 @@
     <rect x="8" y="300" width="18" height="18" fill="#4a90d9">
         <animate attributeName="opacity" values="1;0.3;1" dur="4s" repeatCount="indefinite"/>
     </rect>
-    <g transform="translate(48 309)">
-        <rect x="-9" y="-9" width="18" height="18" fill="#f5a623">
-            <animateTransform attributeName="transform" type="rotate" values="0;360" dur="12s" repeatCount="indefinite"/>
-        </rect>
-    </g>
+    <!--
+      The rotation centre is spelled out, and the rect sits at absolute
+      coordinates, on purpose. Wrapping it in a <g transform="translate(48 309)">
+      and rotating about the implied origin renders identically — until SVGO
+      flattens the group into the geometry and the centre-less rotate starts
+      turning about the root origin instead, throwing the square out of the
+      viewBox on a 313px arc. An animation must not depend on a coordinate
+      system an optimisation is allowed to collapse.
+    -->
+    <rect x="39" y="300" width="18" height="18" fill="#f5a623">
+        <animateTransform attributeName="transform" type="rotate" values="0 48 309;360 48 309" dur="12s" repeatCount="indefinite"/>
+    </rect>
     <rect x="70" y="300" width="18" height="18" fill="#9013fe">
         <set attributeName="fill" to="#d0021b" begin="3s" dur="2s"/>
     </rect>

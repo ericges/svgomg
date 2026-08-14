@@ -238,6 +238,32 @@ test('idPrefix leaves every internal reference resolvable', (t) => {
   );
 });
 
+test('no rotate animation leans on a coordinate system SVGO can collapse', (t) => {
+  // A `rotate` with a bare angle turns about the origin of whatever coordinate
+  // system it finds itself in. Wrap it in a <g transform="translate(…)"> and it
+  // looks fine — until `collapseGroups` bakes that translate into the geometry
+  // and the animation starts swinging the element around the root origin, well
+  // outside the viewBox. Spelling out `angle cx cy` is what makes it survive,
+  // so this checks the optimised output rather than the source.
+  const bareAngle = compress({ plugins: defaultPlugins })
+    .matchAll(
+      /<animateTransform[^>]+\btype="rotate"[^>]+\bvalues="(?<values>[^"]*)"/g,
+    )
+    .map((match) => match.groups.values)
+    .toArray();
+
+  t.assert.ok(bareAngle.length > 0, 'the fixture lost its rotate animation');
+  t.assert.deepStrictEqual(
+    bareAngle.filter((values) =>
+      values
+        .split(';')
+        .some((frame) => frame.trim().split(/[\s,]+/).length < 3),
+    ),
+    [],
+    'rotate keyframes missing an explicit centre — these move when a group collapses',
+  );
+});
+
 test('the fixture is offered as a demo and is not the default', (t) => {
   // The gulpfile ships a test-svg only when `src/config.json` lists it, and
   // `demos[0]` is both the bare Demo button's file and the only precached one.
