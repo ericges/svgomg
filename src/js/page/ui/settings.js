@@ -77,6 +77,11 @@ export default class Settings {
 
         if (control && control.type !== 'checkbox') return;
 
+        // Moving focus is the default action being cancelled here, so without
+        // this focus doesn't just skip the click target — it stays put, and
+        // the last field clicked keeps its ring until another control takes
+        // it. Blurring unconditionally is what the default would have done.
+        document.activeElement?.blur();
         event.preventDefault();
       });
 
