@@ -71,22 +71,26 @@
     {
       "id": "mergeStyles",
       "name": "Merge styles",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "styles": true
     },
     {
       "id": "inlineStyles",
       "name": "Inline styles",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "styles": true
     },
     {
       "id": "minifyStyles",
       "name": "Minify styles",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "styles": true
     },
     {
       "id": "convertStyleToAttrs",
       "name": "Style to attributes",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "styles": true
     },
     {
       "id": "removeRasterImages",
@@ -228,7 +232,8 @@
     {
       "id": "removeStyleElement",
       "name": "Remove style elements",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "styles": true
     },
     {
       "id": "removeScripts",

@@ -104,7 +104,8 @@
   background-position: right 10px center;
 }
 
-.metadata-custom {
+.metadata-custom,
+.styles-custom {
   // Indented to read as subordinate to the select that governs it. Visibility
   // is the `hidden` attribute's job — a `display` here would override it.
   padding-left: 16px;

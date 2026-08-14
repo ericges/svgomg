@@ -117,6 +117,26 @@ test('leaves a new-format save matching the old metadata defaults alone', (t) =>
   t.assert.deepStrictEqual(migrateSettings(settings), settings);
 });
 
+test('leaves the style plugins alone', (t) => {
+  // The Styles select is page-side sugar over checkboxes whose defaults never
+  // changed, so unlike the metadata group there is nothing to translate: an old
+  // save restores the same booleans and derives straight to its stage. A key
+  // predating one of the plugins stays absent, so the markup default stands.
+  const migrated = migrateSettings(
+    oldSettings({
+      ...oldMetadata,
+      inlineStyles: true,
+      minifyStyles: true,
+      removeStyleElement: true,
+    }),
+  );
+
+  t.assert.strictEqual(migrated.plugins.inlineStyles, true);
+  t.assert.strictEqual(migrated.plugins.minifyStyles, true);
+  t.assert.strictEqual(migrated.plugins.removeStyleElement, true);
+  t.assert.ok(!('mergeStyles' in migrated.plugins));
+});
+
 test('passes settings in the new shape through untouched', (t) => {
   const settings = {
     ...oldSettings(),
