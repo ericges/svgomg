@@ -22,9 +22,10 @@ addEventListener('install', (event) => {
         'js/page.js',
         'js/prism-worker.js',
         'js/svgo-worker.js',
-        // Only the demo that loads itself on startup. The rest of the demo menu
-        // is ~1MB of artwork nobody asked for, so those stay network-only —
-        // picking one offline fails with the usual toast.
+        // Only the demo the bare Demo button loads, so that button works
+        // offline. The rest of the menu is ~1MB of artwork nobody asked for, so
+        // those stay network-only — picking one offline fails with the usual
+        // toast.
         'test-svgs/car-lite.svg',
       ]);
 

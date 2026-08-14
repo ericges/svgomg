@@ -11,6 +11,7 @@ import ToolbarActions from './ui/toolbar-actions.js';
 import Toasts from './ui/toasts.js';
 import FileDrop from './ui/file-drop.js';
 import Preloader from './ui/preloader.js';
+import EmptyState from './ui/empty-state.js';
 import ResultsContainer from './ui/results-container.js';
 import ViewToggler from './ui/view-toggler.js';
 import ResultsCache from './results-cache.js';
@@ -31,6 +32,7 @@ export default class MainController {
     this._settingsUi = new Settings();
     this._actionsUi = new ToolbarActions();
     this._toastsUi = new Toasts();
+    this._emptyStateUi = new EmptyState();
 
     const bgFillUi = new BgFillButton();
     const dropUi = new FileDrop();
@@ -97,7 +99,8 @@ export default class MainController {
       const outputElement = container.querySelector('.output');
 
       // The rest of the shell paints settled; the output is the only thing that
-      // waits for a file, so it's the only thing that animates in.
+      // waits for a file, so it's the only thing that animates in — from
+      // `_onInputChange`, once there is one.
       this._mainUi = new MainUi(this._outputUi.container);
 
       minorActionContainer.append(
@@ -109,8 +112,10 @@ export default class MainController {
       container.append(this._toastsUi.container, dropUi.container);
 
       // Awaited, because `setSettings()` assigns input values without firing
-      // events: nothing recompresses afterwards, so a demo compressed before
-      // the restore lands would disagree with the panel showing it.
+      // events: nothing recompresses afterwards, so a file compressed before
+      // the restore lands would disagree with the panel showing it. The panel
+      // is out of reach until the first file, but the toolbar isn't — Ctrl+O
+      // works from the first frame.
       await this._loadSettings();
 
       // someone managed to hit the preloader, aww
@@ -118,15 +123,8 @@ export default class MainController {
         this._toastsUi.show('Ready now!', { duration: 3000 });
       }
 
-      // Open with something to look at rather than an empty app. Skipped if the
-      // user got there first — a drop or Ctrl+O during the settings restore.
-      if (!this._userHasInteracted) {
-        await this._actionsUi.loadDemo({ auto: true });
-      }
-
-      // Whether or not that worked: there's no drawer left to hide an
-      // unactivated shell behind, so the output has to settle either way.
-      this._mainUi.activate();
+      // Nothing else to do: the app opens empty, on the sheet `EmptyState`
+      // adopted, and waits to be given a file.
     });
   }
 
@@ -240,16 +238,12 @@ export default class MainController {
     }
   }
 
-  async _onInputChange({ data, filename, auto = false }) {
-    // The demo fetch is a real gap, so a user-driven load that landed while it
-    // was in flight wins.
-    if (auto && this._userHasInteracted) return;
-
+  async _onInputChange({ data, filename }) {
     const settings = this._settingsUi.getSettings();
-    // An automatic load isn't interaction: `_onUpdateFound` reads this flag to
-    // choose between a silent reload and an "Update available" toast, and every
-    // visitor would otherwise get the toast.
-    if (!auto) this._userHasInteracted = true;
+    // `_onUpdateFound` reads this to choose between a silent reload and an
+    // "Update available" toast: there's nothing to lose until someone has given
+    // the app a file.
+    this._userHasInteracted = true;
     const previousInput = this._inputItem;
 
     try {
@@ -257,13 +251,6 @@ export default class MainController {
       this._inputFilename = filename;
     } catch (error) {
       this._actionsUi.stopSpinner();
-
-      // Nobody asked for the automatic demo, so nobody should be told it failed.
-      if (auto) {
-        console.warn('Demo SVG failed to load', error);
-        return;
-      }
-
       this._handleError(new Error(`Load failed: ${error.message}`));
       return;
     }
@@ -273,8 +260,17 @@ export default class MainController {
     previousInput?.release();
     this._cache.purge();
 
+    // The previous file's collision notices describe a document that is no
+    // longer open, and the new ones aren't measured until it has been through
+    // the pipeline. Dropped rather than left standing — a failed load returns
+    // above, so the panel still describes what it is showing.
+    this._settingsUi.setCollisions(null);
+
     this._compressSvg(settings);
     this._outputUi.reset();
+    // Only now, on a file that actually parsed: a failed load leaves the app
+    // empty, so it keeps the sheet that says so.
+    this._emptyStateUi.hide();
     this._mainUi.activate();
     this._actionsUi.stopSpinner();
   }
@@ -358,6 +354,12 @@ export default class MainController {
   }
 
   async _updateForFile(svgFile, { compareToFile, compress }) {
+    // The panel's collision notices are read off the run that produced this
+    // file — every guarded plugin's own view of the document, recorded as it
+    // ran (`svgo-worker/collision-probes.js`). `compareToFile` is absent
+    // exactly when the file on screen *is* the input ("Show original"), which
+    // has been through no plugins and so has nothing to report.
+    this._settingsUi.setCollisions(compareToFile ? svgFile.collisions : null);
     this._outputUi.update(svgFile);
     this._downloadButtonUi.setDownload(this._inputFilename, svgFile);
     this._copyButtonUi.setCopyText(svgFile.text);

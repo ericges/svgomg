@@ -1,13 +1,25 @@
 import { gzip } from './gzip.js';
 
 export default class SvgFile {
-  constructor(text, width, height) {
+  /**
+   * One SVG the app is holding on to: the input, or a result of optimising it.
+   *
+   * @param {string} text The markup.
+   * @param {number} width Pixel width, for sizing the preview.
+   * @param {number} height Pixel height.
+   * @param {object} [collisions] `{ fingerprint, subjects }` — what each
+   * guarded plugin saw when it ran, and the settings that produced it, for the
+   * panel's collision notices (`svgo-worker/collision-probes.js`). Only a
+   * result has one: the input has been through no plugins.
+   */
+  constructor(text, width, height, collisions) {
     this.text = text;
     this._compressedSize = null;
     this._rawSize = null;
     this._url = null;
     this.width = width;
     this.height = height;
+    this.collisions = collisions;
   }
 
   async size({ compress }) {
