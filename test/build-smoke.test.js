@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { panelOrder } from './panel-order.js';
 
 // These assertions read `build/`, so they need a *production* build:
 // `npm run build`. A dev build (`npm run dev`) skips terser, which the
@@ -295,27 +296,21 @@ test('the settings panel carries the controls the page bundle queries', async (t
 test('the plugin checkboxes render in the order the worker runs them', async (t) => {
   // Document order of `.plugins input` is `_pluginInputs` order is
   // `Object.entries(settings.plugins)` order is SVGO's execution order.
-  // `test/build-plugins.test.js` pins the resulting array; this pins the
-  // markup it comes from, which is what a moved checkbox would change.
+  // `test/build-plugins.test.js` pins the resulting array against `panelOrder`;
+  // this pins the markup it comes from against the same thing, which is what a
+  // moved checkbox would change.
+  //
+  // The whole array, not a prefix of it: checking the first ten names and the
+  // total length leaves the 34 feature checkboxes free to render in any order,
+  // and `panelOrder` is a prediction from `src/config.json` rather than a
+  // reading of the template — so nothing else here would notice.
   const config = await readConfig();
   const ids = new Set(config.plugins.map((plugin) => plugin.id));
   const rendered = [...inputNames(await readBuildFile('index.html'))].filter(
     (name) => ids.has(name),
   );
 
-  t.assert.deepStrictEqual(rendered.slice(0, 10), [
-    'removeComments',
-    'removeMetadata',
-    'removeEditorsNSData',
-    'removeTitle',
-    'removeDesc',
-    'mergeStyles',
-    'inlineStyles',
-    'minifyStyles',
-    'convertStyleToAttrs',
-    'removeStyleElement',
-  ]);
-  t.assert.strictEqual(rendered.length, config.plugins.length);
+  t.assert.deepStrictEqual(rendered, panelOrder);
 });
 
 test('every configured demo is offered, shipped, and named on the button', async (t) => {

@@ -143,10 +143,26 @@ test('the tiles the inert sweep cannot see keep their witnesses', (t) => {
     {
       tile: 'hidden',
       plugin: 'removeHiddenElems',
-      source: [/display="none"/, /opacity="0"/, /visibility="hidden"/, /r="0"/],
+      // Five separate reasons to be invisible, and the plugin has a branch per
+      // reason — so each one is named on both sides. The zero-width rect is
+      // scoped by its `x`, since `width="0"` on its own would also match a
+      // future tile that happens to use it.
+      source: [
+        /display="none"/,
+        /opacity="0"/,
+        /x="52"[^>]*width="0"/,
+        /r="0"/,
+        /visibility="hidden"/,
+      ],
       // The one rect in the tile with nothing wrong with it has to stay.
       optimised: [/#c8ced6/],
-      removed: [/display="none"/, /visibility="hidden"/, /r="0"/],
+      removed: [
+        /display="none"/,
+        /opacity="0"/,
+        /width="0"/,
+        /r="0"/,
+        /visibility="hidden"/,
+      ],
     },
   ];
 
@@ -172,12 +188,14 @@ test('the tiles the inert sweep cannot see keep their witnesses', (t) => {
 });
 
 test('both precision sliders have range on the fixture', (t) => {
-  // A slider whose whole 0–8 sweep is byte-identical is a control the fixture
-  // cannot demonstrate by hand. `floatPrecision` needs coordinates with more
-  // decimals than it keeps; `transformPrecision` needs a transform that reaches
-  // `convertTransform` intact, which on a <g> nothing does — the default
-  // pipeline bakes those into path data first. See the <use> in the numbers
-  // tile.
+  // A slider position that produces the same bytes as its neighbour is a
+  // position the fixture cannot demonstrate by hand, so the contract is all
+  // nine, not most of nine — which is what forces eight decimal places into
+  // both witnesses rather than seven. `floatPrecision` needs coordinates with
+  // more decimals than it keeps; `transformPrecision` needs a transform that
+  // reaches `convertTransform` intact, which on a <g> nothing does — the
+  // default pipeline bakes those into path data first. See the <use> in the
+  // numbers tile.
   const sweep = (key) =>
     new Set(
       Array.from({ length: 9 }, (_, value) =>
@@ -185,13 +203,15 @@ test('both precision sliders have range on the fixture', (t) => {
       ),
     ).size;
 
-  t.assert.ok(
-    sweep('floatPrecision') >= 8,
-    'floatPrecision no longer changes the output across most of its range',
+  t.assert.strictEqual(
+    sweep('floatPrecision'),
+    9,
+    'floatPrecision has stops the fixture renders identically',
   );
-  t.assert.ok(
-    sweep('transformPrecision') >= 8,
-    'transformPrecision no longer changes the output across most of its range',
+  t.assert.strictEqual(
+    sweep('transformPrecision'),
+    9,
+    'transformPrecision has stops the fixture renders identically',
   );
 });
 
@@ -246,24 +266,28 @@ test('every combination of the grouped controls resolves its references', (t) =>
   // every plugin enabled — a destructive configuration no preset produces, but
   // the widest one the panel can reach — and asks something an id-rewriting bug
   // would actually break.
-  const broken = matrix
-    .map((combination) => ({
-      combination,
-      ...danglingReferences(
-        compress({ ...combination, idPrefix: 'ks_', plugins: allPlugins }),
-      ),
-    }))
-    .filter(({ dangling }) => dangling.length > 0);
+  const broken = matrix.flatMap((combination) => {
+    const { references, dangling } = danglingReferences(
+      compress({ ...combination, idPrefix: 'ks_', plugins: allPlugins }),
+    );
 
-  t.assert.deepStrictEqual(broken, [], 'combinations left dangling references');
+    return [
+      ...(dangling.length > 0
+        ? [{ ...combination, problem: `dangling: ${dangling.join(', ')}` }]
+        : []),
+      // Guards the guard, per row rather than once for the matrix: a
+      // combination that deleted every reference *and* every definition it
+      // pointed at would have nothing dangling and would otherwise pass.
+      ...(references.length === 0
+        ? [{ ...combination, problem: 'no references survived to check' }]
+        : []),
+    ];
+  });
 
-  // Guards the guard: a matrix that stopped referencing anything would pass.
-  const { references } = danglingReferences(
-    compress({ idPrefix: 'ks_', plugins: allPlugins }),
-  );
-  t.assert.ok(
-    references.length > 0,
-    'the fixture references no ids, so this proves nothing',
+  t.assert.deepStrictEqual(
+    broken,
+    [],
+    'combinations with broken or unverifiable references',
   );
 });
 

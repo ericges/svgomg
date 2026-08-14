@@ -213,11 +213,12 @@
     <rect x="216" y="135" width="24.000" height="20.000" fill="#4a90d9" stroke-width="1.5000" stroke="#1b2733"/>
     <text x="248" y="150" font-family="sans-serif" font-size="8" fill="#55606d">10.00000</text>
     <!--
-      Seven decimals on every coordinate, so the float-precision slider has
-      range: the whole 0–8 sweep produces a different `d` at each stop. Short
-      exact fractions elsewhere in the file round away by 2 and then sit still.
+      Eight decimals on every coordinate, so the float-precision slider has
+      range across its whole travel: all nine stops produce a different `d`.
+      Seven is one too few — 7 and 8 then round to the same thing. Short exact
+      fractions elsewhere in the file round away by 2 and then sit still.
     -->
-    <path fill="#417505" d="M168.1234567 160.7654321h39.8765432v9.1234567h-39.8765432z"/>
+    <path fill="#417505" d="M168.12345678 160.76543219h39.87654321v9.12345678h-39.87654321z"/>
     <!--
       The transform-precision slider needs a transform that reaches
       `convertTransform` still intact, and on a <g> nothing does: the default
@@ -226,9 +227,10 @@
       *float* precision. A <use> is one of the few things `convertPathData`
       cannot apply a transform to, so this one survives to be rounded — and at
       precision 0 the scale rounds away entirely and the square jumps to full
-      size, which is the slider visibly doing something.
+      size, which is the slider visibly doing something. Eight decimals for the
+      same reason as the path above: seven leaves stops 7 and 8 identical.
     -->
-    <use href="#ks-reused-shape" transform="translate(280 160) scale(0.6428571)"/>
+    <use href="#ks-reused-shape" transform="translate(280 160) scale(0.64285714)"/>
 
     <!-- stroke &amp; fill -->
     <rect x="328" y="135" width="24" height="20" fill="#f5a623" stroke="none" stroke-width="4" stroke-dasharray="3 3" stroke-linejoin="round"/>
