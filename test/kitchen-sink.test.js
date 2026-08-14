@@ -1,22 +1,24 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
 import test from 'node:test';
 import { optimize } from 'svgo';
 import { buildPlugins } from '../src/js/svgo-worker/build-plugins.js';
+import {
+  allPlugins,
+  combinations,
+  config,
+  defaultPlugins,
+  panelPlugins,
+  readSource,
+} from './panel-order.js';
 
 // `src/test-svgs/kitchen-sink.svg` is the one fixture authored to give every
 // exposed optimisation something to do. These assertions read the source tree,
 // not `build/`, so unlike the smoke test they need no build.
-const repoRoot = path.join(import.meta.dirname, '..');
-
-const readSource = (relativePath) =>
-  fs.readFile(path.join(repoRoot, 'src', relativePath), 'utf8');
-
 const fixture = await readSource('test-svgs/kitchen-sink.svg');
-const config = JSON.parse(await readSource('config.json'));
 
 // The defaults keep every checkbox out of the way, exactly as in
-// `test/build-plugins.test.js`; each test opts into what it's about.
+// `test/build-plugins.test.js`; each test opts into what it's about. `plugins`
+// comes from `./panel-order.js` rather than `config.plugins`, because SVGO runs
+// the array in order and the panel's order is not the config file's.
 const compress = (overrides = {}) => {
   const settings = {
     floatPrecision: '3',
@@ -47,30 +49,45 @@ const styleDeoptimised = new Set([
 ]);
 const cleared = { removeStyleElement: true, removeScripts: true };
 
-// `buildPlugins` iterates the `plugins` object's own entries, so a plugin left
-// out of it never runs — an absent key is not the same as `false`.
-const allPlugins = Object.fromEntries(
-  config.plugins.map(({ id }) => [id, true]),
-);
-const defaultPlugins = Object.fromEntries(
-  config.plugins.map(({ id, enabledByDefault }) => [
-    id,
-    Boolean(enabledByDefault),
-  ]),
-);
+// Every axis of the settings panel that changes the pipeline rather than just
+// the measurement, so a matrix over it is the widest thing the fixture can be
+// put through without a browser.
+const matrix = combinations({
+  dimensionAttrs: ['original', 'viewBox', 'widthHeight', 'both'],
+  ids: ['keep', 'minify', 'removeUnused'],
+  currentColor: [false, true],
+  multipass: [false, true],
+});
+
+// A reference that outlives the thing it points at is the failure mode every
+// id-rewriting mode shares, and the one that survives a "does it still look
+// like SVG" check untouched.
+const danglingReferences = (data) => {
+  const ids = new Set(
+    data.matchAll(/\bid="(?<id>[^"]+)"/g).map((match) => match.groups.id),
+  );
+  const references = data
+    .matchAll(/(?:url\(#|(?:xlink:)?href=")#?(?<id>[^")]+)/g)
+    .map((match) => match.groups.id)
+    // `<a xlink:href="https://…">` and the data: URI point outside the document.
+    .filter((id) => !id.includes(':') && !id.includes('/'))
+    .toArray();
+
+  return { ids, references, dangling: references.filter((id) => !ids.has(id)) };
+};
 
 test('every configured plugin changes the kitchen-sink fixture', (t) => {
-  // The point of the fixture. Each plugin runs alone and is compared against a
-  // run of nothing at all — both go through SVGO's parse/stringify, so the only
-  // difference is that one plugin. Anything listed here has quietly stopped
-  // being covered: either the fixture lost the construct it acted on, or SVGO
-  // changed what the plugin does.
+  // A cheap early warning, not a coverage proof: it only asks whether a plugin
+  // changed *any* byte, and plugins with incidental targets in the labels and
+  // definitions stay non-inert long after their own tile is gone. Deleting the
+  // colour, numbers, hidden or animation tile outright leaves this test green
+  // — which is what the witness and sentinel tests below are for.
   const baselines = {
     plain: compress(),
     cleared: compress({ plugins: cleared }),
   };
 
-  const inert = config.plugins
+  const inert = panelPlugins
     .map(({ id }) => id)
     .filter((id) => {
       const isDeoptimised = styleDeoptimised.has(id);
@@ -102,39 +119,186 @@ test('the two style-deoptimised plugins really are deoptimised', (t) => {
   );
 });
 
-test('every combination of the grouped controls yields usable markup', (t) => {
-  // The four selects and toggles multiply out to combinations no single hand
-  // test covers, and the fixture is the widest input in the repo. Nothing here
-  // pins SVGO's output — it checks the pipeline survives the whole matrix.
-  const combinations = ['original', 'viewBox', 'widthHeight', 'both'].flatMap(
-    (dimensionAttrs) =>
-      ['keep', 'minify', 'removeUnused'].flatMap((ids) =>
-        [false, true].flatMap((currentColor) =>
-          [false, true].map((multipass) => ({
-            dimensionAttrs,
-            ids,
-            currentColor,
-            multipass,
-          })),
-        ),
-      ),
+test('the tiles the inert sweep cannot see keep their witnesses', (t) => {
+  // Binds a plugin to the construct it is supposed to act on, in both
+  // directions: the `source` patterns fail if the tile was trimmed away, the
+  // `optimised`/`removed` ones fail if the plugin stopped doing the thing the
+  // tile is there to demonstrate. Only the tiles the sweep above is blind to
+  // need this — the rest are pinned by the sentinel matrix.
+  const witnesses = [
+    {
+      tile: 'colour',
+      plugin: 'convertColors',
+      source: [/fill="#FF0000"/, /fill="rgb\(0, 128, 255\)"/],
+      optimised: [/fill="red"/, /fill="#0080ff"/],
+      removed: [/#FF0000/, /rgb\(/],
+    },
+    {
+      tile: 'numbers',
+      plugin: 'cleanupNumericValues',
+      source: [/width="\+40"/, /height="20\.250000"/, /y="135\.5000"/],
+      optimised: [/width="40"/, /height="20.25"/, /y="135.5"/],
+      removed: [/"\+40"/, /20\.250000/],
+    },
+    {
+      tile: 'hidden',
+      plugin: 'removeHiddenElems',
+      source: [/display="none"/, /opacity="0"/, /visibility="hidden"/, /r="0"/],
+      // The one rect in the tile with nothing wrong with it has to stay.
+      optimised: [/#c8ced6/],
+      removed: [/display="none"/, /visibility="hidden"/, /r="0"/],
+    },
+  ];
+
+  const problems = witnesses.flatMap(
+    ({ tile, plugin, source, optimised, removed }) => {
+      const data = compress({ plugins: { ...cleared, [plugin]: true } });
+
+      return [
+        ...source
+          .filter((pattern) => !pattern.test(fixture))
+          .map((pattern) => `the ${tile} tile no longer contains ${pattern}`),
+        ...optimised
+          .filter((pattern) => !pattern.test(data))
+          .map((pattern) => `${plugin} no longer produces ${pattern}`),
+        ...removed
+          .filter((pattern) => pattern.test(data))
+          .map((pattern) => `${plugin} left ${pattern} in the ${tile} tile`),
+      ];
+    },
   );
 
-  const broken = combinations.filter((combination) => {
-    const data = compress({
-      ...combination,
-      idPrefix: 'ks_',
-      plugins: allPlugins,
-    });
-    // A preserved `<!--!` banner comment legitimately precedes the root, so
-    // this looks for the element rather than the start of the string.
-    return !/<svg[\s>]/.test(data) || /<parsererror/.test(data);
+  t.assert.deepStrictEqual(problems, []);
+});
+
+test('both precision sliders have range on the fixture', (t) => {
+  // A slider whose whole 0–8 sweep is byte-identical is a control the fixture
+  // cannot demonstrate by hand. `floatPrecision` needs coordinates with more
+  // decimals than it keeps; `transformPrecision` needs a transform that reaches
+  // `convertTransform` intact, which on a <g> nothing does — the default
+  // pipeline bakes those into path data first. See the <use> in the numbers
+  // tile.
+  const sweep = (key) =>
+    new Set(
+      Array.from({ length: 9 }, (_, value) =>
+        compress({ [key]: String(value), plugins: defaultPlugins }),
+      ),
+    ).size;
+
+  t.assert.ok(
+    sweep('floatPrecision') >= 8,
+    'floatPrecision no longer changes the output across most of its range',
+  );
+  t.assert.ok(
+    sweep('transformPrecision') >= 8,
+    'transformPrecision no longer changes the output across most of its range',
+  );
+});
+
+test('the default preset keeps every tile of the test card', (t) => {
+  // What "usable markup" has to mean for a diagnostic: the constructs a reader
+  // is meant to see are all still there, in every combination of the grouped
+  // controls. Matched by element rather than by id, since two of the id modes
+  // rename them. These are the defaults, so nothing here is destructive.
+  const sentinels = {
+    mask: /<mask[\s>]/,
+    filter: /<filter[\s>]/,
+    pattern: /<pattern[\s>]/,
+    clipPath: /<clipPath[\s>]/,
+    symbol: /<symbol[\s>]/,
+    use: /<use[\s>]/,
+    image: /<image[\s>]/,
+    marker: /<marker[\s>]/,
+    linearGradient: /<linearGradient[\s>]/,
+    radialGradient: /<radialGradient[\s>]/,
+    animate: /<animate[\s>]/,
+    rotate: /<animateTransform[^>]+type="rotate"/,
+    set: /<set[\s>]/,
+    motionPath: /<mpath[\s>]/,
+    textPath: /<textPath[\s>]/,
+    tspan: /<tspan[\s>]/,
+    foreignObject: /<foreignObject[\s>]/,
+    switch: /<switch[\s>]/,
+    nestedSvg: /<svg[^>]*>[\s\S]*<svg[\s>]/,
+    anchor: /<a[\s>]/,
+    // The red diagonal of the shapes tile, and the one rect of the hidden tile
+    // that is meant to survive — both easy to lose to a plugin interaction.
+    diagonal: /m82 70 16-18/,
+    visibleRect: /h19v17/,
+    // The long-coordinate path the float-precision slider works on.
+    longCoordinates: /168\.123/,
+  };
+
+  const missing = matrix.flatMap((combination) => {
+    const data = compress({ ...combination, plugins: defaultPlugins });
+    return Object.entries(sentinels)
+      .filter(([, pattern]) => !pattern.test(data))
+      .map(([name]) => ({ ...combination, missing: name }));
   });
 
-  t.assert.deepStrictEqual(
-    broken,
-    [],
-    'control combinations that produced unusable markup',
+  t.assert.deepStrictEqual(missing, [], 'tiles the default preset destroyed');
+});
+
+test('every combination of the grouped controls resolves its references', (t) => {
+  // Replaces a check for `<svg` and `<parsererror`, which could not fail:
+  // `optimize()` throws on malformed input and its serializer returns text, so
+  // no parser error can ever reach the output. This runs the whole matrix with
+  // every plugin enabled — a destructive configuration no preset produces, but
+  // the widest one the panel can reach — and asks something an id-rewriting bug
+  // would actually break.
+  const broken = matrix
+    .map((combination) => ({
+      combination,
+      ...danglingReferences(
+        compress({ ...combination, idPrefix: 'ks_', plugins: allPlugins }),
+      ),
+    }))
+    .filter(({ dangling }) => dangling.length > 0);
+
+  t.assert.deepStrictEqual(broken, [], 'combinations left dangling references');
+
+  // Guards the guard: a matrix that stopped referencing anything would pass.
+  const { references } = danglingReferences(
+    compress({ idPrefix: 'ks_', plugins: allPlugins }),
+  );
+  t.assert.ok(
+    references.length > 0,
+    'the fixture references no ids, so this proves nothing',
+  );
+});
+
+test('removeOffCanvasPaths still deletes an on-canvas straight line', (t) => {
+  // A known SVGO defect, pinned rather than hidden. `removeOffCanvasPaths`
+  // only treats an *absolute* `M` inside the viewBox as proof of visibility;
+  // everything else falls through to `intersects()`, which builds a convex hull
+  // and gives up when it has fewer than three points. A straight line has two.
+  // So any zero-area path with a relative start is deleted wherever it sits.
+  //
+  // The fixture's red diagonal is a <line>, which `convertShapeToPath` turns
+  // into exactly that, so enabling "Remove out-of-bounds paths" on otherwise
+  // default settings loses a visible element. The <line> is the only witness
+  // `convertShapeToPath` has for that shape, so the fixture keeps it and this
+  // test records the damage. When SVGO fixes the hull check this test fails,
+  // which is the point — delete it then.
+  const withOffCanvas = compress({
+    plugins: { ...defaultPlugins, removeOffCanvasPaths: true },
+  });
+
+  t.assert.match(
+    compress({ plugins: defaultPlugins }),
+    /m82 70 16-18/,
+    'the fixture lost its red diagonal, so this test has nothing to say',
+  );
+  t.assert.doesNotMatch(
+    withOffCanvas,
+    /m82 70 16-18/,
+    'SVGO stopped eating the on-canvas diagonal — delete this test and the note in CLAUDE.md',
+  );
+  // The plugin does still do its actual job.
+  t.assert.doesNotMatch(
+    withOffCanvas,
+    /M-240-240/,
+    'the genuinely off-canvas square survived',
   );
 });
 
@@ -208,26 +372,17 @@ test('idPrefix leaves every internal reference resolvable', (t) => {
   // together. The fixture references ids through `url(#…)`, `href` and
   // `xlink:href`, from a <use>, a <textPath> and an <mpath> — so a mode
   // `prefixIds` misses shows up here as a dangling reference.
-  const data = compress({ idPrefix: 'ks_', plugins: allPlugins });
-
-  const ids = new Set(
-    data.matchAll(/\bid="(?<id>[^"]+)"/g).map((match) => match.groups.id),
-  );
-  const references = new Set(
-    data
-      .matchAll(/(?:url\(#|(?:xlink:)?href=")#?(?<id>[^")]+)/g)
-      .map((match) => match.groups.id)
-      // `<a xlink:href="https://…">` points outside the document.
-      .filter((id) => !id.includes(':') && !id.includes('/')),
+  const { ids, references, dangling } = danglingReferences(
+    compress({ idPrefix: 'ks_', plugins: allPlugins }),
   );
 
   t.assert.ok(ids.size > 0, 'the prefixed output declares no ids at all');
   t.assert.ok(
-    references.size > 0,
+    references.length > 0,
     'the fixture references no ids, so this proves nothing',
   );
   t.assert.deepStrictEqual(
-    [...references].filter((id) => !ids.has(id)),
+    dangling,
     [],
     'references left pointing at ids that no longer exist',
   );

@@ -190,6 +190,27 @@ test('the page bundle never selects on an attribute the minifier strips', async 
   t.assert.doesNotMatch(idPrefix[0], /\btype=/);
 });
 
+test('the preview iframe ships with an empty sandbox', async (t) => {
+  // The preview renders untrusted SVG, and one of the bundled demos —
+  // `kitchen-sink.svg` — carries a <script>, an `onclick` and a `javascript:`
+  // href on purpose, so this attribute is load-bearing rather than theoretical.
+  // `sandbox=""` grants nothing; adding `allow-scripts` would let a dropped
+  // file run code in the app's origin. Pinned here because the iframe is built
+  // by `strToEl` in the page bundle, where no markup test would see it.
+  const page = await readBuildFile('js/page.js');
+
+  t.assert.match(
+    page,
+    /<iframe[^>]+\bsandbox=(?<quote>["'])\k<quote>/,
+    'the preview iframe lost its empty `sandbox` attribute',
+  );
+  t.assert.doesNotMatch(
+    page,
+    /\bsandbox=["'][^"']*allow-scripts/,
+    'the preview iframe grants allow-scripts — untrusted SVG could run code',
+  );
+});
+
 test('every configured SVGO plugin renders a checkbox', async (t) => {
   // Exposing a plugin is meant to be one entry in `src/config.json` and no JS
   // change, which only holds while the template renders all of them. They come

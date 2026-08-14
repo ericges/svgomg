@@ -8,8 +8,11 @@
   Every construct in here exists to give one exposed optimisation something to
   do, so that toggling any single control in the settings panel visibly changes
   the output. `test/kitchen-sink.test.js` runs each plugin over this file on its
-  own and fails if one of them turns out to be a no-op, so please don't trim a
-  tile without checking what it was covering.
+  own and fails if one of them turns out to be a no-op — but that sweep only
+  asks whether any byte changed, and most plugins have incidental targets in the
+  labels and definitions, so it will not notice a whole tile going missing. The
+  witness and sentinel tests alongside it cover the tiles it is blind to. Please
+  don't trim anything without checking what it was covering.
 
   One deliberate limitation: `current-color-styles.js` refuses to rewrite any
   stylesheet while a mask exists anywhere in the document, because a rule could
@@ -209,6 +212,23 @@
     <rect x="168.00000" y="135.5000" width="+40" height="20.250000" fill="#9013fe" fill-opacity="0.50"/>
     <rect x="216" y="135" width="24.000" height="20.000" fill="#4a90d9" stroke-width="1.5000" stroke="#1b2733"/>
     <text x="248" y="150" font-family="sans-serif" font-size="8" fill="#55606d">10.00000</text>
+    <!--
+      Seven decimals on every coordinate, so the float-precision slider has
+      range: the whole 0–8 sweep produces a different `d` at each stop. Short
+      exact fractions elsewhere in the file round away by 2 and then sit still.
+    -->
+    <path fill="#417505" d="M168.1234567 160.7654321h39.8765432v9.1234567h-39.8765432z"/>
+    <!--
+      The transform-precision slider needs a transform that reaches
+      `convertTransform` still intact, and on a <g> nothing does: the default
+      pipeline runs `moveGroupAttrsToElems`, `collapseGroups` and
+      `convertPathData` first, which bake the whole thing into the path data at
+      *float* precision. A <use> is one of the few things `convertPathData`
+      cannot apply a transform to, so this one survives to be rounded — and at
+      precision 0 the scale rounds away entirely and the square jumps to full
+      size, which is the slider visibly doing something.
+    -->
+    <use href="#ks-reused-shape" transform="translate(280 160) scale(0.6428571)"/>
 
     <!-- stroke &amp; fill -->
     <rect x="328" y="135" width="24" height="20" fill="#f5a623" stroke="none" stroke-width="4" stroke-dasharray="3 3" stroke-linejoin="round"/>
@@ -221,7 +241,13 @@
     <rect x="52" y="218" width="0" height="18" fill="#f5a623"/>
     <circle cx="80" cy="227" r="0" fill="#d0021b"/>
     <rect x="96" y="218" width="18" height="18" fill="#9013fe" visibility="hidden"/>
-    <rect x="118" y="218" width="18" height="18" fill="#c8ced6"/>
+    <!--
+      19×17 rather than 18×18 like its neighbours, so `h19v17` identifies it in
+      the output no matter which path it got merged into or whether the moveto
+      came out absolute or relative. It is the one rect in this tile that is
+      meant to survive, and a plugin interaction that eats it has to be caught.
+    -->
+    <rect x="118" y="218" width="19" height="17" fill="#c8ced6"/>
 
     <!-- text -->
     <text x="168" y="228" font-family="sans-serif" font-size="9" fill="#1b2733">Hello <tspan fill="#d0021b" font-weight="bold">tspan</tspan></text>
