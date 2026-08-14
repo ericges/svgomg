@@ -1,13 +1,20 @@
 import { createNanoEvents } from 'nanoevents';
-import { domReady } from '../utils.js';
+import infoIconSvg from '../../../partials/icons/info.svg';
+import { domReady, strToEl } from '../utils.js';
 import MaterialSlider from './material-slider.js';
 import Ripple from './ripple.js';
 import { deriveStage, metadataStages, stylesStages } from './setting-stages.js';
+import { collectNotes } from './setting-notes.js';
 
 export default class Settings {
   constructor() {
     this.emitter = createNanoEvents();
     this._throttleTimeout = null;
+    // What the loaded file contains, for the collision notices. Undefined until
+    // `MainController` has a file to describe, which is also what keeps the
+    // notices off an app that has nothing open.
+    this._documentFacts = undefined;
+    this._renderedNotes = '';
 
     domReady.then(() => {
       this.container = document.querySelector('.settings');
@@ -86,7 +93,19 @@ export default class Settings {
       });
 
       this._syncStageSelects();
+      this._renderNotes();
     });
+  }
+
+  /**
+   * What the input file contains, from the worker's `extract-features` pass.
+   * The collision notices are gated on it — see `setting-notes.js`.
+   *
+   * @param {object} facts `{ hasStyleElement, hasScripts, hasMask }`.
+   */
+  setDocumentFacts(facts) {
+    this._documentFacts = facts;
+    this._renderNotes();
   }
 
   _onChange(event) {
@@ -96,8 +115,14 @@ export default class Settings {
       (candidate) => candidate.select === event.target,
     );
 
+    if (stageGroup) this._applyStage(stageGroup, event.target.value);
+
+    // After the stage has written its checkboxes: the notices read the settings
+    // those produce, not the select. Never throttled — a note that lags the
+    // control it sits under reads as a note about something else.
+    this._renderNotes();
+
     if (stageGroup) {
-      this._applyStage(stageGroup, event.target.value);
       this.emitter.emit('change');
       return;
     }
@@ -127,6 +152,65 @@ export default class Settings {
     }
 
     group.custom.hidden = stage !== 'custom';
+  }
+
+  /**
+   * A notice sits *after* the control's `<label>`, never inside it — the label
+   * is the click target for its own checkbox. One exception: a checkbox in a
+   * collapsed stage block has no visible row of its own, so its notice goes to
+   * the select that stands in for the block.
+   *
+   * @param {Element} control The input or select the notice is about.
+   * @returns {Element} The element to insert the notice after.
+   */
+  _noteHost(control) {
+    const group = this._stageGroups.find((candidate) =>
+      candidate.custom.contains(control),
+    );
+
+    return group?.custom.hidden
+      ? group.select.closest('label')
+      : control.closest('label');
+  }
+
+  _renderNotes() {
+    if (!this.container) return;
+
+    const notes = collectNotes(this.getSettings(), this._documentFacts);
+    // Re-rendering identical notes on every keystroke would tear them off the
+    // panel and put them straight back.
+    const rendered = JSON.stringify(notes);
+
+    if (rendered === this._renderedNotes) return;
+
+    this._renderedNotes = rendered;
+
+    for (const stale of this.container.querySelectorAll('.setting-note')) {
+      stale.remove();
+    }
+
+    for (const control of this.container.querySelectorAll(
+      '[aria-describedby]',
+    )) {
+      control.removeAttribute('aria-describedby');
+    }
+
+    for (const { name, text } of notes) {
+      const control = this.container.querySelector(
+        `[name="${CSS.escape(name)}"]`,
+      );
+      if (!control) continue;
+
+      const id = `setting-note-${name}`;
+      const note = strToEl(
+        `<p class="setting-note" id="${id}">${infoIconSvg}<span></span></p>`,
+      );
+
+      // textContent, not markup: the messages name constructs like `<style>`.
+      note.querySelector('span').textContent = text;
+      control.setAttribute('aria-describedby', id);
+      this._noteHost(control).after(note);
+    }
   }
 
   _syncStageSelects() {
@@ -169,6 +253,7 @@ export default class Settings {
     // The stage selects have no name of their own, so they follow the
     // checkboxes.
     this._syncStageSelects();
+    this._renderNotes();
 
     this.emitter.emit('reset', oldSettings);
     this.emitter.emit('change');
@@ -193,6 +278,7 @@ export default class Settings {
     }
 
     this._syncStageSelects();
+    this._renderNotes();
   }
 
   getSettings() {

@@ -89,8 +89,8 @@
     box-shadow: 0 0 0 1px #3f51b5;
   }
 
-  // A prefix its `pattern` rejects is never applied by the worker, so the
-  // field is the one place the user learns why nothing happened.
+  // A prefix its `pattern` rejects is never applied by the worker. The border
+  // marks it; the `.setting-note` below the field says why.
   &:invalid {
     border-color: #d32f2f;
 
@@ -106,6 +106,30 @@
   background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M1 1l4 4 4-4" fill="none" stroke="%23767676" stroke-width="1.5"/></svg>');
   background-repeat: no-repeat;
   background-position: right 10px center;
+}
+
+// Written into the panel by `Settings._renderNotes()` when a chosen option is
+// being overruled by the file or by another option (`setting-notes.js`). It
+// explains rather than warns, so it stays quiet — the loud red is reserved for
+// the invalid field above.
+.setting-note {
+  margin: -6px 0 0;
+  padding: 0 16px 14px;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  align-items: start;
+  gap: 8px;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: rgba(0, 0, 0, 0.55);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+    // Optical alignment with the first line of text rather than its box.
+    margin-top: 1px;
+    color: #3f51b5;
+  }
 }
 
 .metadata-custom,

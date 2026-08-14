@@ -14,7 +14,7 @@ export default class Svgo extends WorkerMessenger {
   }
 
   async wrapOriginal(svgText) {
-    const { width, height } = await this.requestResponse(
+    const { width, height, features } = await this.requestResponse(
       {
         action: 'wrapOriginal',
         data: svgText,
@@ -22,7 +22,7 @@ export default class Svgo extends WorkerMessenger {
       { timeout: WRAP_ORIGINAL_TIMEOUT_MS },
     );
 
-    return new SvgFile(svgText, width, height);
+    return new SvgFile(svgText, width, height, features);
   }
 
   process(svgText, settings) {
@@ -31,14 +31,14 @@ export default class Svgo extends WorkerMessenger {
     this._currentJob = this._currentJob
       .catch(() => {})
       .then(async () => {
-        const { data, dimensions } = await this.requestResponse({
+        const { data, dimensions, features } = await this.requestResponse({
           action: 'process',
           settings,
           data: svgText,
         });
 
         // return final result
-        return new SvgFile(data, dimensions.width, dimensions.height);
+        return new SvgFile(data, dimensions.width, dimensions.height, features);
       });
 
     return this._currentJob;

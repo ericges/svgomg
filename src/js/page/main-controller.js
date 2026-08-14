@@ -260,6 +260,12 @@ export default class MainController {
     previousInput?.release();
     this._cache.purge();
 
+    // What this file contains decides which of the panel's collision notices
+    // apply — a failed load leaves the previous file's, which is still what the
+    // panel is describing. Refined by `_updateForFile` once there's a result to
+    // read the stylesheet off.
+    this._updateDocumentFacts();
+
     this._compressSvg(settings);
     this._outputUi.reset();
     // Only now, on a file that actually parsed: a failed load leaves the app
@@ -347,7 +353,36 @@ export default class MainController {
     }
   }
 
+  /**
+   * The two halves of what the settings panel's collision notices need, which
+   * deliberately come from different documents.
+   *
+   * A script is only cleared at the very end of the pipeline, long after the
+   * plugins that back off for one have run — so that answer has to come from
+   * the *input*, and the same goes for the `<mask>` the currentColor pass
+   * checks. A stylesheet is the other way round: every plugin that backs off
+   * for one runs after the Styles block, so what matters is whether one
+   * survived into the *result*. That's also the only way to tell an "Inline
+   * into elements" that dissolved the `<style>` from one that couldn't.
+   *
+   * @param {object} [result] The optimised file, once there is one.
+   */
+  _updateDocumentFacts(result) {
+    const inputFeatures = this._inputItem?.features;
+    if (!inputFeatures) return;
+
+    this._settingsUi.setDocumentFacts({
+      ...inputFeatures,
+      hasStyleElement:
+        result?.features?.hasStyleElement ?? inputFeatures.hasStyleElement,
+    });
+  }
+
   async _updateForFile(svgFile, { compareToFile, compress }) {
+    // `compareToFile` is absent exactly when the file on screen *is* the input
+    // ("Show original"), and an unoptimised document says nothing about what
+    // the pipeline did with its stylesheet.
+    this._updateDocumentFacts(compareToFile && svgFile);
     this._outputUi.update(svgFile);
     this._downloadButtonUi.setDownload(this._inputFilename, svgFile);
     this._copyButtonUi.setCopyText(svgFile.text);

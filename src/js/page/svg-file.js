@@ -1,13 +1,24 @@
 import { gzip } from './gzip.js';
 
 export default class SvgFile {
-  constructor(text, width, height) {
+  /**
+   * One SVG the app is holding on to: the input, or a result of optimising it.
+   *
+   * @param {string} text The markup.
+   * @param {number} width Pixel width, for sizing the preview.
+   * @param {number} height Pixel height.
+   * @param {object} [features] What this document contains, for the settings
+   * panel's collision notices. Both the input and every result carry their own,
+   * and the panel reads different flags off each — see `setting-notes.js`.
+   */
+  constructor(text, width, height, features) {
     this.text = text;
     this._compressedSize = null;
     this._rawSize = null;
     this._url = null;
     this.width = width;
     this.height = height;
+    this.features = features;
   }
 
   async size({ compress }) {

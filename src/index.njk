@@ -191,7 +191,10 @@
                                     <option value="minify">Minify</option>
                                     <option value="inline" selected>Inline into elements</option>
                                     <option value="attributes">Convert to presentation attributes</option>
-                                    <option value="remove">Remove entirely</option>
+                                    {# Named after the one plugin it enables, not after what "styles"
+                                       might sound like: `removeStyleElement` deletes `<style>`
+                                       elements, and a `style` attribute on an element survives it. #}
+                                    <option value="remove">Remove style elements</option>
                                     <option value="custom">Custom…</option>
                                 </select>
                             </label>

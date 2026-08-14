@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
+import { quotedControlLabels } from '../src/js/page/ui/setting-notes.js';
 import { panelOrder } from './panel-order.js';
 
 // These assertions read `build/`, so they need a *production* build:
@@ -290,6 +291,20 @@ test('the settings panel carries the controls the page bundle queries', async (t
     stageBlocks.filter(([, isPluginsContainer]) => !isPluginsContainer),
     [],
     'stage blocks that are not .plugins containers — their checkboxes would never reach getSettings()',
+  );
+});
+
+test('the collision notices quote controls the panel really offers', async (t) => {
+  // A notice's fix names a control by its label — "set Styles to “Remove style
+  // elements”". Nothing else ties those strings to the template, so renaming an
+  // option would leave the advice pointing at a control that no longer exists
+  // under that name.
+  const html = await readBuildFile('index.html');
+
+  t.assert.deepStrictEqual(
+    quotedControlLabels.filter((label) => !html.includes(label)),
+    [],
+    'labels the notices quote that are missing from the built markup',
   );
 });
 
