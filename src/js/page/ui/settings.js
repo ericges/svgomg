@@ -66,12 +66,16 @@ export default class Settings {
       // I think this code will bite me.
       // The exceptions are controls that need the mousedown to focus or open
       // them — preventing it leaves the text field unfocusable.
+      //
+      // Matched on the `type` DOM *property*, not an attribute selector:
+      // `type=text` is the HTML default, so `removeRedundantAttributes` strips
+      // it and `input[type=text]` matches nothing in a production build. The
+      // property still reads 'text'. Checkboxes are deliberately not exempt —
+      // they're visually hidden, so the mousedown lands on their label.
       scroller.addEventListener('mousedown', (event) => {
-        if (
-          event.target.closest('input[type=range], input[type=text], select')
-        ) {
-          return;
-        }
+        const control = event.target.closest('input, select');
+
+        if (control && control.type !== 'checkbox') return;
 
         event.preventDefault();
       });

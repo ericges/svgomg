@@ -168,6 +168,28 @@ test('settings keys reach the worker under their HTML `name` attributes', async 
   );
 });
 
+test('the page bundle never selects on an attribute the minifier strips', async (t) => {
+  // `removeRedundantAttributes` drops `type=text` — it is the HTML default —
+  // so `input[type=text]` matches nothing in a production build. The scroller's
+  // mousedown exemption used to select on exactly that, which left the ID
+  // prefix field unfocusable by click in every shipped build while working
+  // fine in `npm run dev`. It reads the `type` DOM property instead now.
+  const page = await readBuildFile('js/page.js');
+  const html = await readBuildFile('index.html');
+
+  t.assert.doesNotMatch(
+    page,
+    /input\[type=["']?text/,
+    'the page bundle selects on `input[type=text]`, which the minifier strips',
+  );
+
+  // The premise, so this test explains itself if the minifier config changes.
+  const idPrefix =
+    /<input[^>]+\bname=(?<quote>["']?)idPrefix\k<quote>[^>]*>/.exec(html);
+  t.assert.ok(idPrefix, 'no idPrefix field in the built markup');
+  t.assert.doesNotMatch(idPrefix[0], /\btype=/);
+});
+
 test('every configured SVGO plugin renders a checkbox', async (t) => {
   // Exposing a plugin is meant to be one entry in `src/config.json` and no JS
   // change, which only holds while the template renders all of them. They come

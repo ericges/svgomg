@@ -73,6 +73,10 @@
   font: inherit;
   font-size: 1rem;
   color: inherit;
+  // There's no global reset, and the UA default differs by control: `select`
+  // is already border-box, a text `input` is not — so `width: 100%` plus the
+  // padding and border below used to push the field out past the panel.
+  box-sizing: border-box;
   width: 100%;
   padding: 8px 10px;
   background-color: #fff;
