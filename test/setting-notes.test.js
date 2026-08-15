@@ -321,10 +321,11 @@ test('a rejected ID prefix is explained, whatever the file contains', (t) => {
   );
 });
 
-test('the order the messages assume is the order the panel produces', (t) => {
+test('the order the messages assume is the order the pipeline runs', (t) => {
   // Both anticipating conditions are claims about pipeline order, and the
-  // pipeline is the panel's DOM order. Moving a checkbox between blocks would
-  // leave the messages advising a fix that no longer works.
+  // pipeline is `config.json`'s array order (`panelOrder` re-exports it from
+  // `plugin-order.js`). Reordering the config would leave the messages
+  // advising a fix that no longer works.
   const at = (id) => panelOrder.indexOf(id);
   const subjects = [
     // `cleanupIds` has no checkbox; `buildPlugins` inserts it at this entry.

@@ -2,7 +2,6 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import test from 'node:test';
 import { quotedControlLabels } from '../src/js/page/ui/setting-notes.js';
-import { panelOrder } from './panel-order.js';
 
 // These assertions read `build/`, so they need a *production* build:
 // `npm run build`. A dev build (`npm run dev`) skips terser, which the
@@ -170,6 +169,27 @@ test('settings keys reach the worker under their HTML `name` attributes', async 
   );
 });
 
+test('the page bundle keeps the copying-array methods out of the boot path', async (t) => {
+  // The build minifies without transpiling, so an ES2023 method in the page
+  // bundle throws in a browser that runs everything else — and one did:
+  // `Settings` briefly booted through `toSorted()`, which would have cost the
+  // whole panel, not just the sort. xo's unicorn rules actively rewrite
+  // toward these methods (`no-array-sort`, `no-array-reverse`), so the same
+  // slip recurs whenever page code appeases the linter — suppress the rule at
+  // the call site instead, with `settings.js` as the pattern. Confined to
+  // the page bundle: it's all hand-written but `nanoevents`, so a hit here is
+  // ours, not a vendored library forcing a baseline discussion.
+  const page = await readBuildFile('js/page.js');
+
+  t.assert.deepStrictEqual(
+    ['.toSorted(', '.toReversed(', '.toSpliced('].filter((method) =>
+      page.includes(method),
+    ),
+    [],
+    'ES2023 copying-array methods in build/js/page.js',
+  );
+});
+
 test('the page bundle never selects on an attribute the minifier strips', async (t) => {
   // `removeRedundantAttributes` drops `type=text` — it is the HTML default —
   // so `input[type=text]` matches nothing in a production build. The scroller's
@@ -308,24 +328,24 @@ test('the collision notices quote controls the panel really offers', async (t) =
   );
 });
 
-test('the plugin checkboxes render in the order the worker runs them', async (t) => {
-  // Document order of `.plugins input` is `_pluginInputs` order is
-  // `Object.entries(settings.plugins)` order is SVGO's execution order.
-  // `test/build-plugins.test.js` pins the resulting array against `panelOrder`;
-  // this pins the markup it comes from against the same thing, which is what a
-  // moved checkbox would change.
-  //
-  // The whole array, not a prefix of it: checking the first ten names and the
-  // total length leaves the 34 feature checkboxes free to render in any order,
-  // and `panelOrder` is a prediction from `src/config.json` rather than a
-  // reading of the template — so nothing else here would notice.
+test('the plugin checkboxes cover the config exactly once each', async (t) => {
+  // The pipeline runs in `config.json`'s array order now (`plugin-order.js`),
+  // so the markup's order stopped binding it — the panel is free to group and
+  // sort its controls. Coverage still matters: a plugin with no checkbox can
+  // never be enabled, and one with two would fight itself over a single
+  // settings key. The raw match list rather than `inputNames()`, because a
+  // duplicate collapses in a Set and nothing else here would notice it.
   const config = await readConfig();
-  const ids = new Set(config.plugins.map((plugin) => plugin.id));
-  const rendered = [...inputNames(await readBuildFile('index.html'))].filter(
-    (name) => ids.has(name),
-  );
+  const html = await readBuildFile('index.html');
+  const ids = config.plugins.map((plugin) => plugin.id);
+  const rendered = html
+    .matchAll(inputNamePattern)
+    .map((match) => match.groups.name)
+    .filter((name) => ids.includes(name))
+    .toArray();
+  const byName = (a, b) => a.localeCompare(b);
 
-  t.assert.deepStrictEqual(rendered, panelOrder);
+  t.assert.deepStrictEqual(rendered.toSorted(byName), ids.toSorted(byName));
 });
 
 test('every configured demo is offered, shipped, and named on the button', async (t) => {

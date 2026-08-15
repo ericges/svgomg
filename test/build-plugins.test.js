@@ -1,7 +1,7 @@
 import test from 'node:test';
 import { optimize } from 'svgo';
 import { buildPlugins } from '../src/js/svgo-worker/build-plugins.js';
-import { panelOrder } from './panel-order.js';
+import { pluginOrder as canonicalOrder } from '../src/js/svgo-worker/plugin-order.js';
 
 // Runs the exact plugin array the worker would hand to SVGO, so what's
 // asserted is the assembled pipeline, not any one plugin in isolation. The
@@ -96,10 +96,10 @@ test('a valid prefix is trimmed and reaches stylesheet selectors too', (t) => {
   t.assert.match(data, /#svgomg_shape\{/);
 });
 
-// The order `Settings.getSettings()` yields, which is the panel's DOM order:
-// the metadata block, then the styles block, then the feature list, each in
-// `config.json` order. SVGO runs plugins in array order, so moving a checkbox
-// between those blocks reorders the pipeline — this pins the result.
+// The canonical pipeline order: `src/config.json`'s array order, which
+// `buildPlugins()` walks regardless of how the incoming map is arranged. SVGO
+// runs plugins in array order, so reordering the config reorders the pipeline
+// — this pins the result, spelled out for human review.
 const pluginOrder = [
   'removeComments',
   'removeMetadata',
@@ -147,16 +147,45 @@ const pluginOrder = [
   'removeXlink',
 ];
 
-test('the pinned order is the one the panel actually renders', (t) => {
+test('the pinned order is the one the worker actually walks', (t) => {
   // Closes the loop on the order: this literal is what the assertions below
-  // read, `panelOrder` is `src/config.json` partitioned the way `index.njk`
-  // loops over it, and `test/build-smoke.test.js` checks the built markup comes
-  // out in that same order. Without this, adding a plugin to `config.json`
-  // silently leaves the pinned array describing a pipeline that no longer runs.
-  t.assert.deepStrictEqual(pluginOrder, panelOrder);
+  // read, and `canonicalOrder` is the `plugin-order.js` export `buildPlugins`
+  // iterates — `src/config.json`'s array order. Without this, editing
+  // `config.json` silently leaves the pinned array describing a pipeline that
+  // no longer runs; with it, the config can't reorder without a human seeing
+  // the pipeline change spelled out here.
+  t.assert.deepStrictEqual(pluginOrder, canonicalOrder);
 });
 
-test('the assembled array keeps panel order, with the selects slotted in', (t) => {
+test('the incoming map order does not reach the pipeline', (t) => {
+  // `getSettings()` happens to send its map in canonical order, but that is
+  // courtesy, not contract: the panel is free to group and sort its controls,
+  // so `buildPlugins` must assemble the same array from any arrangement.
+  const settings = {
+    floatPrecision: '3',
+    transformPrecision: '5',
+    dimensionAttrs: 'viewBox',
+    ids: 'minify',
+    idPrefix: 'svgomg_',
+    currentColor: true,
+  };
+  // Names and params only: the two local visitor plugins carry a fresh `fn`
+  // closure per build, which no deep equality can match by value.
+  const assembled = (plugins) =>
+    buildPlugins({ ...settings, plugins }).map(({ name, params }) => ({
+      name,
+      params,
+    }));
+  const everythingOn = (names) =>
+    Object.fromEntries(names.map((name) => [name, true]));
+
+  const forward = assembled(everythingOn(pluginOrder));
+  const reversed = assembled(everythingOn(pluginOrder.toReversed()));
+
+  t.assert.deepStrictEqual(reversed, forward);
+});
+
+test('the assembled array keeps canonical order, with the selects slotted in', (t) => {
   const plugins = buildPlugins({
     floatPrecision: '3',
     transformPrecision: '5',

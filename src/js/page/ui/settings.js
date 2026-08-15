@@ -1,5 +1,6 @@
 import { createNanoEvents } from 'nanoevents';
 import infoIconSvg from '../../../partials/icons/info.svg';
+import { pluginOrder } from '../../svgo-worker/plugin-order.js';
 import { domReady, strToEl } from '../utils.js';
 import MaterialSlider from './material-slider.js';
 import Ripple from './ripple.js';
@@ -21,9 +22,30 @@ export default class Settings {
       // Three `.plugins` containers now: the two stage blocks and the feature
       // list. The stage blocks carry the class on purpose — it's what puts
       // their checkboxes in `_pluginInputs`, and so in `getSettings().plugins`.
+      //
+      // Sorted into canonical pipeline order (`plugin-order.js`), not kept in
+      // document order: `buildPlugins()` decides the execution order for
+      // itself, but emitting the map — and the fingerprint built from it — in
+      // that same order keeps a mid-update worker from an older build running
+      // the panel's layout as a pipeline, and keeps two visual arrangements
+      // of the same settings from producing different cache keys. An unknown
+      // `name` shouldn't exist; it sorts last rather than throwing.
+      const pluginIndex = new Map(pluginOrder.map((id, index) => [id, index]));
+
       this._pluginInputs = [
         ...this.container.querySelectorAll('.plugins input'),
       ];
+      // In-place `sort`, not `toSorted`: the build minifies without
+      // transpiling, and this line runs in the boot path — an ES2023-only
+      // method here costs the whole panel in a browser that otherwise runs
+      // everything on it. The array is the spread's own copy, so the mutation
+      // reaches nobody. (As a bare statement the sort passes
+      // `unicorn/no-array-sort`, which only flags sorts posing as copies.)
+      this._pluginInputs.sort(
+        (a, b) =>
+          (pluginIndex.get(a.name) ?? pluginOrder.length) -
+          (pluginIndex.get(b.name) ?? pluginOrder.length),
+      );
       this._globalInputs = [
         ...this.container.querySelectorAll('input[name], select[name]'),
       ].filter((element) => !element.closest('.plugins'));
