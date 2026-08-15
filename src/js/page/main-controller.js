@@ -4,6 +4,7 @@ import { domReady } from './utils.js';
 import Output from './ui/output.js';
 import DownloadButton from './ui/download-button.js';
 import CopyButton from './ui/copy-button.js';
+import PngButton from './ui/png-button.js';
 import BgFillButton from './ui/bg-fill-button.js';
 import Results from './ui/results.js';
 import Settings from './ui/settings.js';
@@ -28,6 +29,7 @@ export default class MainController {
     this._outputUi = new Output();
     this._downloadButtonUi = new DownloadButton();
     this._copyButtonUi = new CopyButton();
+    this._pngButtonUi = new PngButton();
     this._resultsUi = new Results();
     this._settingsUi = new Settings();
     this._actionsUi = new ToolbarActions();
@@ -61,6 +63,9 @@ export default class MainController {
       this._toastsUi.show(success ? 'Copy successful' : 'Copy failed', {
         duration: 2000,
       }),
+    );
+    this._pngButtonUi.emitter.on('error', ({ error }) =>
+      this._handleError(error),
     );
     window.addEventListener('keydown', (event) => this._onGlobalKeyDown(event));
     window.addEventListener('paste', (event) => this._onGlobalPaste(event));
@@ -106,6 +111,7 @@ export default class MainController {
       minorActionContainer.append(
         bgFillUi.container,
         this._copyButtonUi.container,
+        this._pngButtonUi.container,
       );
       actionContainer.append(this._downloadButtonUi.container);
       outputElement.append(this._outputUi.container);
@@ -363,6 +369,7 @@ export default class MainController {
     this._outputUi.update(svgFile);
     this._downloadButtonUi.setDownload(this._inputFilename, svgFile);
     this._copyButtonUi.setCopyText(svgFile.text);
+    this._pngButtonUi.setExport(this._inputFilename, svgFile);
 
     this._resultsUi.update({
       comparisonSize: compareToFile && (await compareToFile.size({ compress })),
