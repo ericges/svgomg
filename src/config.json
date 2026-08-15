@@ -35,16 +35,6 @@
   ],
   "plugins": [
     {
-      "id": "removeDoctype",
-      "name": "Remove doctype",
-      "enabledByDefault": true
-    },
-    {
-      "id": "removeXMLProcInst",
-      "name": "Remove XML instructions",
-      "enabledByDefault": true
-    },
-    {
       "id": "removeComments",
       "name": "Remove comments",
       "enabledByDefault": true,
@@ -57,20 +47,22 @@
       "metadata": true
     },
     {
-      "id": "removeXMLNS",
-      "name": "Remove xmlns",
-      "enabledByDefault": false
-    },
-    {
       "id": "removeEditorsNSData",
       "name": "Remove editor data",
       "enabledByDefault": true,
       "metadata": true
     },
     {
-      "id": "cleanupAttrs",
-      "name": "Clean up attribute whitespace",
-      "enabledByDefault": true
+      "id": "removeTitle",
+      "name": "Remove <title>",
+      "enabledByDefault": false,
+      "metadata": true
+    },
+    {
+      "id": "removeDesc",
+      "name": "Remove <desc>",
+      "enabledByDefault": false,
+      "metadata": true
     },
     {
       "id": "mergeStyles",
@@ -95,6 +87,32 @@
       "name": "Style to attributes",
       "enabledByDefault": false,
       "styles": true
+    },
+    {
+      "id": "removeStyleElement",
+      "name": "Remove style elements",
+      "enabledByDefault": false,
+      "styles": true
+    },
+    {
+      "id": "removeDoctype",
+      "name": "Remove doctype",
+      "enabledByDefault": true
+    },
+    {
+      "id": "removeXMLProcInst",
+      "name": "Remove XML instructions",
+      "enabledByDefault": true
+    },
+    {
+      "id": "removeXMLNS",
+      "name": "Remove xmlns",
+      "enabledByDefault": false
+    },
+    {
+      "id": "cleanupAttrs",
+      "name": "Clean up attribute whitespace",
+      "enabledByDefault": true
     },
     {
       "id": "removeRasterImages",
@@ -220,24 +238,6 @@
       "id": "sortDefsChildren",
       "name": "Sort children of <defs>",
       "enabledByDefault": true
-    },
-    {
-      "id": "removeTitle",
-      "name": "Remove <title>",
-      "enabledByDefault": false,
-      "metadata": true
-    },
-    {
-      "id": "removeDesc",
-      "name": "Remove <desc>",
-      "enabledByDefault": false,
-      "metadata": true
-    },
-    {
-      "id": "removeStyleElement",
-      "name": "Remove style elements",
-      "enabledByDefault": false,
-      "styles": true
     },
     {
       "id": "removeScripts",
