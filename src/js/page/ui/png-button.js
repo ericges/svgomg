@@ -39,21 +39,33 @@ export default class PngButton extends FloatingActionButton {
   }
 
   async _save() {
-    if (!this._svgFile) return;
+    // Snapshotted before the first await: setExport() may replace both while
+    // we're rasterizing, and the download must not pair old pixels with a new
+    // name.
+    const svgFile = this._svgFile;
+
+    if (!svgFile) return;
+
+    const filename = this._filename;
 
     try {
-      const blob = await this._rasterize(this._svgFile);
+      const blob = await this._rasterize(svgFile);
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = pngFilename(this._filename);
+      anchor.download = pngFilename(filename);
       // Firefox only honours click() on an in-document anchor.
       document.body.append(anchor);
       anchor.click();
       anchor.remove();
       URL.revokeObjectURL(url);
-    } catch (error) {
-      error.message = `PNG export failed: ${error.message}`;
+    } catch (error_) {
+      // Not mutated in place: decode() rejects with a DOMException, whose
+      // message is a getter-only accessor.
+      const detail = error_ instanceof Error ? error_.message : String(error_);
+      const error = new Error(`PNG export failed: ${detail}`, {
+        cause: error_,
+      });
       this.emitter.emit('error', { error });
     }
   }
