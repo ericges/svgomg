@@ -169,6 +169,27 @@ test('settings keys reach the worker under their HTML `name` attributes', async 
   );
 });
 
+test('the page bundle keeps the copying-array methods out of the boot path', async (t) => {
+  // The build minifies without transpiling, so an ES2023 method in the page
+  // bundle throws in a browser that runs everything else — and one did:
+  // `Settings` briefly booted through `toSorted()`, which would have cost the
+  // whole panel, not just the sort. xo's unicorn rules actively rewrite
+  // toward these methods (`no-array-sort`, `no-array-reverse`), so the same
+  // slip recurs whenever page code appeases the linter — suppress the rule at
+  // the call site instead, with `settings.js` as the pattern. Confined to
+  // the page bundle: it's all hand-written but `nanoevents`, so a hit here is
+  // ours, not a vendored library forcing a baseline discussion.
+  const page = await readBuildFile('js/page.js');
+
+  t.assert.deepStrictEqual(
+    ['.toSorted(', '.toReversed(', '.toSpliced('].filter((method) =>
+      page.includes(method),
+    ),
+    [],
+    'ES2023 copying-array methods in build/js/page.js',
+  );
+});
+
 test('the page bundle never selects on an attribute the minifier strips', async (t) => {
   // `removeRedundantAttributes` drops `type=text` — it is the HTML default —
   // so `input[type=text]` matches nothing in a production build. The scroller's

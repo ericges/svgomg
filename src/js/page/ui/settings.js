@@ -34,7 +34,14 @@ export default class Settings {
 
       this._pluginInputs = [
         ...this.container.querySelectorAll('.plugins input'),
-      ].toSorted(
+      ];
+      // In-place `sort`, not `toSorted`: the build minifies without
+      // transpiling, and this line runs in the boot path — an ES2023-only
+      // method here costs the whole panel in a browser that otherwise runs
+      // everything on it. The array is the spread's own copy, so the mutation
+      // reaches nobody. (As a bare statement the sort passes
+      // `unicorn/no-array-sort`, which only flags sorts posing as copies.)
+      this._pluginInputs.sort(
         (a, b) =>
           (pluginIndex.get(a.name) ?? pluginOrder.length) -
           (pluginIndex.get(b.name) ?? pluginOrder.length),
