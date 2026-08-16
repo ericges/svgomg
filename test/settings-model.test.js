@@ -341,6 +341,53 @@ test('the defaults are the markup, control for control', async (t) => {
     [],
     'controls whose initial markup state is not the model default',
   );
+
+  // The bounds a restored value is normalised against have to be the ones the
+  // slider will apply to it, or the model and the panel disagree.
+  const attribute = (tag, name) =>
+    Number(new RegExp(String.raw`\s${name}="(?<v>[^"]*)"`).exec(tag)?.groups.v);
+
+  t.assert.deepStrictEqual(
+    controls
+      .filter(({ tag }) => /\btype="range"/.test(tag))
+      .map(({ tag, name }) => [
+        name,
+        attribute(tag, 'min'),
+        attribute(tag, 'max'),
+        attribute(tag, 'step'),
+      ]),
+    globalFields
+      .filter((field) => field.type === 'range')
+      .map((field) => [field.name, field.min, field.max, field.step]),
+    'range bounds that differ from the markup',
+  );
+});
+
+test('a restored range value is snapped to the step the control offers', (t) => {
+  // A fraction the slider cannot display must not survive in the model: it
+  // would show 2 in the panel while sending 1.5 to the worker and the cache
+  // key, and nothing would reveal the split until that slider was moved.
+  const model = new SettingsModel();
+
+  model.set({ floatPrecision: '1.5' });
+
+  t.assert.strictEqual(model.get().floatPrecision, '2');
+
+  model.set({ transformPrecision: 6.4 });
+
+  t.assert.strictEqual(model.get().transformPrecision, '6');
+
+  // Out of range as well as off-step: clamped first, then snapped.
+  model.set({ floatPrecision: '99.7' });
+
+  t.assert.strictEqual(model.get().floatPrecision, '8');
+  t.assert.strictEqual(model.fingerprint.startsWith('0,|8|,|6|'), true);
+
+  // Whole values are left exactly as they are — this is the common path.
+  model.set({ floatPrecision: '3', transformPrecision: '5' });
+
+  t.assert.strictEqual(model.get().floatPrecision, '3');
+  t.assert.strictEqual(model.get().transformPrecision, '5');
 });
 
 test('the notices are the ones collectNotes produces', (t) => {

@@ -35,8 +35,22 @@ export const globalFields = [
   { name: 'original', type: 'checkbox', default: false },
   { name: 'gzip', type: 'checkbox', default: true },
   { name: 'pretty', type: 'checkbox', default: false },
-  { name: 'floatPrecision', type: 'range', default: '3', min: 0, max: 8 },
-  { name: 'transformPrecision', type: 'range', default: '5', min: 0, max: 8 },
+  {
+    name: 'floatPrecision',
+    type: 'range',
+    default: '3',
+    min: 0,
+    max: 8,
+    step: 1,
+  },
+  {
+    name: 'transformPrecision',
+    type: 'range',
+    default: '5',
+    min: 0,
+    max: 8,
+    step: 1,
+  },
   {
     name: 'dimensionAttrs',
     type: 'select',
@@ -103,14 +117,22 @@ export const defaultSettings = () => {
   return settings;
 };
 
-// Incoming values are coerced the way the DOM used to coerce them, since a
-// restored payload used to be assigned straight onto an input: a checkbox
-// yields a boolean, everything else a string. The two guards below are where
-// this deliberately stops imitating the DOM — a select handed an unknown value
-// blanks itself, and a range handed a wild one clamps but a non-numeric one
-// jumps to the midpoint. Neither is reachable from a payload `get()` produced,
-// and keeping the current value is the more defensible answer for a corrupted
-// save than passing nonsense on to the worker.
+// Incoming values are coerced the way the control itself would coerce them,
+// since a restored payload used to be assigned straight onto an input: a
+// checkbox yields a boolean, everything else a string, and a range is clamped
+// and snapped to its step exactly as the input's own value sanitisation does.
+//
+// The model has to land on the value the slider will *display*, not merely a
+// legal-looking one: `_syncDom()` hands this to the real input, which rounds
+// it, and from then on the panel would be showing 2 while the worker and the
+// cache key were given 1.5 — invisible until someone moves that slider.
+//
+// Two cases deliberately stop imitating the DOM, because there the control
+// discards the setting rather than correcting it: a select handed an unknown
+// value blanks itself, and a range handed a non-numeric one jumps to its
+// midpoint. Neither is reachable from a payload `get()` produced, and keeping
+// the current value is the more defensible answer for a corrupted save than
+// passing nonsense on to the worker.
 const coerceValue = (field, current, value) => {
   if (field.type === 'checkbox') return Boolean(value);
 
@@ -123,7 +145,16 @@ const coerceValue = (field, current, value) => {
 
     if (Number.isNaN(number)) return current;
 
-    return String(Math.min(Math.max(number, field.min), field.max));
+    // Clamp first, then snap — the order the value sanitisation algorithm
+    // uses. Ties go to the higher step, which is both what the spec says and
+    // what `Math.round` does. The markup's bounds are themselves multiples of
+    // the step (the test holds all three equal to the template), so snapping
+    // a clamped value can't leave the range again.
+    const clamped = Math.min(Math.max(number, field.min), field.max);
+
+    return String(
+      field.min + Math.round((clamped - field.min) / field.step) * field.step,
+    );
   }
 
   return text;
