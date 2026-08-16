@@ -17,12 +17,23 @@
 .setting-item-toggle {
   position: relative;
   cursor: pointer;
-  padding: 0 16px;
-  height: 51px;
+  padding: 8px 16px;
+  // `min-height`, not `height`: a plugin row carries its SVGO id on a second
+  // line and has to be allowed to grow. `border-box` so the padding counts
+  // towards it — there's no global reset, so a one-line row would otherwise
+  // come out 16px taller than the 51px it has always been.
+  box-sizing: border-box;
+  min-height: 51px;
   display: grid;
   grid-template-columns: max-content 1fr;
   align-items: center;
   gap: 19px;
+
+  // The filter hides rows with the `hidden` attribute, which a `display` here
+  // would otherwise outrank.
+  &[hidden] {
+    display: none;
+  }
 
   // stylelint-disable-next-line selector-no-qualifying-type
   input[type='checkbox'] {
@@ -41,6 +52,22 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), inset 0 0 0 2px #3f51b5;
     }
   }
+}
+
+.setting-item-lines {
+  display: flex;
+  flex-flow: column;
+  gap: 2px;
+}
+
+// The plugin's real SVGO name, under the label the panel gives it — it's what
+// the SVGO docs and CLI call the same option. A `<code>` element, so the mono
+// stack comes from the global rule rather than being restated here.
+.setting-item-id {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: #767676;
+  overflow-wrap: anywhere;
 }
 
 .setting-item-range {
@@ -67,7 +94,8 @@
 }
 
 .setting-item-select select,
-.setting-item-text input {
+.setting-item-text input,
+.setting-filter-input {
   // 1rem rather than something smaller: under 16px iOS zooms the viewport in
   // when the control takes focus.
   font: inherit;
@@ -160,9 +188,111 @@
   padding-left: 16px;
 }
 
-// The sections live inside the scroller, not directly under `.settings`.
-.settings-scroller > section:not(:first-child) {
+// The sections live inside a tab panel, one level below the scroller.
+.settings-panel > section:not(:first-child) {
   border-top: 1px solid #e7e7e7;
+}
+
+// Outside the scroller, so the strip stays put while the panel below it
+// scrolls. Visibility of the panels themselves is the `hidden` attribute's
+// job — no `display` on `.settings-panel`, for the same reason as the stage
+// blocks above.
+.settings-tabs {
+  display: flex;
+  flex: none;
+  border-bottom: 1px solid #e7e7e7;
+}
+
+.settings-tab {
+  flex: 1;
+  padding: 14px 16px;
+  font: inherit;
+  font-size: 0.9rem;
+  color: #767676;
+  cursor: pointer;
+  // The selected tab is marked by weight and an underline as well as colour,
+  // so it doesn't rely on colour alone.
+  box-shadow: inset 0 -2px 0 transparent;
+
+  &[aria-selected='true'] {
+    color: #3f51b5;
+    font-weight: 500;
+    box-shadow: inset 0 -2px 0 #3f51b5;
+  }
+}
+
+.plugin-category-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #767676;
+  // The UA marker is replaced by the caret below, which can be turned.
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::after {
+    content: '';
+    width: 10px;
+    height: 6px;
+    flex: none;
+    margin-left: auto;
+    background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="6"><path d="M1 1l4 4 4-4" fill="none" stroke="%23767676" stroke-width="1.5"/></svg>');
+    background-repeat: no-repeat;
+    transition: transform 0.2s;
+  }
+}
+
+.plugin-category[open] > .plugin-category-summary::after {
+  transform: rotate(180deg);
+}
+
+.plugin-category-name {
+  flex: 1;
+}
+
+.plugin-category-count {
+  font-variant-numeric: tabular-nums;
+  color: #767676;
+
+  // A collapsed category hides its notices, so the count says one is in there
+  // — the same indigo the notice's own icon uses.
+  &.has-note {
+    color: #3f51b5;
+    font-weight: 500;
+  }
+}
+
+.setting-filter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px 16px;
+}
+
+.setting-filter-input {
+  flex: 1;
+  min-width: 0;
+}
+
+.setting-filter-count {
+  flex: none;
+  font-size: 0.8125rem;
+  color: #767676;
+  font-variant-numeric: tabular-nums;
+}
+
+.setting-filter-empty {
+  margin: 0;
+  padding: 0 16px 16px;
+  font-size: 0.8125rem;
+  color: rgba(0, 0, 0, 0.55);
 }
 
 .settings-sub-heading {
@@ -173,9 +303,14 @@
   color: #767676;
 }
 
+// Below both panels rather than in either, so a reset that clears everything
+// is reachable from whichever tab is showing. `flex: none` keeps it out of the
+// scroller's share of the height.
 .setting-reset-row {
+  flex: none;
   padding: 12px 16px 16px;
   text-align: right;
+  border-top: 1px solid #e7e7e7;
 }
 
 .setting-reset {
