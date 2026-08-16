@@ -154,8 +154,16 @@
                                     <details class="plugin-category" data-category="{{ category.id }}" {% if category.open %}open{% endif %}>
                                         <summary class="plugin-category-summary">
                                             <span class="plugin-category-name">{{ category.name }}</span>
-                                            {# Filled by `Settings._updateCounts()`; tinted while the
-                                               category holds a collision notice a collapse would hide. #}
+                                            {# Collapsing a category takes its notices out of the
+                                               accessibility tree with it, so the header says how many
+                                               are in there. The icon is for the reader the tint on the
+                                               count doesn't reach; the text goes into the summary's
+                                               accessible name. Both are `Settings._renderNotes()`'s. #}
+                                            <span class="plugin-category-notice" hidden>
+                                                {% include "partials/icons/info.svg" %}
+                                                <span class="plugin-category-notice-text"></span>
+                                            </span>
+                                            {# Filled by `Settings._updateCounts()`. #}
                                             <span class="plugin-category-count"></span>
                                         </summary>
                                         <div class="plugins">

@@ -293,6 +293,8 @@ test('the settings panel carries the controls the page bundle queries', async (t
     'settings-tab',
     'plugin-category',
     'plugin-category-count',
+    'plugin-category-notice',
+    'plugin-category-notice-text',
     'setting-item-toggle',
     'setting-item-name',
     'setting-filter-input',

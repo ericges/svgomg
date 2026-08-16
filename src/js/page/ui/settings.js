@@ -74,6 +74,9 @@ export default class Settings {
           (tab) => tab.getAttribute('aria-selected') === 'true',
         ),
       );
+      // Where each panel was left, so switching away and back returns to it.
+      // In memory only: it is a scroll position, not a preference.
+      this._scrollTops = this._tabs.map(() => 0);
 
       // One descriptor per category, carrying the rows the filter hides and
       // the header count it keeps up to date. The name is read out of the
@@ -84,7 +87,12 @@ export default class Settings {
       ].map((details) => ({
         id: details.dataset.category,
         details,
+        // The open state this class last wrote, so a `toggle` that disagrees
+        // with it can be recognised as the user's own — see `_bindCategories`.
+        expected: details.open,
         count: details.querySelector('.plugin-category-count'),
+        notice: details.querySelector('.plugin-category-notice'),
+        noticeText: details.querySelector('.plugin-category-notice-text'),
         rows: [...details.querySelectorAll('.setting-item-toggle')].map(
           (label) => ({
             label,
@@ -111,6 +119,7 @@ export default class Settings {
       this._filterInput.addEventListener('input', () => this._applyFilter());
 
       const scroller = this.container.querySelector('.settings-scroller');
+      this._scroller = scroller;
       const resetBtn = this.container.querySelector('.setting-reset');
       const ranges = this.container.querySelectorAll('input[type=range]');
 
@@ -219,6 +228,15 @@ export default class Settings {
   }
 
   _selectTab(index, shouldFocus = false) {
+    // The two panels share one scroller, so an offset means something different
+    // in each — and the taller panel's offset is clamped to the shorter one's
+    // maximum on the way in, which loses it for the way back. Read before the
+    // swap and written after it, since hiding a panel reflows the scroller and
+    // clamps whatever is there.
+    if (index !== this._activeTab) {
+      this._scrollTops[this._activeTab] = this._scroller.scrollTop;
+    }
+
     for (const [candidate, tab] of this._tabs.entries()) {
       const isSelected = candidate === index;
 
@@ -234,18 +252,34 @@ export default class Settings {
     }
 
     this._activeTab = index;
+    this._scroller.scrollTop = this._scrollTops[index] ?? 0;
+  }
+
+  /**
+   * Open or close a category on the panel's own initiative, recording that it
+   * was us — see the `toggle` handler in `_bindCategories()`.
+   *
+   * @param {object} category The category descriptor.
+   * @param {boolean} isOpen Whether it should be open.
+   */
+  _setCategoryOpen(category, isOpen) {
+    category.expected = isOpen;
+    category.details.open = isOpen;
   }
 
   _bindCategories() {
     for (const category of this._categories) {
       category.details.addEventListener('toggle', () => {
         // `toggle` fires for programmatic changes as well as clicks, and it
-        // fires asynchronously — so the guard is written before the change it
-        // has to ignore. Starting a query sets `_filterQuery` and only then
-        // forces the categories open, so those toggles are skipped; clearing
-        // one empties `_filterQuery` before restoring the user's own state, so
-        // those toggles re-record exactly what is already there.
-        if (this._filterQuery.trim()) return;
+        // fires asynchronously — so a synchronous "we are writing this" flag
+        // would be long gone by the time it arrived. Comparing against the
+        // state last written tells the two apart exactly: an open state this
+        // class didn't ask for is the user's own, whether or not a query is
+        // running. That matters, because a category the user collapses while
+        // filtering must still be collapsed once the filter clears.
+        if (category.details.open === category.expected) return;
+
+        category.expected = category.details.open;
 
         if (category.details.open) {
           this._openCategories.add(category.id);
@@ -254,8 +288,10 @@ export default class Settings {
         }
 
         this._persistUiState();
-        // Collapsing a category can bury a notice, which the header count then
-        // has to own up to — and the open state is part of the render key.
+        // Collapsing a category buries its notices, which the header then has
+        // to own up to — and the open state is part of the render key. It also
+        // takes its rows off the screen, which the filter's count reports.
+        this._updateCounts();
         this._renderNotes();
       });
     }
@@ -269,11 +305,10 @@ export default class Settings {
   _applyFilter() {
     const query = this._filterInput.value;
 
-    // Written before any `open` is touched — see `_bindCategories()`.
     this._filterQuery = query;
 
     const isFiltering = query.trim() !== '';
-    let shown = 0;
+    let matched = 0;
 
     for (const category of this._categories) {
       let matches = 0;
@@ -285,17 +320,23 @@ export default class Settings {
         if (match) matches++;
       }
 
-      shown += matches;
+      matched += matches;
       category.details.hidden = isFiltering && matches === 0;
-      // Forced open while a query is running, so a match can never sit behind
-      // a collapsed header; back to whatever was chosen once it clears.
-      category.details.open = isFiltering
-        ? matches > 0
-        : this._openCategories.has(category.id);
+      // Opened where there is something to show, so a fresh result never
+      // starts out behind a collapsed header; back to whatever the user chose
+      // once the query clears. They stay free to collapse it again from here —
+      // the count below reports what is actually on screen, not what matched.
+      this._setCategoryOpen(
+        category,
+        isFiltering ? matches > 0 : this._openCategories.has(category.id),
+      );
     }
 
-    this._filterEmpty.hidden = !isFiltering || shown > 0;
-    if (isFiltering && shown === 0) {
+    // The empty message is about matches rather than visibility: collapsing
+    // every matching category hides the results, it doesn't mean there weren't
+    // any.
+    this._filterEmpty.hidden = !isFiltering || matched > 0;
+    if (isFiltering && matched === 0) {
       // textContent, not markup: the query is whatever was typed.
       this._filterEmpty.textContent = `Nothing matches “${query.trim()}”.`;
     }
@@ -315,10 +356,13 @@ export default class Settings {
 
     for (const category of this._categories) {
       let on = 0;
+      // A row inside a collapsed — or filtered-away — category is not on
+      // screen, whatever its own `hidden` says.
+      const isOnScreen = category.details.open && !category.details.hidden;
 
       for (const row of category.rows) {
         if (plugins[row.id]) on++;
-        if (!row.label.hidden) shown++;
+        if (isOnScreen && !row.label.hidden) shown++;
       }
 
       category.count.textContent = `${on}/${category.rows.length}`;
@@ -367,7 +411,7 @@ export default class Settings {
       );
 
       for (const category of this._categories) {
-        category.details.open = this._openCategories.has(category.id);
+        this._setCategoryOpen(category, this._openCategories.has(category.id));
       }
     }
 
@@ -539,14 +583,23 @@ export default class Settings {
       note.hidden = Boolean(row?.hidden);
     }
 
-    // A collapsed category hides its notices outright. Rather than re-homing
-    // them the way a stage block does — subtle machinery the categories don't
-    // need — the header says one is in there.
+    // A collapsed category takes its notices out of the accessibility tree
+    // along with everything else inside it. Rather than re-homing them the way
+    // a stage block does — subtle machinery the categories don't need — the
+    // header says how many are in there, in words as well as in colour: the
+    // icon carries the same meaning to anyone the tint doesn't reach, and the
+    // count goes into the summary's accessible name. Only while collapsed —
+    // once it's open the notices speak for themselves.
     for (const category of this._categories) {
-      category.count.classList.toggle(
-        'has-note',
-        Boolean(category.details.querySelector('.setting-note:not([hidden])')),
-      );
+      const buried = category.details.open
+        ? 0
+        : category.details.querySelectorAll('.setting-note:not([hidden])')
+            .length;
+
+      category.count.classList.toggle('has-note', buried > 0);
+      category.notice.hidden = buried === 0;
+      category.noticeText.textContent =
+        buried === 1 ? '1 notice' : `${buried} notices`;
     }
   }
 

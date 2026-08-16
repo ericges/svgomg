@@ -118,6 +118,8 @@ The panel is **two tabs** — Optimise and Output — inside one `.settings-scro
 - **Optimise**: Multipass, the plugin filter, then the plugin list in four collapsible categories.
 - **Output**: the View group (`original`, `gzip`) and the Output group (everything else), in their original order under their original headings. The View settings sit here until a later PR moves size/gzip reporting into a status bar.
 
+The two panels **share one scroller**, so `_selectTab()` keeps a scroll offset per panel (in memory — it's a position, not a preference). Without it the taller panel's offset is clamped to the shorter one's maximum on the way in, which opens that tab part-scrolled *and* loses the original position for the way back. Read before the panels are swapped and written after, since hiding one reflows the scroller and clamps whatever is there.
+
 Two structural details are load-bearing. The **tab strip is outside `.settings-scroller`** — the scroller's `mousedown` handler cancels focus for everything that isn't a non-checkbox control, which would leave `<button role="tab">` unfocusable. And **`.setting-reset-row` is outside it too**, a persistent footer below both panels: it resets everything, so it has to be reachable from whichever tab is showing. `_onReset()` itself is unchanged.
 
 `gzip` and `original` are the two settings `getSettings()` leaves out of the cache fingerprint — neither changes SVGO's output, only how it's measured.
@@ -128,7 +130,9 @@ Two structural details are load-bearing. The **tab strip is outside `.settings-s
 
 Every plugin carries **either** a `metadata`/`styles` flag **or** a `category`, never both and never neither — a partition the tests enforce, because two inputs sharing one `name` would double that plugin's contribution to the fingerprint and send its collision notice to whichever rendered first. The flagged ten render only in their stage block; the other 34 render only under their category. The template groups by **filtering the array once per category**, so adding a `category` key reorders nothing: `config.json`'s array order is still the pipeline order.
 
-Each category is a `<details>`/`<summary>` — native keyboard and screen-reader behaviour, and it collapses with no JS. Its header shows an `n/total` enabled count, and **the count is tinted when the category holds a collision notice** a collapse would otherwise bury. The notices themselves stay on their own rows: the stage blocks' re-homing machinery (`_noteTargets`) is deliberately *not* extended here.
+Each category is a `<details>`/`<summary>` — native keyboard and screen-reader behaviour, and it collapses with no JS. Its header shows an `n/total` enabled count.
+
+**A collapsed category takes its notices out of the accessibility tree along with everything else inside it**, so the header says how many are in there — and says it three ways, because each reaches someone the others don't: the count is tinted, an info icon appears beside it (a shape, for anyone the tint doesn't reach), and `.plugin-category-notice-text` carries "3 notices" as `visually-hidden` text inside the `<summary>`, which puts it in the summary's accessible name. Only while collapsed: once it's open the notices speak for themselves. The notices themselves stay on their own rows — the stage blocks' re-homing machinery (`_noteTargets`) is deliberately *not* extended here.
 
 The filter sits at the top of the Optimise tab and matches case-insensitively against the plugin's SVGO id **and** its display name (`src/js/page/plugin-filter.js` — pure, DOM-free, unit-tested; the panel's part is one loop). While a query is active, categories with a match are forced open, categories without one are hidden, and an empty result names the query. Three rules it obeys:
 
@@ -144,7 +148,9 @@ Active tab and category open state persist through `src/js/utils/storage.js` und
 
 The restore is deliberately **not awaited** — unlike `_loadSettings()`, whose await exists because `setSettings()` fires no events and a file compressed before it landed would disagree with the panel. Layout triggers no compression, so landing a frame late costs nothing; the markup already ships the default (Optimise active, `paths` and `structure` open).
 
-`<details>`'s `toggle` event fires for *programmatic* changes as well as clicks, and fires asynchronously — so the persistence guard is written before the change it has to ignore. Starting a query sets `_filterQuery` and only then forces categories open (those toggles are skipped); clearing one empties `_filterQuery` before restoring the user's own state (those toggles re-record what is already there, idempotently).
+`<details>`'s `toggle` event fires for *programmatic* changes as well as clicks, and fires **asynchronously** — so a synchronous "we are writing this" flag would be long gone by the time it arrived. Instead every write the panel makes itself goes through `_setCategoryOpen()`, which records the state alongside it, and the `toggle` handler ignores anything that agrees with that record. What's left is the user's own doing, whether or not a query is running — which matters, because **a category the user collapses while filtering has to stay collapsed once the filter clears**. An earlier version guarded on "is a query running", which silently dropped exactly that.
+
+Because the user can collapse a matching category mid-query, **the filter's count reports rows genuinely on screen** — a row inside a collapsed category is not shown, whatever its own `hidden` says. The empty-result message is the exception and stays match-based: collapsing every matching category hides the results, it doesn't mean there were none.
 
 Four controls are **not** one-checkbox-one-plugin, because the underlying plugins are mutually dependent. They live in Output and are mapped to plugin configurations in `buildPlugins()` (`src/js/svgo-worker/build-plugins.js`, covered end-to-end by `test/build-plugins.test.js`), not in the page:
 

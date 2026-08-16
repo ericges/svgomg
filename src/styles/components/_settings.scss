@@ -262,10 +262,31 @@
   color: #767676;
 
   // A collapsed category hides its notices, so the count says one is in there
-  // — the same indigo the notice's own icon uses.
+  // — the same indigo the notice's own icon uses. Never the only signal: the
+  // icon beside it says the same thing without relying on colour, and carries
+  // the count in words for assistive technology.
   &.has-note {
     color: #3f51b5;
     font-weight: 500;
+  }
+}
+
+.plugin-category-notice {
+  display: flex;
+  flex: none;
+  color: #3f51b5;
+
+  &[hidden] {
+    display: none;
+  }
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  .plugin-category-notice-text {
+    @include utils.visually-hidden();
   }
 }
 
