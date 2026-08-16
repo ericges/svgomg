@@ -1,72 +1,47 @@
 import { createNanoEvents } from 'nanoevents';
 import infoIconSvg from '../../../partials/icons/info.svg';
-import { pluginOrder } from '../../svgo-worker/plugin-order.js';
+import SettingsModel from '../settings-model.js';
 import { domReady, strToEl } from '../utils.js';
 import MaterialSlider from './material-slider.js';
 import Ripple from './ripple.js';
-import { deriveStage, metadataStages, stylesStages } from './setting-stages.js';
-import { collectNotes } from './setting-notes.js';
 
+// The panel, and nothing but the panel: what a setting *is* lives in
+// `page/settings-model.js`, which has no DOM in it and is unit-tested. This
+// class binds the two together — it writes the model into the controls, reads
+// the controls back into the model, and owns the notice markup.
 export default class Settings {
   constructor() {
     this.emitter = createNanoEvents();
     this._throttleTimeout = null;
-    // What each guarded plugin saw when it last ran, for the collision notices.
-    // Undefined until `MainController` has an optimised file to describe, which
-    // is also what keeps the notices off an app that has nothing open.
-    this._collisions = undefined;
+    this._model = new SettingsModel();
     this._renderedNotes = '';
 
     domReady.then(() => {
       this.container = document.querySelector('.settings');
-      // Three `.plugins` containers now: the two stage blocks and the feature
+      // Three `.plugins` containers: the two stage blocks and the feature
       // list. The stage blocks carry the class on purpose — it's what puts
       // their checkboxes in `_pluginInputs`, and so in `getSettings().plugins`.
-      //
-      // Sorted into canonical pipeline order (`plugin-order.js`), not kept in
-      // document order: `buildPlugins()` decides the execution order for
-      // itself, but emitting the map — and the fingerprint built from it — in
-      // that same order keeps a mid-update worker from an older build running
-      // the panel's layout as a pipeline, and keeps two visual arrangements
-      // of the same settings from producing different cache keys. An unknown
-      // `name` shouldn't exist; it sorts last rather than throwing.
-      const pluginIndex = new Map(pluginOrder.map((id, index) => [id, index]));
-
+      // Document order is fine here; the model emits the map and the
+      // fingerprint in canonical pipeline order for itself.
       this._pluginInputs = [
         ...this.container.querySelectorAll('.plugins input'),
       ];
-      // In-place `sort`, not `toSorted`: the build minifies without
-      // transpiling, and this line runs in the boot path — an ES2023-only
-      // method here costs the whole panel in a browser that otherwise runs
-      // everything on it. The array is the spread's own copy, so the mutation
-      // reaches nobody. (As a bare statement the sort passes
-      // `unicorn/no-array-sort`, which only flags sorts posing as copies.)
-      this._pluginInputs.sort(
-        (a, b) =>
-          (pluginIndex.get(a.name) ?? pluginOrder.length) -
-          (pluginIndex.get(b.name) ?? pluginOrder.length),
-      );
       this._globalInputs = [
         ...this.container.querySelectorAll('input[name], select[name]'),
       ].filter((element) => !element.closest('.plugins'));
 
-      // Both selects are sugar with no `name` of their own, so `getSettings()`
-      // never sees them: each writes the checkboxes in its block and derives
-      // its own value back from them.
-      const stageGroup = (stages, selectClass, customClass) => {
-        const custom = this.container.querySelector(customClass);
-
-        return {
-          stages,
-          select: this.container.querySelector(selectClass),
-          custom,
-          inputs: [...custom.querySelectorAll('input')],
-        };
-      };
+      // Both selects are sugar with no `name` of their own, so the settings
+      // object never sees them: each writes the checkboxes in its block, and
+      // the model derives its value back from them.
+      const stageGroup = (name, selectClass, customClass) => ({
+        name,
+        select: this.container.querySelector(selectClass),
+        custom: this.container.querySelector(customClass),
+      });
 
       this._stageGroups = [
-        stageGroup(metadataStages, '.metadata-select', '.metadata-custom'),
-        stageGroup(stylesStages, '.styles-select', '.styles-custom'),
+        stageGroup('metadata', '.metadata-select', '.metadata-custom'),
+        stageGroup('styles', '.styles-select', '.styles-custom'),
       ];
 
       const scroller = this.container.querySelector('.settings-scroller');
@@ -114,7 +89,10 @@ export default class Settings {
         event.preventDefault();
       });
 
-      this._syncStageSelects();
+      // The markup ships the model's defaults as its initial attributes, so
+      // this paints nothing new — but it is also the flush for anything
+      // restored before the DOM was ready, which reaches the model alone.
+      this._syncDom();
       this._renderNotes();
     });
   }
@@ -127,7 +105,7 @@ export default class Settings {
    * @param {object} [collisions] Keyed by plugin name; null between files.
    */
   setCollisions(collisions) {
-    this._collisions = collisions;
+    this._model.setCollisions(collisions);
     this._renderNotes();
   }
 
@@ -138,20 +116,34 @@ export default class Settings {
       (candidate) => candidate.select === event.target,
     );
 
-    if (stageGroup) this._applyStage(stageGroup, event.target.value);
-
-    // After the stage has written its checkboxes: the notices read the settings
-    // those produce, not the select. Never throttled — a note that lags the
-    // control it sits under reads as a note about something else.
-    this._renderNotes();
-
     if (stageGroup) {
+      this._applyStage(stageGroup, event.target.value);
+      // After the stage has written its checkboxes: the notices read the
+      // settings those produce, not the select. Never throttled — a note that
+      // lags the control it sits under reads as a note about something else.
+      this._renderNotes();
       this.emitter.emit('change');
       return;
     }
 
+    const control = event.target;
+
+    // Routed one control at a time rather than through the model's `set()`,
+    // which re-derives the stage selects: an edit made by hand must leave the
+    // block it belongs to open. See `SettingsModel.setPlugin()`.
+    if (control.closest('.plugins')) {
+      this._model.setPlugin(control.name, control.checked);
+    } else {
+      this._model.setGlobal(
+        control.name,
+        control.type === 'checkbox' ? control.checked : control.value,
+      );
+    }
+
+    this._renderNotes();
+
     // throttle range dragging and typing
-    if (event.target.type === 'range' || event.target.type === 'text') {
+    if (control.type === 'range' || control.type === 'text') {
       this._throttleTimeout = setTimeout(
         () => this.emitter.emit('change'),
         150,
@@ -161,20 +153,42 @@ export default class Settings {
     }
   }
 
-  // Picking a stage writes the checkboxes it stands for. Deliberately not the
-  // reverse: toggling a checkbox by hand leaves the select on 'custom' even if
-  // the combination happens to match a stage, so the block doesn't snap shut
-  // mid-edit. Deriving is for programmatic restores only.
   _applyStage(group, stage) {
-    const combination = group.stages[stage];
+    this._model.setStage(group.name, stage);
 
-    if (combination) {
-      for (const inputEl of group.inputs) {
-        inputEl.checked = combination[inputEl.name];
-      }
+    const { plugins } = this._model.get();
+
+    for (const inputEl of group.custom.querySelectorAll('input')) {
+      inputEl.checked = plugins[inputEl.name];
     }
 
     group.custom.hidden = stage !== 'custom';
+  }
+
+  /** Push the whole model into the controls. Fires no events. */
+  _syncDom() {
+    const settings = this._model.get();
+
+    for (const inputEl of this._globalInputs) {
+      if (inputEl.type === 'checkbox') {
+        inputEl.checked = settings[inputEl.name];
+      } else if (inputEl.type === 'range') {
+        this._sliderMap.get(inputEl).value = settings[inputEl.name];
+      } else {
+        inputEl.value = settings[inputEl.name];
+      }
+    }
+
+    for (const inputEl of this._pluginInputs) {
+      inputEl.checked = settings.plugins[inputEl.name];
+    }
+
+    for (const group of this._stageGroups) {
+      const stage = this._model.stageOf(group.name);
+
+      group.select.value = stage;
+      group.custom.hidden = stage !== 'custom';
+    }
   }
 
   /**
@@ -199,16 +213,8 @@ export default class Settings {
   _renderNotes() {
     if (!this.container) return;
 
-    const settings = this.getSettings();
-    const notes = collectNotes(settings, this._collisions?.subjects);
-    // The report describes the settings it was produced under. Anything else
-    // changed upstream of a subject — enabling "Remove metadata" on a file
-    // whose script sits inside it, say — can only be answered by the run
-    // that's already on its way, so until it lands the notices are marked as
-    // describing the previous one rather than silently reinterpreted.
-    const isPending =
-      Boolean(this._collisions) &&
-      this._collisions.fingerprint !== settings.fingerprint;
+    const notes = this._model.notes();
+    const isPending = this._model.pending;
 
     // Re-rendering identical notes on every keystroke would tear them off the
     // panel and put them straight back. Where each note *goes* is part of that
@@ -276,46 +282,14 @@ export default class Settings {
     }
   }
 
-  _syncStageSelects() {
-    for (const group of this._stageGroups) {
-      const stage = deriveStage(
-        group.stages,
-        Object.fromEntries(
-          group.inputs.map((inputEl) => [inputEl.name, inputEl.checked]),
-        ),
-      );
-
-      group.select.value = stage;
-      group.custom.hidden = stage !== 'custom';
-    }
-  }
-
   _onReset() {
     this._resetRipple.animate();
     const oldSettings = this.getSettings();
 
-    // Set all inputs according to their initial attributes
-    for (const inputEl of this._globalInputs) {
-      if (inputEl.type === 'checkbox') {
-        inputEl.checked = inputEl.hasAttribute('checked');
-      } else if (inputEl.type === 'range') {
-        this._sliderMap.get(inputEl).value = inputEl.getAttribute('value');
-      } else if (inputEl.tagName === 'SELECT') {
-        for (const option of inputEl.options) {
-          option.selected = option.defaultSelected;
-        }
-      } else {
-        inputEl.value = inputEl.defaultValue;
-      }
-    }
-
-    for (const inputEl of this._pluginInputs) {
-      inputEl.checked = inputEl.hasAttribute('checked');
-    }
-
+    this._model.reset();
     // The stage selects have no name of their own, so they follow the
     // checkboxes.
-    this._syncStageSelects();
+    this._syncDom();
     this._renderNotes();
 
     this.emitter.emit('reset', oldSettings);
@@ -323,54 +297,15 @@ export default class Settings {
   }
 
   setSettings(settings) {
-    for (const inputEl of this._globalInputs) {
-      if (!(inputEl.name in settings)) continue;
+    this._model.set(settings);
 
-      if (inputEl.type === 'checkbox') {
-        inputEl.checked = settings[inputEl.name];
-      } else if (inputEl.type === 'range') {
-        this._sliderMap.get(inputEl).value = settings[inputEl.name];
-      } else {
-        inputEl.value = settings[inputEl.name];
-      }
-    }
+    if (!this.container) return;
 
-    for (const inputEl of this._pluginInputs) {
-      if (!(inputEl.name in settings.plugins)) continue;
-      inputEl.checked = settings.plugins[inputEl.name];
-    }
-
-    this._syncStageSelects();
+    this._syncDom();
     this._renderNotes();
   }
 
   getSettings() {
-    // fingerprint is used for cache lookups
-    const fingerprint = [];
-    const output = {
-      plugins: {},
-    };
-
-    for (const inputEl of this._globalInputs) {
-      if (inputEl.name !== 'gzip' && inputEl.name !== 'original') {
-        if (inputEl.type === 'checkbox') {
-          fingerprint.push(Number(inputEl.checked));
-        } else {
-          fingerprint.push(`|${inputEl.value}|`);
-        }
-      }
-
-      output[inputEl.name] =
-        inputEl.type === 'checkbox' ? inputEl.checked : inputEl.value;
-    }
-
-    for (const inputEl of this._pluginInputs) {
-      fingerprint.push(Number(inputEl.checked));
-      output.plugins[inputEl.name] = inputEl.checked;
-    }
-
-    output.fingerprint = fingerprint.join(',');
-
-    return output;
+    return this._model.get();
   }
 }
