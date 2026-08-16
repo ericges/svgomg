@@ -75,8 +75,11 @@ export default class Settings {
         ),
       );
       // Where each panel was left, so switching away and back returns to it.
-      // In memory only: it is a scroll position, not a preference.
+      // In memory only: it is a scroll position, not a preference. Both of
+      // these belong to `_selectTab()`, so they are set before anything can
+      // reach it.
       this._scrollTops = this._tabs.map(() => 0);
+      this._scroller = this.container.querySelector('.settings-scroller');
 
       // One descriptor per category, carrying the rows the filter hides and
       // the header count it keeps up to date. The name is read out of the
@@ -118,8 +121,7 @@ export default class Settings {
       this._bindCategories();
       this._filterInput.addEventListener('input', () => this._applyFilter());
 
-      const scroller = this.container.querySelector('.settings-scroller');
-      this._scroller = scroller;
+      const scroller = this._scroller;
       const resetBtn = this.container.querySelector('.setting-reset');
       const ranges = this.container.querySelectorAll('input[type=range]');
 
