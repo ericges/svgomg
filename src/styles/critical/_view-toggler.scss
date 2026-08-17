@@ -1,8 +1,10 @@
 @use '../utils';
 
-// A segmented control: one translucent pill split in two, with the active half
-// filled. Critical-path, like the toolbar that contains it — deferred, it would
-// render as two unstyled labels on first paint.
+// A segmented control: one outlined pill split in two, with the active half
+// filled — the same language as the actions in the bar, so the toggler reads as
+// one of them rather than as a separate widget. Critical-path, like the toolbar
+// that contains it — deferred, it would render as two unstyled labels on first
+// paint.
 .view-toggler {
   @include utils.user-select(none);
   display: flex;
@@ -11,9 +13,9 @@
   // Taking the height from the bar instead of hard-coding it keeps the two the
   // same size at every breakpoint.
   margin: 10px 0;
+  border: 2px solid utils.$barSurface;
   border-radius: 8px;
   overflow: hidden;
-  background-color: rgba(#fff, 0.08);
   line-height: 1;
 
   input {
@@ -32,6 +34,16 @@
   padding: 0 1em;
   white-space: nowrap;
   cursor: pointer;
+  // Muted like the secondary actions, so the checked half's white is what marks
+  // the state — one more signal beside the fill, and neither is the only one:
+  // these are radios, so the state is in the accessibility tree regardless.
+  color: utils.$barMuted;
+
+  // Required, not stylistic: $barMuted on $barSelected is 2.9:1.
+  &:has(:checked),
+  &:hover {
+    color: #fff;
+  }
 
   .icon {
     flex: none;
@@ -40,7 +52,7 @@
   }
 
   + .view-toggler-tab {
-    box-shadow: inset 1px 0 0 rgba(#fff, 0.14);
+    box-shadow: inset 2px 0 0 utils.$barSurface;
   }
 
   .selected {
@@ -50,8 +62,12 @@
     pointer-events: none;
   }
 
+  // Lighter than the bar, where this used to be darker than it: on an indigo
+  // bar a black wash was the obvious "recessed" reading, but on a dark grey one
+  // going down has nowhere to go. Two steps above the outline, so the checked
+  // half is a state you can see rather than one you have to look for.
   :checked + .selected {
-    background-color: rgba(#000, 0.38);
+    background-color: utils.$barSelected;
   }
 
   // Keyboard focus only, like .toolbar-action — `trackFocusMethod()` tags the

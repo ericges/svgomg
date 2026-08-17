@@ -14,7 +14,7 @@
   display: flex;
   align-items: stretch;
   height: 52px;
-  background-color: #3574f0;
+  background-color: utils.$bar;
   color: #fff;
   // Set on the bar rather than on .toolbar-actions so that everything in it —
   // including the view toggler and the trailing link, which sit outside that
@@ -63,8 +63,10 @@
   }
 
   // A footnote under the wordmark, so it drops the bar's 700 weight and a step
-  // of size. The de-emphasis stops there: at 0.75 this is ~4.6:1 on the indigo,
-  // and fading it further would put it under AA.
+  // of size. 0.75 resolves to 8.4:1 on the dark bar — it was ~4.6:1 back when
+  // the bar was indigo, i.e. this was the value AA allowed rather than the one
+  // the design wanted. There is room to fade it further now; it stays here
+  // because the size and weight already do the de-emphasising.
   p {
     margin: 0;
     display: flex;
@@ -133,13 +135,16 @@
   gap: 0.45rem;
   padding: 0 1em;
   white-space: nowrap;
-  color: inherit;
+  // Muted, not the bar's white: these are the secondary actions, and the
+  // primary takes its white back below. The icon partials draw in
+  // `currentColor`, so this is the glyph colour as well as the label's.
+  color: utils.$barMuted;
   cursor: pointer;
   border-radius: 8px;
 
   &:link,
   &:visited {
-    color: inherit;
+    color: utils.$barMuted;
     text-decoration: none;
   }
 
@@ -153,9 +158,23 @@
 
   // :focus-within, not :focus — the paste action's focused node is the textarea
   // inside it, not the label itself.
+  //
+  // One hover value for all three actions, filled rather than a translucent
+  // white: the outlined two and the filled one then give the same feedback, so
+  // hovering a secondary doesn't land it on the primary's resting colour.
   &:hover::before,
   &:focus-within::before {
-    background-color: rgba(#fff, 0.14);
+    background-color: utils.$barHover;
+  }
+
+  // The label comes forward with the fill. Not decoration: $barMuted is 5.3:1
+  // against the bare bar but 4.0:1 once the pill fills to $barHover, which is
+  // under AA — so the state that adds a background also has to add contrast.
+  &:hover,
+  &:focus-within,
+  &:hover:link,
+  &:hover:visited {
+    color: #fff;
   }
 
   &:focus {
@@ -164,12 +183,18 @@
 
   // `trackFocusMethod()` in page/utils.js tags keyboard focus. This rule is
   // what makes `outline: none` above acceptable — without it, keyboard focus is
-  // invisible on the coloured bar. White rather than an accent hue: it is 4.3:1
-  // against the bar and stays legible whatever the bar's colour becomes, where
-  // the cyan this used to be fell to 1.9:1 against it — under WCAG 1.4.11's 3:1.
-  &.key-focused::before {
-    background-color: rgba(#fff, 0.24);
-    box-shadow: inset 0 0 0 2px #fff;
+  // invisible on the bar. White rather than an accent hue: 13.8:1 here, and it
+  // stays legible whatever the bar's colour becomes. It was cyan until the bar
+  // stopped being indigo, which took it to 1.9:1 — under WCAG 1.4.11's 3:1.
+  &.key-focused {
+    // Same reason as the hover rule: $barActive is the strongest fill in the
+    // bar, and $barMuted on it is 3.4:1.
+    color: #fff;
+
+    &::before {
+      background-color: utils.$barActive;
+      box-shadow: inset 0 0 0 2px #fff;
+    }
   }
 
   .icon {
@@ -199,9 +224,23 @@
   font-weight: 600;
 }
 
-// "Open SVG" is the primary action: a permanent, quieter version of the pill.
-.toolbar-action-primary::before {
-  background-color: rgba(#fff, 0.08);
+// The three actions in the scrolling row are outlined pills. The trailing repo
+// link is a `.toolbar-action` too but sits outside this row and stays bare —
+// it's an icon, and boxing it would promote it to the rank of the other three.
+.toolbar-actions .toolbar-action::before {
+  border: 2px solid utils.$barSurface;
+}
+
+// "Open SVG" is the primary action, and the only filled one: same outline,
+// solid ground, and the bar's white where the others are muted. Those two
+// things together are the hierarchy; it used to be a slightly stronger wash of
+// the same white as everything else.
+.toolbar-action-primary {
+  color: #fff;
+
+  &::before {
+    background-color: utils.$barSurface;
+  }
 }
 
 // The demo action is a split button: the label loads the default demo in one
@@ -221,8 +260,12 @@
 .toolbar-action-split {
   padding-right: 0.75em;
 
+  // The two halves are one pill, so the outline has to skip the seam — left as
+  // borders on both, the shared edge would draw at double width and read as a
+  // gap between two buttons rather than a split in one.
   &::before {
     border-radius: 8px 0 0 8px;
+    border-right: 0;
   }
 }
 
@@ -231,9 +274,13 @@
 
   &::before {
     border-radius: 0 8px 8px 0;
+    border-left: 0;
   }
 
   // A hairline between the halves, so the split is visible before you hover it.
+  // A step above the outline rather than matching it: this one carries meaning
+  // — that these are two buttons — where the outline is only decoration, and at
+  // the outline's own value it would disappear against an unhovered half.
   &::after {
     content: '';
     position: absolute;
@@ -241,7 +288,9 @@
     top: 14px;
     bottom: 14px;
     width: 1px;
-    background-color: rgba(#fff, 0.25);
+    background-color: utils.$barSelected;
+    // Above the ::before pill, so a hovered half doesn't paint over the seam.
+    z-index: 1;
   }
 
   .icon {
@@ -254,7 +303,7 @@
   // keeps the menu's state even when it was closed by clicking elsewhere.
   &[aria-expanded='true'] {
     &::before {
-      background-color: rgba(#fff, 0.14);
+      background-color: utils.$barHover;
     }
 
     .icon {

@@ -289,7 +289,13 @@ Everything uses the Sass module system (`@use` / `@forward`) — no `@import`. S
 
 ### The palette, and why it isn't one blue
 
-Three colours, and which one applies is a contrast question rather than a taste one — hex values are inline, there are no variables, so the rule has to live here:
+**The toolbar is dark and everything below it is not.** `#2b2d30` for the bar and `#34363a` for the surface that fills the primary action and outlines all three are given values; the rest of the bar's greys continue the same `+9/+9/+10` step and live as `$bar`/`$barSurface`/`$barHover`/`$barActive`/`$barSelected` in `_utils.scss`, shared because `critical/_toolbar.scss` and `critical/_view-toggler.scss` both draw on them. Variables emit nothing, so they don't breach the "no output-producing rules in `_utils.scss`" rule below. The steps are deliberately small — `$barSurface` is 1.14:1 against `$bar`, so the 2px outline is decoration, not an affordance: what identifies a control up there is its label, its hover fill and its white focus ring (13.8:1). The one place a grey has to carry meaning is the view toggler's checked half, which is why `$barSelected` is two steps further out.
+
+The bar's language is **filled + white = primary, outlined + muted = secondary**: "Open SVG" is filled and keeps the bar's white, Paste and Demo are transparent with `$barMuted` labels, all three are outlined, and the trailing repo link is bare and muted because it's an icon and a box would promote it. The wordmark stays white — the muting is set on the actions, not on `.toolbar`. The demo split button drops the border on its shared edge — at double width it reads as a gap between two buttons rather than a seam in one. The view toggler follows the same language rather than having its own, its checked half taking the white.
+
+**Every rule that fills a control also takes its label to white**, and that is a requirement rather than a flourish: `$barMuted` is 5.3:1 on the bare bar but 4.0:1 on `$barHover` and 3.4:1 on `$barActive`, both under AA. Adding a fill state without the colour alongside it puts the label under the line.
+
+Below the bar the blue stands, and which blue applies is a contrast question rather than a taste one:
 
 - **`#3574f0`** is the primary: filled surfaces (toolbar, switches, slider, FAB, the reset button, the results chip), icons, and focus rings drawn on *white*. Against white it is 4.28:1 — over the 3:1 that non-text needs, under the 4.5:1 that text needs.
 - **`#2249d3`** is for **text on white**, for exactly that reason: the selected settings tab and the `has-note` category count, both of which would otherwise sit at 4.28:1. It doubles as `theme_color` in `manifest.json` and `index.njk`, and comes out of the logo's own artwork rather than being invented. Recolouring those two back to the primary "for consistency" reintroduces the failure.
