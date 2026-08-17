@@ -1,10 +1,10 @@
-/* globals SVGOMG_BUILD_ID:false */
+/* globals OMSVG_BUILD_ID:false */
 
 // A hash of everything the build produces, injected by the gulpfile. It changes
 // exactly when the cached assets change, so the cache below is rebuilt only
 // when there's something new to cache.
-const cachePrefix = 'svgomg-';
-const staticCacheName = `${cachePrefix}static-${SVGOMG_BUILD_ID}`;
+const cachePrefix = 'omsvg-';
+const staticCacheName = `${cachePrefix}static-${OMSVG_BUILD_ID}`;
 const fontCacheName = `${cachePrefix}fonts`;
 const expectedCaches = new Set([staticCacheName, fontCacheName]);
 
@@ -40,7 +40,7 @@ addEventListener('install', (event) => {
 addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      // remove caches beginning "svgomg-" that aren't in expectedCaches
+      // remove caches beginning "omsvg-" that aren't in expectedCaches
       const cacheNames = await caches.keys();
 
       await Promise.all(

@@ -142,7 +142,7 @@ test('passes settings in the new shape through untouched', (t) => {
     ...oldSettings(),
     dimensionAttrs: 'both',
     ids: 'removeUnused',
-    idPrefix: 'svgomg_',
+    idPrefix: 'omsvg_',
     currentColor: true,
     plugins: { removeComments: true },
   };

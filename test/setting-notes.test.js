@@ -312,7 +312,7 @@ test('a rejected ID prefix is explained, whatever the file contains', (t) => {
     ['idPrefix'],
   );
   t.assert.deepStrictEqual(
-    names(panelSettings({ idPrefix: 'svgomg_' }), undefined),
+    names(panelSettings({ idPrefix: 'omsvg_' }), undefined),
     [],
   );
   t.assert.deepStrictEqual(

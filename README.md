@@ -2,27 +2,27 @@
 
 <img src="src/images/icon.png" width="96" alt="">
 
-# SVGOMG
+# OMSVG
 
-**[SVGO](https://github.com/svg/svgo)'s Missing GUI** — tune every optimisation, watch the file
+**Optimize My SVG** — tune every [SVGO](https://github.com/svg/svgo) optimisation, watch the file
 shrink, and see instantly if you broke the image.
 
 Runs entirely in your browser. No upload, no backend, no tracking.
 
 [![CI](https://github.com/ericges/svgomg/actions/workflows/ci.yml/badge.svg)](https://github.com/ericges/svgomg/actions/workflows/ci.yml)
-[![Live](https://img.shields.io/website?url=https%3A%2F%2Fsvgomg.ges.dev&up_message=online&down_message=offline&label=svgomg.ges.dev)](https://svgomg.ges.dev/)
+[![Live](https://img.shields.io/website?url=https%3A%2F%2Fomsvg.app&up_message=online&down_message=offline&label=omsvg.app)](https://omsvg.app/)
 [![SVGO](https://img.shields.io/github/package-json/dependency-version/ericges/svgomg/dev/svgo?label=SVGO&color=blue)](https://github.com/svg/svgo)
 [![Node](https://img.shields.io/badge/node-22%20%C2%B7%2024%20%C2%B7%2026%2B-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-source--available-blue)](./LICENSE.md)
 
-### [→ Open the app](https://svgomg.ges.dev/)
+### [→ Open the app](https://omsvg.app/)
 
 </div>
 
 ## Why
 
 SVGO is excellent, but it's a command line tool with dozens of switches and no way to see what
-you've just done to your artwork. SVGOMG puts every option behind a toggle and re-optimises as you
+you've just done to your artwork. OMSVG puts every option behind a toggle and re-optimises as you
 change them, so you get the smallest file that still *looks right* — rather than the smallest file.
 
 - **See the damage immediately.** The preview re-renders on every change, and _Show original_
@@ -105,7 +105,7 @@ template renders the checkbox and the `name` attribute carries it through to the
 ## Deployment
 
 Every pull request is linted, built and tested, as is every push to `main`. Only **`main`** is
-published, to GitHub Pages at <https://svgomg.ges.dev/>, and only once all three pass — see
+published, to GitHub Pages at <https://omsvg.app/>, and only once all three pass — see
 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml).
 
 ## Contributing

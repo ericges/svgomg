@@ -657,8 +657,8 @@ test('the service worker gets a build-derived cache name', async (t) => {
   // If `@rollup/plugin-replace` stopped substituting it, the SW would throw on
   // an undefined global at install time and offline support would go silently.
   t.assert.ok(
-    !sw.includes('SVGOMG_BUILD_ID'),
-    'SVGOMG_BUILD_ID was not substituted into build/sw.js',
+    !sw.includes('OMSVG_BUILD_ID'),
+    'OMSVG_BUILD_ID was not substituted into build/sw.js',
   );
   // Terser folds the template literal in a production build and leaves it
   // alone in a dev one; both spellings are fine, an absent hash isn't.

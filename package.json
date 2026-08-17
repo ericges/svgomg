@@ -10,7 +10,7 @@
   "bugs": {
     "url": "https://github.com/ericges/svgomg/issues"
   },
-  "homepage": "https://svgomg.ges.dev/",
+  "homepage": "https://omsvg.app/",
   "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
   "engines": {

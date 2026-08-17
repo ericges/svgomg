@@ -221,8 +221,8 @@ async function html() {
         plugins: config.plugins,
         headCSS,
         SVGO_VERSION,
-        liveBaseUrl: 'https://svgomg.ges.dev/',
-        title: "SVGOMG - SVGO's Missing GUI for minifying SVGs",
+        liveBaseUrl: 'https://omsvg.app/',
+        title: 'OMSVG - Optimize My SVG: a visual GUI for SVGO',
         description: 'Easy & visual compression of SVG images.',
         iconPath: 'images/icon.png',
       }),
@@ -322,7 +322,7 @@ const appJs = gulp.parallel(
 // after every task that writes there, `appJs` included.
 async function swJs() {
   await js('js/sw/index.js', '', {
-    SVGOMG_BUILD_ID: JSON.stringify(await buildId()),
+    OMSVG_BUILD_ID: JSON.stringify(await buildId()),
   });
 }
 

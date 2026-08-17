@@ -1,5 +1,6 @@
 {
-  "name": "SVGOMG",
+  "name": "OMSVG",
+  "short_name": "OMSVG",
   "scope": "./",
   "icons": [
     {
