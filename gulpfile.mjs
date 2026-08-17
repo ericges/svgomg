@@ -210,6 +210,7 @@ async function html() {
     .pipe(
       nunjucksCompile({
         demos: config.demos,
+        categories: config.categories,
         plugins: config.plugins,
         headCSS,
         SVGO_VERSION,

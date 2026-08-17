@@ -114,120 +114,166 @@
                         <label class="setting-item-toggle">
                             <input type="checkbox" name="{{ plugin.id }}" {% if plugin.enabledByDefault %}checked{% endif %}>
                             {% include "partials/material-switch.html" %}
-                            {{ plugin.name }}
+                            <span class="setting-item-lines">
+                                <span class="setting-item-name">{{ plugin.name }}</span>
+                                {# The SVGO plugin id, so the panel says which plugin a
+                                   control really is — it's what the docs and the CLI call it. #}
+                                <code class="setting-item-id">{{ plugin.id }}</code>
+                            </span>
                         </label>
                     {% endmacro %}
                     <div class="results-container-mobile"></div>
+                    {# Outside `.settings-scroller` on purpose: the scroller's `mousedown`
+                       handler cancels focus for everything that isn't a non-checkbox
+                       control, which would leave these buttons unfocusable. #}
+                    <div class="settings-tabs" role="tablist" aria-label="Settings">
+                        <button type="button" class="unbutton settings-tab" role="tab" id="settings-tab-optimise" aria-controls="settings-panel-optimise" aria-selected="true">Optimise</button>
+                        <button type="button" class="unbutton settings-tab" role="tab" id="settings-tab-output" aria-controls="settings-panel-output" aria-selected="false" tabindex="-1">Output</button>
+                    </div>
                     <div class="settings-scroller">
-                        <section>
-                            <h1 class="settings-sub-heading">View</h1>
-                            <label class="setting-item-toggle">
-                                <input type="checkbox" name="original">
-                                {% include "partials/material-switch.html" %}
-                                Show original
-                            </label>
-                            <label class="setting-item-toggle">
-                                <input type="checkbox" name="gzip" checked>
-                                {% include "partials/material-switch.html" %}
-                                Compare gzipped
-                            </label>
-                        </section>
-                        <section>
-                            <h1 class="settings-sub-heading">Output</h1>
-                            <label class="setting-item-toggle">
-                                <input type="checkbox" name="pretty">
-                                {% include "partials/material-switch.html" %}
-                                Prettify markup
-                            </label>
-                            <label class="setting-item-range">
-                                <span class="label-text">Number precision</span>
-                                <input type="range" min="0" max="8" step="1" value="3" name="floatPrecision">
-                            </label>
-                            <label class="setting-item-range">
-                                <span class="label-text">Transform precision</span>
-                                <input type="range" min="0" max="8" step="1" value="5" name="transformPrecision">
-                            </label>
-                            <label class="setting-item-select">
-                                <span class="label-text">Size attributes</span>
-                                <select name="dimensionAttrs">
-                                    <option value="original" selected>Keep as they are</option>
-                                    <option value="viewBox">viewBox only</option>
-                                    <option value="widthHeight">width &amp; height only</option>
-                                    <option value="both">Both</option>
-                                </select>
-                            </label>
-                            <label class="setting-item-select">
-                                <span class="label-text">IDs</span>
-                                <select name="ids">
-                                    <option value="minify" selected>Shorten and drop unused</option>
-                                    <option value="removeUnused">Drop unused only</option>
-                                    <option value="keep">Keep as they are</option>
-                                </select>
-                            </label>
-                            <label class="setting-item-text">
-                                <span class="label-text">ID prefix</span>
-                                {# The pattern restates the worker's `idPrefixPattern` (id-prefix.js): what
-                                   fails it is never applied, only flagged here. #}
-                                <input type="text" name="idPrefix" placeholder="none" spellcheck="false" autocomplete="off" autocapitalize="off" pattern="\s*[A-Za-z_](\w|-)*\s*" title="Letters, digits, hyphens and underscores; must not start with a digit or hyphen">
-                            </label>
-                            <label class="setting-item-select">
-                                <span class="label-text">Metadata</span>
-                                <select class="metadata-select">
-                                    <option value="keep">Keep all</option>
-                                    <option value="junk" selected>Drop junk, keep accessibility</option>
-                                    <option value="all">Drop all</option>
-                                    <option value="custom">Custom…</option>
-                                </select>
-                            </label>
-                            <div class="metadata-custom plugins" hidden>
-                                {% for plugin in plugins %}
-                                    {% if plugin.metadata %}{{ pluginToggle(plugin) }}{% endif %}
+                        <div class="settings-panel" role="tabpanel" id="settings-panel-optimise" aria-labelledby="settings-tab-optimise">
+                            <section>
+                                <label class="setting-item-toggle">
+                                    <input type="checkbox" name="multipass">
+                                    {% include "partials/material-switch.html" %}
+                                    Multipass
+                                </label>
+                                {# No `name`, deliberately: a named control would land in
+                                   `_globalInputs`, and so in the settings object and the cache
+                                   fingerprint. Filtering is a view concern — it hides rows, it
+                                   never changes what is enabled. #}
+                                <div class="setting-filter">
+                                    <input type="search" class="setting-filter-input" placeholder="Filter optimisations" aria-label="Filter optimisations" spellcheck="false" autocomplete="off" autocapitalize="off">
+                                    <span class="setting-filter-count" aria-live="polite"></span>
+                                </div>
+                                <p class="setting-filter-empty" hidden></p>
+                                {% for category in categories %}
+                                    {# `config.json`'s array order is the pipeline order, so the
+                                       groups filter it rather than reordering it: within a
+                                       category the plugins keep the order the worker runs them in. #}
+                                    <details class="plugin-category" data-category="{{ category.id }}" {% if category.open %}open{% endif %}>
+                                        <summary class="plugin-category-summary">
+                                            <span class="plugin-category-name">{{ category.name }}</span>
+                                            {# Collapsing a category takes its notices out of the
+                                               accessibility tree with it, so the header says how many
+                                               are in there. The icon is for the reader the tint on the
+                                               count doesn't reach; the text goes into the summary's
+                                               accessible name. Both are `Settings._renderNotes()`'s. #}
+                                            <span class="plugin-category-notice" hidden>
+                                                {% include "partials/icons/info.svg" %}
+                                                <span class="plugin-category-notice-text"></span>
+                                            </span>
+                                            {# Filled by `Settings._updateCounts()`. #}
+                                            <span class="plugin-category-count"></span>
+                                        </summary>
+                                        <div class="plugins">
+                                            {% for plugin in plugins %}
+                                                {% if plugin.category == category.id %}{{ pluginToggle(plugin) }}{% endif %}
+                                            {% endfor %}
+                                        </div>
+                                    </details>
                                 {% endfor %}
-                            </div>
-                            <label class="setting-item-select">
-                                <span class="label-text">Styles</span>
-                                <select class="styles-select">
-                                    <option value="keep">Keep as they are</option>
-                                    <option value="minify">Minify</option>
-                                    <option value="inline" selected>Inline into elements</option>
-                                    <option value="attributes">Convert to presentation attributes</option>
-                                    {# Named after the one plugin it enables, not after what "styles"
-                                       might sound like: `removeStyleElement` deletes `<style>`
-                                       elements, and a `style` attribute on an element survives it. #}
-                                    <option value="remove">Remove style elements</option>
-                                    <option value="custom">Custom…</option>
-                                </select>
-                            </label>
-                            {# The `plugins` class is what keeps these checkboxes in
-                               `_pluginInputs`, and so in `getSettings().plugins`. #}
-                            <div class="styles-custom plugins" hidden>
-                                {% for plugin in plugins %}
-                                    {% if plugin.styles %}{{ pluginToggle(plugin) }}{% endif %}
-                                {% endfor %}
-                            </div>
-                            <label class="setting-item-toggle">
-                                <input type="checkbox" name="currentColor">
-                                {% include "partials/material-switch.html" %}
-                                Colours to currentColor
-                            </label>
-                        </section>
-                        <section>
-                            <h1 class="settings-sub-heading">Optimisation</h1>
-                            <label class="setting-item-toggle">
-                                <input type="checkbox" name="multipass">
-                                {% include "partials/material-switch.html" %}
-                                Multipass
-                            </label>
-                            <h2 class="settings-sub-heading">Features</h2>
-                            <div class="plugins">
-                                {% for plugin in plugins %}
-                                    {% if not plugin.metadata and not plugin.styles %}{{ pluginToggle(plugin) }}{% endif %}
-                                {% endfor %}
-                            </div>
-                        </section>
-                        <div class="setting-reset-row">
-                            <button class="unbutton setting-reset" type="button">Reset all</button>
+                            </section>
                         </div>
+                        <div class="settings-panel" role="tabpanel" id="settings-panel-output" aria-labelledby="settings-tab-output" hidden>
+                            <section>
+                                <h1 class="settings-sub-heading">View</h1>
+                                <label class="setting-item-toggle">
+                                    <input type="checkbox" name="original">
+                                    {% include "partials/material-switch.html" %}
+                                    Show original
+                                </label>
+                                <label class="setting-item-toggle">
+                                    <input type="checkbox" name="gzip" checked>
+                                    {% include "partials/material-switch.html" %}
+                                    Compare gzipped
+                                </label>
+                            </section>
+                            <section>
+                                <h1 class="settings-sub-heading">Output</h1>
+                                <label class="setting-item-toggle">
+                                    <input type="checkbox" name="pretty">
+                                    {% include "partials/material-switch.html" %}
+                                    Prettify markup
+                                </label>
+                                <label class="setting-item-range">
+                                    <span class="label-text">Number precision</span>
+                                    <input type="range" min="0" max="8" step="1" value="3" name="floatPrecision">
+                                </label>
+                                <label class="setting-item-range">
+                                    <span class="label-text">Transform precision</span>
+                                    <input type="range" min="0" max="8" step="1" value="5" name="transformPrecision">
+                                </label>
+                                <label class="setting-item-select">
+                                    <span class="label-text">Size attributes</span>
+                                    <select name="dimensionAttrs">
+                                        <option value="original" selected>Keep as they are</option>
+                                        <option value="viewBox">viewBox only</option>
+                                        <option value="widthHeight">width &amp; height only</option>
+                                        <option value="both">Both</option>
+                                    </select>
+                                </label>
+                                <label class="setting-item-select">
+                                    <span class="label-text">IDs</span>
+                                    <select name="ids">
+                                        <option value="minify" selected>Shorten and drop unused</option>
+                                        <option value="removeUnused">Drop unused only</option>
+                                        <option value="keep">Keep as they are</option>
+                                    </select>
+                                </label>
+                                <label class="setting-item-text">
+                                    <span class="label-text">ID prefix</span>
+                                    {# The pattern restates the worker's `idPrefixPattern` (id-prefix.js): what
+                                       fails it is never applied, only flagged here. #}
+                                    <input type="text" name="idPrefix" placeholder="none" spellcheck="false" autocomplete="off" autocapitalize="off" pattern="\s*[A-Za-z_](\w|-)*\s*" title="Letters, digits, hyphens and underscores; must not start with a digit or hyphen">
+                                </label>
+                                <label class="setting-item-select">
+                                    <span class="label-text">Metadata</span>
+                                    <select class="metadata-select">
+                                        <option value="keep">Keep all</option>
+                                        <option value="junk" selected>Drop junk, keep accessibility</option>
+                                        <option value="all">Drop all</option>
+                                        <option value="custom">Custom…</option>
+                                    </select>
+                                </label>
+                                <div class="metadata-custom plugins" hidden>
+                                    {% for plugin in plugins %}
+                                        {% if plugin.metadata %}{{ pluginToggle(plugin) }}{% endif %}
+                                    {% endfor %}
+                                </div>
+                                <label class="setting-item-select">
+                                    <span class="label-text">Styles</span>
+                                    <select class="styles-select">
+                                        <option value="keep">Keep as they are</option>
+                                        <option value="minify">Minify</option>
+                                        <option value="inline" selected>Inline into elements</option>
+                                        <option value="attributes">Convert to presentation attributes</option>
+                                        {# Named after the one plugin it enables, not after what "styles"
+                                           might sound like: `removeStyleElement` deletes `<style>`
+                                           elements, and a `style` attribute on an element survives it. #}
+                                        <option value="remove">Remove style elements</option>
+                                        <option value="custom">Custom…</option>
+                                    </select>
+                                </label>
+                                {# The `plugins` class is what keeps these checkboxes in
+                                   `_pluginInputs`, and so in `getSettings().plugins`. #}
+                                <div class="styles-custom plugins" hidden>
+                                    {% for plugin in plugins %}
+                                        {% if plugin.styles %}{{ pluginToggle(plugin) }}{% endif %}
+                                    {% endfor %}
+                                </div>
+                                <label class="setting-item-toggle">
+                                    <input type="checkbox" name="currentColor">
+                                    {% include "partials/material-switch.html" %}
+                                    Colours to currentColor
+                                </label>
+                            </section>
+                        </div>
+                    </div>
+                    {# Below both panels rather than inside either: it resets everything,
+                       so it has to be reachable from whichever tab is showing. #}
+                    <div class="setting-reset-row">
+                        <button class="unbutton setting-reset" type="button">Reset all</button>
                     </div>
                 </div>
             </div>
