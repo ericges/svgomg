@@ -2,24 +2,10 @@ import { createNanoEvents } from 'nanoevents';
 import imageIconSvg from '../../../partials/icons/image.svg';
 import FloatingActionButton from './floating-action-button.js';
 import { previewSize } from './preview-size.js';
+import { rasterizeToCanvas } from './rasterize.js';
 
 const pngFilename = (svgFilename) =>
   `${svgFilename.replace(/\.svgz?$/i, '')}.png`;
-
-// A root carrying only a viewBox has no intrinsic size, and engines disagree
-// about drawing such an image onto a canvas — Firefox drew it blank until
-// 2025. Stamping the size we're going to raster at makes them all agree, and
-// also neutralises percentage widths.
-function withExplicitSize(text, width, height) {
-  const doc = new DOMParser().parseFromString(text, 'image/svg+xml');
-  const root = doc.documentElement;
-
-  if (root.nodeName !== 'svg') return text;
-
-  root.setAttribute('width', width);
-  root.setAttribute('height', height);
-  return new XMLSerializer().serializeToString(doc);
-}
 
 export default class PngButton extends FloatingActionButton {
   constructor() {
@@ -72,26 +58,7 @@ export default class PngButton extends FloatingActionButton {
 
   async _rasterize(svgFile, scale = 1) {
     const { width, height } = previewSize(svgFile.width, svgFile.height);
-    const markup = withExplicitSize(svgFile.text, width, height);
-    // Not svgFile.url: the markup may differ, and revoking our URL must never
-    // invalidate the download button's href. The charset matters — WebKit has
-    // mis-decoded non-ASCII SVG blobs without it.
-    const url = URL.createObjectURL(
-      new Blob([markup], { type: 'image/svg+xml;charset=utf-8' }),
-    );
-    const image = new Image();
-
-    try {
-      image.src = url;
-      await image.decode();
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-
-    const canvas = document.createElement('canvas');
-    canvas.width = Math.max(1, Math.round(width * scale));
-    canvas.height = Math.max(1, Math.round(height * scale));
-    canvas.getContext('2d').drawImage(image, 0, 0, canvas.width, canvas.height);
+    const canvas = await rasterizeToCanvas(svgFile, { width, height, scale });
 
     const blob = await new Promise((resolve) => {
       canvas.toBlob(resolve, 'image/png');

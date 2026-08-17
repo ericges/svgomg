@@ -1,0 +1,142 @@
+// The line diff, laid out like `.code-output` because it is the same kind of
+// surface: a scrolling monospace panel over an opaque background, clearing the
+// floating action buttons and the settings card the same way.
+//
+// Everything here is namespaced `markup-diff-*`: `.diff` is already the size
+// delta badge inside `.results`.
+.markup-diff-output {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  overflow: auto;
+  -webkit-overflow-scrolling: touch; // TODO: revisit this later
+  // Opaque, like the markup view: the page's checkerboard behind the row tints
+  // would make both of them unreadable.
+  background-color: #2b2b2b;
+  color: #a9b7c6;
+  // Without this trio `transitionToClass()` never sees a `transitionend` and
+  // waits out its full 1s timeout on every switch, which reads as a hang.
+  opacity: 0;
+  transform: translateZ(0);
+
+  &.transition {
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  &.active {
+    opacity: 1;
+  }
+
+  @media (min-width: 900px) {
+    width: 100vw;
+  }
+}
+
+// Says what the view has done to both sides, since a reader comparing this
+// against the Markup view would otherwise read the reflow as the optimiser's.
+.markup-diff-notice {
+  margin: 0;
+  padding: 14px;
+  // Clears the view mode switch floating over this panel, exactly as
+  // `.code-output code` does: 8px offset + a 44px segment + 8px of gap.
+  padding-top: 60px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 0.8rem;
+  line-height: 1.5;
+
+  @media (min-width: 640px) {
+    padding: 20px 24px;
+    padding-top: 56px;
+  }
+
+  @media (min-width: 900px) {
+    padding: 30px;
+    // The panel is full-viewport wide above, so this is the only thing keeping
+    // the text clear of the settings card — see the same sum in _code-output.scss.
+    padding-right: 400px;
+    padding-top: 56px;
+  }
+}
+
+.markup-diff-rows {
+  padding: 14px 0;
+  font-family: JetBrainsMonoNL, monospace;
+  font-size: 0.9rem;
+  line-height: 1.5;
+
+  @media (min-width: 640px) {
+    // Lets the rows scroll past the floating action buttons.
+    padding-bottom: 200px;
+  }
+
+  @media (min-width: 900px) {
+    font-size: 1rem;
+  }
+}
+
+.markup-diff-row {
+  display: flex;
+  gap: 0.75em;
+  padding: 0 14px;
+
+  @media (min-width: 640px) {
+    padding: 0 24px;
+  }
+
+  @media (min-width: 900px) {
+    padding: 0 400px 0 30px;
+  }
+}
+
+// The character, not the tint, is what carries the row type — a reader who
+// can't tell the two backgrounds apart still gets a `+` or a `-`.
+.markup-diff-gutter {
+  flex: none;
+  width: 1ch;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: pre;
+}
+
+.markup-diff-line {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.markup-diff-add {
+  background-color: rgba(87, 166, 74, 0.22);
+
+  .markup-diff-gutter {
+    color: #7ec87e;
+  }
+}
+
+.markup-diff-remove {
+  background-color: rgba(204, 87, 87, 0.22);
+
+  .markup-diff-gutter {
+    color: #e08c8c;
+  }
+}
+
+// A collapsed run of unchanged lines. Static on purpose: the Markup view is
+// where you go to read the whole file.
+.markup-diff-skip {
+  color: rgba(255, 255, 255, 0.4);
+  font-style: italic;
+}
+
+// "No changes" — a state worth saying, since every plugin off or an already
+// optimised file both land here.
+.markup-diff-state {
+  margin: 0;
+  padding: 14px;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: system-ui, sans-serif;
+
+  @media (min-width: 640px) {
+    padding: 20px 24px;
+  }
+}

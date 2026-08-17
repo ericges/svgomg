@@ -13,6 +13,7 @@ import { strToEl } from '../utils.js';
 const modes = [
   { value: 'optimised', label: 'Optimised' },
   { value: 'original', label: 'Original' },
+  { value: 'diff', label: 'Diff' },
 ];
 
 // `.selected` sits immediately after its input, so `:checked + .selected` can

@@ -86,9 +86,9 @@ export default class MainController {
     // the worker. A borrowed reference, not an owned one: every result goes
     // into `_cache`, and the cache calls `release()` on what it evicts.
     this._resultItem = null;
-    // Which file the canvas is showing (`optimised` | `original`), and how the
-    // toolbar is showing it. Neither is persisted: a lens is about the moment,
-    // not a preference to restore someone into.
+    // Which file the canvas is showing (`optimised` | `original` | `diff`), and
+    // how the toolbar is showing it. Neither is persisted: a lens is about the
+    // moment, not a preference to restore someone into.
     this._viewMode = 'optimised';
     this._outputView = 'image';
     // What `_renderOutput()` last put on screen, so an unchanged pair doesn't
@@ -96,6 +96,7 @@ export default class MainController {
     // `Output`'s own starting type.
     this._renderedType = 'image';
     this._renderedFile = null;
+    this._renderedCompare = null;
     this._cache = new ResultsCache(10);
     this._latestCompressJobId = 0;
     this._userHasInteracted = false;
@@ -351,7 +352,7 @@ export default class MainController {
 
   /**
    * The file the canvas is showing, which is also the one the export buttons
-   * hand over.
+   * hand over. Diff has no single file to offer, so it carries the result.
    *
    * @returns {object | null} An `SvgFile`, or null before there is one.
    */
@@ -359,23 +360,42 @@ export default class MainController {
     return this._viewMode === 'original' ? this._inputItem : this._resultItem;
   }
 
-  _renderOutput() {
-    const file = this._shownFile();
-    const type = this._outputView;
+  /**
+   * The toolbar picks how the file is shown, the canvas control picks which
+   * file that is; between them they name one of `Output`'s four types.
+   *
+   * @returns {string} A key of `Output._types`.
+   */
+  _outputType() {
+    if (this._viewMode !== 'diff') return this._outputView;
+    return this._outputView === 'code' ? 'markupDiff' : 'renderDiff';
+  }
 
-    if (type === this._renderedType && file === this._renderedFile) return;
+  _renderOutput() {
+    const type = this._outputType();
+    const file = this._shownFile();
+    // Only the diff types read a second file; the others are handed it and
+    // ignore it.
+    const compareFile = this._viewMode === 'diff' ? this._inputItem : null;
+
+    if (
+      type === this._renderedType &&
+      file === this._renderedFile &&
+      compareFile === this._renderedCompare
+    ) {
+      return;
+    }
 
     const hasTypeChanged = type !== this._renderedType;
 
     this._renderedType = type;
     this._renderedFile = file;
+    this._renderedCompare = compareFile;
 
     if (hasTypeChanged) {
-      // `Output.set()` re-renders whatever it is already holding, which is this
-      // same file — the two controls never move at once.
-      this._outputUi.set(type);
+      this._outputUi.set(type, { svgFile: file, compareFile });
     } else if (file) {
-      this._outputUi.update(file);
+      this._outputUi.update(file, compareFile);
     }
   }
 
