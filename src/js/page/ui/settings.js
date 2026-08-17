@@ -230,14 +230,22 @@ export default class Settings {
   }
 
   _selectTab(index, shouldFocus = false) {
+    // Re-selecting the tab already showing is a no-op — a click on it, Enter,
+    // Space, and Home/End when it's already the end all arrive here. There is
+    // nothing to swap, and the offset stored for this panel is the one it had
+    // on the way *out* last time: restoring it would throw away wherever the
+    // reader has scrolled to since.
+    if (index === this._activeTab) {
+      if (shouldFocus) this._tabs[index].focus();
+      return;
+    }
+
     // The two panels share one scroller, so an offset means something different
     // in each — and the taller panel's offset is clamped to the shorter one's
     // maximum on the way in, which loses it for the way back. Read before the
     // swap and written after it, since hiding a panel reflows the scroller and
     // clamps whatever is there.
-    if (index !== this._activeTab) {
-      this._scrollTops[this._activeTab] = this._scroller.scrollTop;
-    }
+    this._scrollTops[this._activeTab] = this._scroller.scrollTop;
 
     for (const [candidate, tab] of this._tabs.entries()) {
       const isSelected = candidate === index;
