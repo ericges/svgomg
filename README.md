@@ -114,14 +114,8 @@ Bug reports, ideas and pull requests are welcome —
 [check the issues](https://github.com/ericges/svgomg/issues) to see what's planned. Please run
 `npm test` before opening a pull request.
 
-By opening a pull request you confirm that you wrote the contribution yourself or have the right to
-submit it, and that you license it under the licence in [LICENSE.md](./LICENSE.md) — granting Eric
-Gesemann the right to publish it under that licence and under any later version of it published for
-this project. You keep the copyright in your contribution.
-
-That last part is needed because the additional use grant in section 2 of the licence can only be
-made by the copyright holder, and because the licence may still need rewording — which would
-otherwise mean tracking down every past contributor.
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the rest: the conventions that aren't obvious from the
+code, how to report a bug usefully, and the licensing terms a contribution comes under.
 
 ## Licence
 
