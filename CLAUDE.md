@@ -285,6 +285,20 @@ Everything uses the Sass module system (`@use` / `@forward`) — no `@import`. S
 
 `_utils.scss` still emits one rule (`.bg-dark`), and both entries load it — so that rule does land in both stylesheets. Keep output-producing rules out of it.
 
+## Licensing
+
+**This is not MIT and not open source.** `LICENSE.md` is the PolyForm Noncommercial License 1.0.0, reproduced verbatim, under a two-section header that changes what it permits. Two rules come out of it: nobody may earn money from giving other people access to the app (ads, subscription, paywall, paid-plan feature, usage data), and anyone who hosts a *modified* version *publicly* must publish the Corresponding Source under the same licence and say in the app where to find it. Deliberately unconditional: private and in-house use, an agency hosting it for its clients (modified or not, no disclosure), and a free public mirror (no attribution asked).
+
+Three things about the construction are load-bearing, and all three read as tidiable:
+
+- **§ 1's opening sentence makes every permission conditional on § 1.** That is what stops it being an "additional restriction" a recipient could strip — the AGPL § 7 problem, and the Commons Clause argument of 2018. Rewriting it as a rule *alongside* the licence quietly guts the whole document.
+- **§ 2 is a grant, and only the copyright holder can make it.** Hence the contributor licence-back in the README's Contributing section, which must keep covering *later versions of the licence*: §§ 1–2 are unreviewed by a lawyer, and a rewording would otherwise need every past contributor's consent. Don't trim that clause to "under the same licence".
+- **§ 2 exempts client hosting only "where they are not charged for access to this software as such"**, and defines "organisation" to exclude the people you sell to. Both sentences exist to keep a subscription SaaS from calling its subscribers clients.
+
+`NOTICE.md` carries the upstream MIT notice (`2014-2025 Jake Archibald and SVGOMG contributors` — the plural is required, 25+ people hold rights) and the notices for every package the bundles carry. The list is the whole runtime closure and is deliberately over-inclusive, since proving what tree-shaking removed costs more than naming it: `commander` and `picocolors` are in there for that reason. **A new bundled dependency — including a transitive one — has to be added there**; `test/notices.test.js` walks the closure out of `package-lock.json` and fails if a name is absent, because that is how `sax` and its Blue Oak licence arrived unnoticed. Both files are copied into `build/` by the gulpfile's `notices()` task: the deployed site is the actual point of redistribution, and shipping without them is the MIT violation this replaced.
+
+The upstream fork point is `f925656`; everything up to and including it stays available under MIT, and `LICENSE.md` says so — an overstated claim would undermine the rest.
+
 ## Code style
 
 xo + Prettier (single quotes, semicolons, trailing commas, 2-space indent) for JS; stylelint with `stylelint-config-twbs-bootstrap` for Sass. Rule overrides live in `xo.config.mjs` and `.stylelintrc`; Prettier options live in `.prettierrc`. `npm run fix` autofixes JS. `.editorconfig` applies repo-wide.

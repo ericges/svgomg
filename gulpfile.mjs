@@ -190,6 +190,13 @@ function copy() {
     .pipe(gulp.dest('build', { encoding: false }));
 }
 
+// The deployed site is where the bundled MIT/BSD/ISC code actually reaches
+// anyone, so its notices have to travel with it. Separate from `copy()` because
+// these two live in the repository root and `copy()` is pinned to `{ base: 'src' }`.
+function notices() {
+  return gulp.src(['LICENSE.md', 'NOTICE.md']).pipe(gulp.dest('build'));
+}
+
 function css() {
   return gulp
     .src('src/styles/*.scss', { sourcemaps: true })
@@ -322,13 +329,14 @@ async function swJs() {
 const allJs = gulp.series(appJs, swJs);
 
 const mainBuild = gulp.series(
-  gulp.parallel(gulp.series(css, html), appJs, copy),
+  gulp.parallel(gulp.series(css, html), appJs, copy, notices),
   swJs,
 );
 
 function watch() {
   gulp.watch(['src/styles/**/*.scss'], gulp.series(css, html, swJs));
   gulp.watch(['src/js/**/*.js'], allJs);
+  gulp.watch(['LICENSE.md', 'NOTICE.md'], gulp.series(notices, swJs));
   gulp.watch(
     // `.html` still matters here: the Nunjucks partials keep that extension.
     ['src/**/*.{html,njk,svg,woff2}', 'src/*.json'],

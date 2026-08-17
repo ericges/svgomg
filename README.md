@@ -13,7 +13,7 @@ Runs entirely in your browser. No upload, no backend, no tracking.
 [![Live](https://img.shields.io/website?url=https%3A%2F%2Fsvgomg.ges.dev&up_message=online&down_message=offline&label=svgomg.ges.dev)](https://svgomg.ges.dev/)
 [![SVGO](https://img.shields.io/github/package-json/dependency-version/ericges/svgomg/dev/svgo?label=SVGO&color=blue)](https://github.com/svg/svgo)
 [![Node](https://img.shields.io/badge/node-22%20%C2%B7%2024%20%C2%B7%2026%2B-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE.md)
+[![License](https://img.shields.io/badge/license-source--available-blue)](./LICENSE.md)
 
 ### [→ Open the app](https://svgomg.ges.dev/)
 
@@ -110,13 +110,47 @@ published, to GitHub Pages at <https://svgomg.ges.dev/>, and only once all three
 
 ## Contributing
 
-Bug reports and ideas are welcome — [check the issues](https://github.com/ericges/svgomg/issues)
-to see what's planned. Please run `npm test` before opening a pull request.
+Bug reports, ideas and pull requests are welcome —
+[check the issues](https://github.com/ericges/svgomg/issues) to see what's planned. Please run
+`npm test` before opening a pull request.
+
+By opening a pull request you confirm that you wrote the contribution yourself or have the right to
+submit it, and that you license it under the licence in [LICENSE.md](./LICENSE.md) — granting Eric
+Gesemann the right to publish it under that licence and under any later version of it published for
+this project. You keep the copyright in your contribution.
+
+That last part is needed because the additional use grant in section 2 of the licence can only be
+made by the copyright holder, and because the licence may still need rewording — which would
+otherwise mean tracking down every past contributor.
+
+## Licence
+
+Source-available, not open source. The full terms are in [LICENSE.md](./LICENSE.md); it is the
+[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)
+with two additions. Two rules matter in practice:
+
+1. **Don't make money from giving other people access to it.** No ads, no subscription, no paywall,
+   no "feature of our paid plan", no selling usage data.
+2. **If you host a modified version publicly, publish your source** — under this same licence, free
+   to download, at a URL anyone can reach, and say in the app where to find it.
+
+|  | |
+| --- | --- |
+| ✅ Use it, at home or at work, on paid client projects | no conditions |
+| ✅ Run it on your own machines or your company's intranet, modified or not | no conditions |
+| ✅ Host it for your clients as part of your services | no conditions, no disclosure |
+| ✅ Mirror it publicly, free of charge, unmodified | no conditions — no attribution needed |
+| ✅ Fork it and host your fork publicly, free of charge | publish your source |
+| ❌ Host it publicly with advertising on or around it | not permitted |
+| ❌ Charge for access, or include it in a paid product or service | not permitted |
+| ❌ Sell or broker data about its use | not permitted |
+
+Everything up to and including commit `f925656` is upstream SVGOMG and stays available under the
+MIT License — see [NOTICE.md](./NOTICE.md), which also carries the notices for the third-party code
+the built app bundles.
 
 ## Credits
 
-SVGOMG was created by [Jake Archibald](https://github.com/jakearchibald); this is a
-[fork](https://github.com/jakearchibald/svgomg) that keeps it updated and free of telemetry. It
-stands on [SVGO](https://github.com/svg/svgo) by Kir Belevich and contributors.
-
-Licensed under the [MIT License](./LICENSE.md).
+SVGOMG, which this is a [fork](https://github.com/jakearchibald/svgomg) of, was created by
+[Jake Archibald](https://github.com/jakearchibald); this fork keeps it updated and free of
+telemetry. It stands on [SVGO](https://github.com/svg/svgo) by Kir Belevich and contributors.

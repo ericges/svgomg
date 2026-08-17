@@ -665,6 +665,25 @@ test('the service worker gets a build-derived cache name', async (t) => {
   t.assert.match(sw, /static-(?:\$\{)?["'`]?[\da-f]{16}/);
 });
 
+test('the licence and its notices ship with the build', async (t) => {
+  // The deployed site is where the bundled MIT/BSD/ISC code actually reaches
+  // anyone, so those licences require their notices to travel with it. Neither
+  // file is precached — the check below is one-directional, so that's fine.
+  const licence = await readBuildFile('LICENSE.md');
+  const notice = await readBuildFile('NOTICE.md');
+
+  // The whole construction rests on the PolyForm text being present, not just
+  // named: sections 1 and 2 grant and condition, they don't stand alone.
+  t.assert.match(licence, /PolyForm Noncommercial License 1\.0\.0/);
+  t.assert.match(licence, /## Acceptance/);
+
+  t.assert.match(notice, /Jake Archibald/);
+  t.assert.match(notice, /The MIT License/);
+  // Every package the bundles carry has to be named; `test/notices.test.js`
+  // checks the list against the real dependency closure.
+  t.assert.match(notice, /\bsvgo\b/);
+});
+
 test('every precached asset exists in the build', async (t) => {
   // The precache list is hand-written, and `cache.addAll` rejects as a whole if
   // any entry 404s — one stale path disables offline support entirely.
