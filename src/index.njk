@@ -108,6 +108,11 @@
                     </div>
                 </div>
                 <div class="output">
+                    {# Outside the `.output-switcher` subtree on purpose: `PanZoom` takes
+                       its event area from `SvgOutput`'s own container, so a control that
+                       isn't a descendant of it can't be swallowed by a pan gesture.
+                       `ViewMode`'s container is appended in here. #}
+                    <div class="view-mode-container"></div>
                     <div class="action-button-container">
                         <div class="minor-action-container"></div>
                         <div class="results-container"></div>
@@ -181,20 +186,12 @@
                         </div>
                         <div class="settings-panel" role="tabpanel" id="settings-panel-output" aria-labelledby="settings-tab-output" hidden>
                             <section>
-                                <h1 class="settings-sub-heading">View</h1>
-                                <label class="setting-item-toggle">
-                                    <input type="checkbox" name="original">
-                                    {% include "partials/material-switch.html" %}
-                                    Show original
-                                </label>
+                                <h1 class="settings-sub-heading">Output</h1>
                                 <label class="setting-item-toggle">
                                     <input type="checkbox" name="gzip" checked>
                                     {% include "partials/material-switch.html" %}
                                     Compare gzipped
                                 </label>
-                            </section>
-                            <section>
-                                <h1 class="settings-sub-heading">Output</h1>
                                 <label class="setting-item-toggle">
                                     <input type="checkbox" name="pretty">
                                     {% include "partials/material-switch.html" %}

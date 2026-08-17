@@ -25,16 +25,16 @@ SVGO is excellent, but it's a command line tool with dozens of switches and no w
 you've just done to your artwork. OMSVG puts every option behind a toggle and re-optimises as you
 change them, so you get the smallest file that still *looks right* — rather than the smallest file.
 
-- **See the damage immediately.** The preview re-renders on every change, and _Show original_
-  flips back for comparison.
+- **See the damage immediately.** The preview re-renders on every change, and a switch on the
+  canvas flips between _Optimised_ and _Original_ without losing your zoom.
 - **All 47 plugins exposed**, 34 on by default, plus number/transform precision, multipass and
   pretty-printing.
 - **Real numbers.** Before/after size and percentage, optionally measured **gzipped** — which is
   what actually travels over the wire.
 - **Read the output.** A syntax-highlighted markup view, with copy-to-clipboard and download.
 - **Works offline.** A service worker caches the app, so it keeps running with no connection.
-- **Nothing to set up.** A demo SVG loads by itself, so the app opens with something to look at;
-  drop, paste or pick a file from the toolbar to replace it.
+- **Nothing to set up.** The app opens on an empty sheet and waits: drop a file anywhere, paste
+  markup, pick one from the toolbar — or load a **Demo** if you haven't got one to hand.
 
 ## Privacy
 

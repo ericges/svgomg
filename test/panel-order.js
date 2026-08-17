@@ -40,7 +40,6 @@ export const panelSettings = ({ plugins, ...overrides } = {}) => ({
   plugins: { ...defaultPlugins, ...plugins },
   multipass: false,
   pretty: false,
-  original: false,
   gzip: true,
   floatPrecision: '3',
   transformPrecision: '5',

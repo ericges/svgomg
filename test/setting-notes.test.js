@@ -79,17 +79,6 @@ test('nothing is said before the first file has been optimised', (t) => {
   );
 });
 
-test('“Show original” silences everything', (t) => {
-  // Nothing is being optimised, so no optimisation is being overruled.
-  t.assert.deepStrictEqual(
-    names(
-      panelSettings({ original: true, currentColor: true }),
-      everywhere(MASK),
-    ),
-    [],
-  );
-});
-
 test('a stylesheet with rules deoptimises four controls', (t) => {
   t.assert.deepStrictEqual(names(panelSettings(), everywhere(STYLE)), [
     'ids',

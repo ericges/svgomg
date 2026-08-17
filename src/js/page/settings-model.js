@@ -22,17 +22,17 @@ import {
   stylesStages,
 } from './ui/setting-stages.js';
 
-// The named controls that aren't plugin checkboxes, in the order `index.njk`
-// renders them — which is the order their values are pushed into the
-// fingerprint, so this array is a byte-for-byte contract with the results
-// cache and not merely a list. `test/settings-model.test.js` pins both the
-// order and every `default` against the template, so the two can't drift.
+// The named controls that aren't plugin checkboxes, in the order their values
+// are pushed into the fingerprint — so this array is a byte-for-byte contract
+// with the results cache and not merely a list. It was `index.njk`'s document
+// order until the panel grew tabs; now `test/settings-model.test.js` pins the
+// order outright, and holds the markup to the same *set* of controls and every
+// `default`, so the two can't drift.
 //
 // `type` mirrors the control the template renders, because the fingerprint
 // treats checkboxes (a bit) differently from everything else (a delimited
 // value), and because it says how an incoming value has to be coerced.
 export const globalFields = [
-  { name: 'original', type: 'checkbox', default: false },
   { name: 'gzip', type: 'checkbox', default: true },
   { name: 'pretty', type: 'checkbox', default: false },
   {
@@ -68,9 +68,10 @@ export const globalFields = [
   { name: 'multipass', type: 'checkbox', default: false },
 ];
 
-// Neither of these two settings changes SVGO's output — only how the result is
-// measured and which file is shown — so neither belongs in the cache key.
-const unfingerprinted = new Set(['gzip', 'original']);
+// `gzip` doesn't change SVGO's output — only how the result is measured — so it
+// doesn't belong in the cache key. It used to have "Show original" for company,
+// until that became a view mode on the canvas rather than a setting.
+const unfingerprinted = new Set(['gzip']);
 
 // Which checkboxes each staged select governs. Taken from `config.json`'s
 // flags rather than from the stage maps' own keys, exactly as the panel takes
