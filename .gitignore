@@ -9,3 +9,4 @@
 agentdb.*
 node_modules/
 ruvector.db
+AUDIT-*.md
