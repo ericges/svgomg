@@ -57,7 +57,7 @@
   // Keyboard focus only, like .toolbar-action — `trackFocusMethod()` tags the
   // input. A ring left behind by a mouse click reads as a stuck state.
   .key-focused + .selected {
-    box-shadow: inset 0 0 0 2px #00bcd4;
+    box-shadow: inset 0 0 0 2px #fff;
   }
 }
 

@@ -49,7 +49,7 @@
       width: 25px;
       height: 25px;
       top: -5px;
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), inset 0 0 0 2px #3f51b5;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5), inset 0 0 0 2px #3574f0;
     }
   }
 }
@@ -113,8 +113,8 @@
 
   &:focus {
     outline: none;
-    border-color: #3f51b5;
-    box-shadow: 0 0 0 1px #3f51b5;
+    border-color: #3574f0;
+    box-shadow: 0 0 0 1px #3574f0;
   }
 
   // A prefix its `pattern` rejects is never applied by the worker. The border
@@ -156,7 +156,7 @@
     height: 16px;
     // Optical alignment with the first line of text rather than its box.
     margin-top: 1px;
-    color: #3f51b5;
+    color: #3574f0;
   }
 
   // No delay here, so a note that was dimmed comes back the moment its result
@@ -215,9 +215,11 @@
   box-shadow: inset 0 -2px 0 transparent;
 
   &[aria-selected='true'] {
-    color: #3f51b5;
+    // The darker blue, not the primary: as small text on white the primary is
+    // 4.28:1, just under AA's 4.5. Filled surfaces and icons keep the primary.
+    color: #2249d3;
     font-weight: 500;
-    box-shadow: inset 0 -2px 0 #3f51b5;
+    box-shadow: inset 0 -2px 0 #3574f0;
   }
 }
 
@@ -262,11 +264,14 @@
   color: #767676;
 
   // A collapsed category hides its notices, so the count says one is in there
-  // — the same indigo the notice's own icon uses. Never the only signal: the
-  // icon beside it says the same thing without relying on colour, and carries
-  // the count in words for assistive technology.
+  // — tinted to match the notice icon beside it. The darker blue rather than
+  // the primary the icon uses, because this is small text on white and the
+  // primary is 4.28:1 there, just under AA's 4.5; for the icon, 3:1 applies and
+  // the primary clears it. Never the only signal either way: the icon says the
+  // same thing without relying on colour, and carries the count in words for
+  // assistive technology.
   &.has-note {
-    color: #3f51b5;
+    color: #2249d3;
     font-weight: 500;
   }
 }
@@ -274,7 +279,7 @@
 .plugin-category-notice {
   display: flex;
   flex: none;
-  color: #3f51b5;
+  color: #3574f0;
 
   &[hidden] {
     display: none;
@@ -337,7 +342,7 @@
 .setting-reset {
   text-transform: uppercase;
   color: #fff;
-  background-color: #3f51b5;
+  background-color: #3574f0;
   padding: 9px 14px;
   font-size: 0.9rem;
   border-radius: 5px;

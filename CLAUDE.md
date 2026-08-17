@@ -287,6 +287,18 @@ Everything uses the Sass module system (`@use` / `@forward`) — no `@import`. S
 
 `_utils.scss` still emits one rule (`.bg-dark`), and both entries load it — so that rule does land in both stylesheets. Keep output-producing rules out of it.
 
+### The palette, and why it isn't one blue
+
+Three colours, and which one applies is a contrast question rather than a taste one — hex values are inline, there are no variables, so the rule has to live here:
+
+- **`#3574f0`** is the primary: filled surfaces (toolbar, switches, slider, FAB, the reset button, the results chip), icons, and focus rings drawn on *white*. Against white it is 4.28:1 — over the 3:1 that non-text needs, under the 4.5:1 that text needs.
+- **`#2249d3`** is for **text on white**, for exactly that reason: the selected settings tab and the `has-note` category count, both of which would otherwise sit at 4.28:1. It doubles as `theme_color` in `manifest.json` and `index.njk`, and comes out of the logo's own artwork rather than being invented. Recolouring those two back to the primary "for consistency" reintroduces the failure.
+- **`#00bcd4`** survives in two places only — the click ripple, and the toast's dismiss button on `#323232`. It used to be the toolbar's focus ring too, at 2.99:1 against the old indigo bar; against `#3574f0` that fell to **1.86:1**, so those two rings are now white (4.28:1) and stay legible whatever the bar becomes. Don't put cyan back on the bar.
+
+`#9abaf8` (the switch's off-track) is the primary mixed 50/50 with white, which is exactly what the old `#9fa8da` was to the old primary — keep that relationship if the primary ever moves again.
+
+The logo is four files from one drawing: `src/partials/icons/logo.svg` (inlined into the toolbar, so **no XML declaration** — it is `{% include %}`d into HTML — and it carries `class="logo"` and `aria-hidden="true"` like every other partial, with CSS doing the sizing), `src/images/icon.png` (favicon, apple-touch-icon, manifest, `og:image`), and `src/images/maskable.png` with its source `maskable.svg`, which `copy()` deliberately excludes. The maskable variant is not the same drawing scaled: it insets the artwork into the central 80% so a circular mask can't clip it — measured, the furthest white pixel sits at r=213 of the 240 allowed. The paths are already SVGO-optimised; re-optimising them saves only whitespace.
+
 ## Licensing
 
 **This is not MIT and not open source.** `LICENSE.md` is the PolyForm Noncommercial License 1.0.0, reproduced verbatim, under a two-section header that changes what it permits. Two rules come out of it: nobody may earn money from giving other people access to the app (ads, subscription, paywall, paid-plan feature, usage data), and anyone who hosts a *modified* version *publicly* must publish the Corresponding Source under the same licence and say in the app where to find it. Deliberately unconditional: private and in-house use, an agency hosting it for its clients (modified or not, no disclosure), and a free public mirror (no attribution asked).
