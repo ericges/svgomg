@@ -1,14 +1,14 @@
 {
-  "name": "svgomg",
+  "name": "omsvg",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ericges/svgomg.git"
+    "url": "git+https://github.com/ericges/omsvg.git"
   },
   "keywords": [],
   "author": "Eric Gesemann",
   "bugs": {
-    "url": "https://github.com/ericges/svgomg/issues"
+    "url": "https://github.com/ericges/omsvg/issues"
   },
   "homepage": "https://omsvg.app/",
   "license": "SEE LICENSE IN LICENSE.md",

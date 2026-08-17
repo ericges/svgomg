@@ -1,7 +1,7 @@
 # Contributing to OMSVG
 
 Bug reports, ideas and pull requests are welcome.
-[Check the issues](https://github.com/ericges/svgomg/issues) to see what's planned, and open one
+[Check the issues](https://github.com/ericges/omsvg/issues) to see what's planned, and open one
 before starting anything large — it saves you building something that was already decided against.
 
 ## Getting set up
@@ -10,8 +10,8 @@ Requires Node **22**, **24**, or **26 and later**. There is nothing else to inst
 to configure: the app is static files and runs entirely in the browser.
 
 ```sh
-git clone https://github.com/ericges/svgomg.git
-cd svgomg
+git clone https://github.com/ericges/omsvg.git
+cd omsvg
 npm install
 npm run dev
 ```

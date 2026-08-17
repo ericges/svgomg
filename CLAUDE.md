@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 OMSVG — a client-side-only web GUI for [SVGO](https://github.com/svg/svgo). No backend: the SVG never leaves the browser. Optimisation, gzip sizing and syntax highlighting all run in web workers, and a service worker makes the app work offline. Vanilla ES modules, no framework.
 
-The name is written **`OMSVG`**, read as **"Optimize My SVG"**, and lives at **omsvg.app**. It was SVGOMG until 2026-08-17; "SVGOMG" now refers only to [the upstream project](https://github.com/jakearchibald/svgomg) it was forked from, so leave the name alone where the text means upstream. The GitHub repository is still `ericges/svgomg` and is renamed separately — that is not a leftover.
+The name is written **`OMSVG`**, read as **"Optimize My SVG"**, and lives at **omsvg.app**. It was SVGOMG until 2026-08-17; "SVGOMG" now refers only to [the upstream project](https://github.com/jakearchibald/svgomg) it was forked from, so leave the name alone where the text means upstream. The GitHub repository is `ericges/omsvg`, renamed on 2026-08-18; a local clone whose directory is still called `svgomg` is fine — the folder name isn't tracked by anything.
 
 ## Commands
 

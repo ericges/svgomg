@@ -9,9 +9,9 @@ shrink, and see instantly if you broke the image.
 
 Runs entirely in your browser. No upload, no backend, no tracking.
 
-[![CI](https://github.com/ericges/svgomg/actions/workflows/ci.yml/badge.svg)](https://github.com/ericges/svgomg/actions/workflows/ci.yml)
+[![CI](https://github.com/ericges/omsvg/actions/workflows/ci.yml/badge.svg)](https://github.com/ericges/omsvg/actions/workflows/ci.yml)
 [![Live](https://img.shields.io/website?url=https%3A%2F%2Fomsvg.app&up_message=online&down_message=offline&label=omsvg.app)](https://omsvg.app/)
-[![SVGO](https://img.shields.io/github/package-json/dependency-version/ericges/svgomg/dev/svgo?label=SVGO&color=blue)](https://github.com/svg/svgo)
+[![SVGO](https://img.shields.io/github/package-json/dependency-version/ericges/omsvg/dev/svgo?label=SVGO&color=blue)](https://github.com/svg/svgo)
 [![Node](https://img.shields.io/badge/node-22%20%C2%B7%2024%20%C2%B7%2026%2B-5FA04E?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![License](https://img.shields.io/badge/license-source--available-blue)](./LICENSE.md)
 
@@ -57,8 +57,8 @@ phoned home.
 Requires Node **22**, **24**, or **26 and later**.
 
 ```sh
-git clone https://github.com/ericges/svgomg.git
-cd svgomg
+git clone https://github.com/ericges/omsvg.git
+cd omsvg
 npm install
 npm run dev
 ```
@@ -111,7 +111,7 @@ published, to GitHub Pages at <https://omsvg.app/>, and only once all three pass
 ## Contributing
 
 Bug reports, ideas and pull requests are welcome —
-[check the issues](https://github.com/ericges/svgomg/issues) to see what's planned. Please run
+[check the issues](https://github.com/ericges/omsvg/issues) to see what's planned. Please run
 `npm test` before opening a pull request.
 
 See [CONTRIBUTING.md](./CONTRIBUTING.md) for the rest: the conventions that aren't obvious from the
