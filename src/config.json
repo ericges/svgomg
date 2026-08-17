@@ -33,6 +33,28 @@
       "name": "Kitchen sink"
     }
   ],
+  "categories": [
+    {
+      "id": "paths",
+      "name": "Paths",
+      "open": true
+    },
+    {
+      "id": "structure",
+      "name": "Structure",
+      "open": true
+    },
+    {
+      "id": "cleanup",
+      "name": "Cleanup",
+      "open": false
+    },
+    {
+      "id": "compatibility",
+      "name": "Compatibility",
+      "open": false
+    }
+  ],
   "plugins": [
     {
       "id": "removeComments",
@@ -97,172 +119,206 @@
     {
       "id": "removeDoctype",
       "name": "Remove doctype",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "cleanup"
     },
     {
       "id": "removeXMLProcInst",
       "name": "Remove XML instructions",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "cleanup"
     },
     {
       "id": "removeXMLNS",
       "name": "Remove xmlns",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "category": "compatibility"
     },
     {
       "id": "cleanupAttrs",
       "name": "Clean up attribute whitespace",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "cleanup"
     },
     {
       "id": "removeRasterImages",
       "name": "Remove raster images",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "category": "cleanup"
     },
     {
       "id": "removeUselessDefs",
       "name": "Remove unused defs",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "cleanupNumericValues",
       "name": "Round/rewrite numbers",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "cleanup"
     },
     {
       "id": "cleanupListOfValues",
       "name": "Round/rewrite number lists",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "category": "paths"
     },
     {
       "id": "convertColors",
       "name": "Minify colours",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "cleanup"
     },
     {
       "id": "removeUnknownsAndDefaults",
       "name": "Remove unknowns & defaults",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "removeNonInheritableGroupAttrs",
       "name": "Remove unneeded group attrs",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "removeUselessStrokeAndFill",
       "name": "Remove useless stroke & fill",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "cleanupEnableBackground",
       "name": "Remove/tidy enable-background",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "removeHiddenElems",
       "name": "Remove hidden elements",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "removeEmptyText",
       "name": "Remove empty text",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "convertShapeToPath",
       "name": "Shapes to (smaller) paths",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "paths"
     },
     {
       "id": "moveElemsAttrsToGroup",
       "name": "Move attrs to parent group",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "moveGroupAttrsToElems",
       "name": "Move group attrs to elements",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "collapseGroups",
       "name": "Collapse useless groups",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "convertPathData",
       "name": "Round/rewrite paths",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "paths"
     },
     {
       "id": "convertEllipseToCircle",
       "name": "Convert non-eccentric <ellipse> to <circle>",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "paths"
     },
     {
       "id": "convertTransform",
       "name": "Round/rewrite transforms",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "paths"
     },
     {
       "id": "removeEmptyAttrs",
       "name": "Remove empty attrs",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "removeEmptyContainers",
       "name": "Remove empty containers",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "mergePaths",
       "name": "Merge paths",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "paths"
     },
     {
       "id": "removeUnusedNS",
       "name": "Remove unused namespaces",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "cleanup"
     },
     {
       "id": "reusePaths",
       "name": "Replace duplicate elements with links",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "category": "structure"
     },
     {
       "id": "sortAttrs",
       "name": "Sort attrs",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "sortDefsChildren",
       "name": "Sort children of <defs>",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "structure"
     },
     {
       "id": "removeScripts",
       "name": "Remove scripts",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "category": "cleanup"
     },
     {
       "id": "removeOffCanvasPaths",
       "name": "Remove out-of-bounds paths",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "category": "paths"
     },
     {
       "id": "convertOneStopGradients",
       "name": "Convert one-stop gradients to solid colours",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "category": "compatibility"
     },
     {
       "id": "removeDeprecatedAttrs",
       "name": "Remove deprecated attributes",
-      "enabledByDefault": true
+      "enabledByDefault": true,
+      "category": "compatibility"
     },
     {
       "id": "removeXlink",
       "name": "Replace xlink with native SVG",
-      "enabledByDefault": false
+      "enabledByDefault": false,
+      "category": "compatibility"
     }
   ]
 }

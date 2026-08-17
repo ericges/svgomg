@@ -289,6 +289,17 @@ test('the settings panel carries the controls the page bundle queries', async (t
     'metadata-custom',
     'styles-select',
     'styles-custom',
+    'settings-tabs',
+    'settings-tab',
+    'plugin-category',
+    'plugin-category-count',
+    'plugin-category-notice',
+    'plugin-category-notice-text',
+    'setting-item-toggle',
+    'setting-item-name',
+    'setting-filter-input',
+    'setting-filter-count',
+    'setting-filter-empty',
   ];
 
   t.assert.deepStrictEqual(
@@ -346,6 +357,159 @@ test('the plugin checkboxes cover the config exactly once each', async (t) => {
   const byName = (a, b) => a.localeCompare(b);
 
   t.assert.deepStrictEqual(rendered.toSorted(byName), ids.toSorted(byName));
+  // Stated outright as well, because the comparison above is the only thing
+  // standing between the categorised list and a plugin rendered twice — once
+  // under its category and once in the stage block it also carries a flag for.
+  t.assert.strictEqual(rendered.length, 44);
+  t.assert.strictEqual(rendered.length, ids.length);
+});
+
+test('the tabs each own a panel, and only one of them is showing', async (t) => {
+  // `Settings` reads `aria-controls` to find the panel a tab governs, and an
+  // id that resolves to nothing would leave `_panels` holding a null.
+  const html = await readBuildFile('index.html');
+  const tabs = html
+    .matchAll(/<button[^>]+\brole=(?<q>["']?)tab\k<q>[^>]*>/g)
+    .map(([tag]) => tag)
+    .toArray();
+
+  t.assert.strictEqual(tabs.length, 2, 'the panel needs exactly two tabs');
+
+  const attribute = (tag, name) =>
+    new RegExp(String.raw`\b${name}=(?<q>["']?)(?<v>[^\s"'>]*)\k<q>`).exec(tag)
+      ?.groups.v;
+
+  const governed = tabs.map((tag) => attribute(tag, 'aria-controls'));
+
+  t.assert.deepStrictEqual(
+    governed.filter((panel) => !panel),
+    [],
+    'tabs with no aria-controls',
+  );
+
+  t.assert.deepStrictEqual(
+    governed.filter(
+      (panel) =>
+        !new RegExp(String.raw`<div[^>]+\bid=(["']?)${panel}\1[\s>]`).test(
+          html,
+        ),
+    ),
+    [],
+    'tabs whose aria-controls names no panel',
+  );
+
+  t.assert.strictEqual(
+    tabs.filter((tag) => attribute(tag, 'aria-selected') === 'true').length,
+    1,
+    'exactly one tab ships selected',
+  );
+
+  // The inactive panel is `hidden`, not merely off-screen: it has to be out of
+  // reach of the keyboard and of a screen reader too.
+  const panels = html
+    .matchAll(/<div[^>]+\brole=(?<q>["']?)tabpanel\k<q>[^>]*>/g)
+    .map(([tag]) => tag)
+    .toArray();
+
+  t.assert.strictEqual(panels.length, 2);
+  t.assert.strictEqual(
+    panels.filter((tag) => /\shidden[\s>]/.test(tag)).length,
+    1,
+    'exactly one panel ships hidden',
+  );
+});
+
+test('the plugins render under their category, and the flagged ones do not', async (t) => {
+  // Where each checkbox lives is the whole point of the split: a categorised
+  // plugin belongs to the Optimise tab, and a flagged one renders only inside
+  // the stage block its select governs — never in both.
+  const config = await readConfig();
+  const html = await readBuildFile('index.html');
+
+  // Sliced on markers that only the container carries. `id=` rather than the
+  // panel id alone: the tab button names the same string in `aria-controls`,
+  // and it comes first in the document.
+  const slice = (from, to) => {
+    const start = html.indexOf(from);
+
+    if (start === -1) return '';
+
+    const end = html.indexOf(to, start + from.length);
+
+    return html.slice(start, end === -1 ? html.length : end);
+  };
+
+  const names = (markup) =>
+    new Set(
+      markup.matchAll(inputNamePattern).map((match) => match.groups.name),
+    );
+
+  const optimise = slice(
+    'id=settings-panel-optimise',
+    'id=settings-panel-output',
+  );
+
+  t.assert.deepStrictEqual(
+    config.categories
+      .filter((category) => !optimise.includes(`data-category=${category.id}`))
+      .map((category) => category.id),
+    [],
+    'categories that do not render inside the Optimise panel',
+  );
+
+  // Categories don't nest, so the first `</details>` closes each one.
+  const misfiled = config.categories.flatMap((category) => {
+    const rendered = names(slice(`data-category=${category.id}`, '</details>'));
+
+    return config.plugins
+      .filter((plugin) => plugin.category === category.id)
+      .filter((plugin) => !rendered.has(plugin.id))
+      .map((plugin) => `${plugin.id} (${category.id})`);
+  });
+
+  t.assert.deepStrictEqual(
+    misfiled,
+    [],
+    'plugins missing from the category they are filed under',
+  );
+
+  const onOptimiseTab = names(optimise);
+
+  t.assert.deepStrictEqual(
+    config.plugins
+      .filter((plugin) => plugin.metadata || plugin.styles)
+      .filter((plugin) => onOptimiseTab.has(plugin.id))
+      .map((plugin) => plugin.id),
+    [],
+    'flagged plugins rendered on the Optimise tab as well as in their stage block',
+  );
+
+  // And the reverse: nothing categorised leaked into a stage block. The blocks
+  // hold labels and spans only, so the first `</div>` closes them.
+  const inStageBlocks = new Set(
+    ['metadata-custom', 'styles-custom'].flatMap((name) => [
+      ...names(slice(name, '</div>')),
+    ]),
+  );
+
+  t.assert.deepStrictEqual(
+    config.plugins
+      .filter((plugin) => plugin.category)
+      .filter((plugin) => inStageBlocks.has(plugin.id))
+      .map((plugin) => plugin.id),
+    [],
+    'categorised plugins rendered inside a stage block',
+  );
+
+  // The stage blocks are still where the flagged plugins do render.
+  t.assert.deepStrictEqual(
+    config.plugins
+      .filter((plugin) => plugin.metadata || plugin.styles)
+      .filter((plugin) => !inStageBlocks.has(plugin.id))
+      .map((plugin) => plugin.id),
+    [],
+    'flagged plugins missing from their stage block',
+  );
 });
 
 test('every configured demo is offered, shipped, and named on the button', async (t) => {

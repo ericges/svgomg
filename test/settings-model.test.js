@@ -323,13 +323,42 @@ test('the defaults are config.json and the shared test vocabulary', (t) => {
   t.assert.deepStrictEqual(defaults, panelSettings());
 });
 
+// The order the fingerprint reads its fixed half in, pinned outright. It used
+// to be checked against the markup's document order, which was a fair proxy
+// until the panel grew tabs: `multipass` sits on the Optimise tab now, ahead of
+// controls that come after it here. Document order stopped binding the
+// fingerprint, so the contract is spelled out instead — reordering this list
+// reorders `GLOBAL_PREFIX` and invalidates every cached result in the wild.
+const fingerprintOrder = [
+  'original',
+  'gzip',
+  'pretty',
+  'floatPrecision',
+  'transformPrecision',
+  'dimensionAttrs',
+  'ids',
+  'idPrefix',
+  'currentColor',
+  'multipass',
+];
+
+test('the fingerprint reads its fields in the order it always has', (t) => {
+  t.assert.deepStrictEqual(
+    globalFields.map((field) => field.name),
+    fingerprintOrder,
+  );
+});
+
 test('the defaults are the markup, control for control', async (t) => {
   const controls = await panelControls();
+  const byName = (a, b) => a.localeCompare(b);
 
+  // A set, not a sequence: which tab a control ended up on is the panel's
+  // business, and the two lists still have to name the same controls.
   t.assert.deepStrictEqual(
-    controls.map((control) => control.name),
-    globalFields.map((field) => field.name),
-    'the panel’s named controls, in the order the fingerprint reads them',
+    controls.map((control) => control.name).toSorted(byName),
+    globalFields.map((field) => field.name).toSorted(byName),
+    'the panel’s named controls, whichever tab each of them sits on',
   );
 
   const defaults = defaultSettings();
@@ -347,6 +376,8 @@ test('the defaults are the markup, control for control', async (t) => {
   const attribute = (tag, name) =>
     Number(new RegExp(String.raw`\s${name}="(?<v>[^"]*)"`).exec(tag)?.groups.v);
 
+  // Sorted by name for the same reason as above: the panel may move a control
+  // without the bounds it declares meaning anything different.
   t.assert.deepStrictEqual(
     controls
       .filter(({ tag }) => /\btype="range"/.test(tag))
@@ -355,10 +386,12 @@ test('the defaults are the markup, control for control', async (t) => {
         attribute(tag, 'min'),
         attribute(tag, 'max'),
         attribute(tag, 'step'),
-      ]),
+      ])
+      .toSorted(([a], [b]) => byName(a, b)),
     globalFields
       .filter((field) => field.type === 'range')
-      .map((field) => [field.name, field.min, field.max, field.step]),
+      .map((field) => [field.name, field.min, field.max, field.step])
+      .toSorted(([a], [b]) => byName(a, b)),
     'range bounds that differ from the markup',
   );
 });
