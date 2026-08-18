@@ -39,6 +39,8 @@ const resolveDependency = (packages, fromPath, name) => {
   }
 };
 
+const packageName = (packagePath) => packagePath.split('node_modules/').pop();
+
 const runtimeClosure = (packages) => {
   const visited = new Set();
   const unresolved = [];
@@ -60,12 +62,18 @@ const runtimeClosure = (packages) => {
   for (const root of bundledRoots) visit(`node_modules/${root}`);
 
   // A package can appear twice at different versions (css-tree and mdn-data
-  // both do), and the notice names packages, not versions.
+  // both do), and the notice names packages, not versions — so the first test
+  // works on names. The second one must not: a nested copy is a different
+  // installed tree with its own licence file, and reading the hoisted one
+  // instead silently skipped `csso`'s bundled css-tree 2.2.1, whose
+  // `2016-2022` copyright line ships and is not the hoisted 3.2.1's
+  // `2016-2026`. So the resolved paths are returned alongside.
+  const paths = [...visited].toSorted((a, b) => a.localeCompare(b));
   const names = new Set(
-    [...visited].map((packagePath) => packagePath.split('node_modules/').pop()),
+    paths.map((packagePath) => packagePath.split('node_modules/').pop()),
   );
 
-  return { names, unresolved };
+  return { names, paths, unresolved };
 };
 
 test('every bundled package is named in NOTICE.md', async (t) => {
@@ -132,8 +140,10 @@ const isNoticeLine = (line) =>
 // Listed rather than skipped silently, so a second one shows up as a failure.
 const withoutLicenceFile = ['boolbase'];
 
-const installedCopyrightLines = async (name) => {
-  const dir = path.join(repoRoot, 'node_modules', name);
+// Takes the lockfile path — `node_modules/csso/node_modules/css-tree`, not
+// `css-tree` — so a nested copy is read where it actually sits.
+const installedCopyrightLines = async (packagePath) => {
+  const dir = path.join(repoRoot, packagePath);
   let entries;
 
   try {
@@ -161,24 +171,46 @@ test('every bundled copyright line is reproduced verbatim', async (t) => {
     fs.readFile(path.join(repoRoot, 'NOTICE.md'), 'utf8'),
   ]);
 
-  const { names } = runtimeClosure(packages);
-  const sorted = [...names].toSorted((a, b) => a.localeCompare(b));
+  const { paths } = runtimeClosure(packages);
   const lines = await Promise.all(
-    sorted.map((name) => installedCopyrightLines(name)),
+    paths.map((packagePath) => installedCopyrightLines(packagePath)),
   );
 
-  const unlicensed = sorted.filter((_, index) => !lines[index]);
+  // Reported by name, so the expectation below stays a list of packages; a
+  // package installed twice only counts as unlicensed if neither copy
+  // publishes anything.
+  const licensedNames = new Set(
+    paths
+      .filter((_, index) => lines[index])
+      .map((packagePath) => packageName(packagePath)),
+  );
+  const unlicensed = [
+    ...new Set(
+      paths
+        .filter((_, index) => !lines[index])
+        .map((packagePath) => packageName(packagePath))
+        .filter((name) => !licensedNames.has(name)),
+    ),
+  ].toSorted((a, b) => a.localeCompare(b));
+
   t.assert.deepStrictEqual(
     unlicensed,
     withoutLicenceFile,
     'a bundled package ships no licence file — check what it does publish',
   );
 
-  const missing = sorted.flatMap((name, index) =>
-    (lines[index] ?? [])
-      .filter((line) => !notice.includes(line))
-      .map((line) => `${name}: ${line}`),
-  );
+  // Deduplicated: two copies of a package usually carry the same line, and one
+  // entry per missing line is what the reader needs. The path is on it because
+  // that is where the text to copy actually is.
+  const missing = [
+    ...new Set(
+      paths.flatMap((packagePath, index) =>
+        (lines[index] ?? [])
+          .filter((line) => !notice.includes(line))
+          .map((line) => `${packagePath}: ${line}`),
+      ),
+    ),
+  ].toSorted((a, b) => a.localeCompare(b));
 
   t.assert.deepStrictEqual(
     missing,

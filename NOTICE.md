@@ -96,13 +96,16 @@ prove what the bundler took out. So OMSVG bundles or may bundle:
 
 Applies to the packages below, each with the copyright notice it ships. They are
 in a block rather than in prose so that none of them is reflowed, abbreviated or
-stripped of an address on the way to a reader.
+stripped of an address on the way to a reader. Where a package ships twice at
+different versions, each version's notice is here: `css-tree` arrives both
+directly and inside `csso`, and the two copies carry different years.
 
 ```
 svgo            Copyright (c) Kir Belevich
 csso            Copyright (C) 2015-2021 by Roman Dvornov
                 Copyright (C) 2011-2015 by Sergey Kryzhanovsky
 css-tree        Copyright (C) 2016-2026 by Roman Dvornov
+                Copyright (C) 2016-2022 by Roman Dvornov
 dom-serializer  Copyright (c) 2014 The cheeriojs contributors
 commander       Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca>
 pako            Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn
