@@ -673,6 +673,12 @@ test('the licence and its notices ship with the build', async (t) => {
   const licence = await readBuildFile('LICENSE.md');
   const notice = await readBuildFile('NOTICE.md');
 
+  // The Licensor's own copyright covers his own work, and all of it was
+  // written in 2026 — the fork point is Jake Archibald's 2025 commit, and its
+  // year belongs to his notice, not to this one. Widen the range only when
+  // there is another year's work behind it.
+  t.assert.match(licence, /^Copyright \(c\) 2026 Eric Gesemann$/m);
+
   // The whole construction rests on Part II being present, not just referred
   // to: sections 1 to 4 extend and condition it, they don't stand alone.
   t.assert.match(licence, /^# OMSVG License 1\.0$/m);

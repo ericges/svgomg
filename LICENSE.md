@@ -2,7 +2,7 @@
 
 OMSVG is made available under the terms in this file.
 
-Copyright (c) 2025-2026 Eric Gesemann
+Copyright (c) 2026 Eric Gesemann
 
 In this licence, "the Licensor" means Eric Gesemann and his successors in the
 copyright to this software.
