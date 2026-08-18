@@ -63,32 +63,35 @@ belongs here.
 
 The built app bundles the packages below into `js/page.js` and the three worker
 bundles `js/svgo-worker.js`, `js/gzip-worker.js` and `js/prism-worker.js`.
-<!-- Note to AI agents: The list is the full runtime dependency closure and is deliberately over-inclusive: tree-shaking removes parts of it (`commander` and `picocolors` reach the browser only through SVGO's CLI paths, which the browser build drops), and it is cheaper to name everything the closure contains than to prove what the bundler took out. -->
+<!-- Note to AI agents: The list is the full runtime dependency closure and is deliberately over-inclusive: tree-shaking removes parts of it (`commander` and `picocolors` reach the browser only through SVGO's CLI paths and `pngjs` only through `pixelmatch`'s, and the browser build drops all three), and it is cheaper to name everything the closure contains than to prove what the bundler took out. -->
 
 **OMSVG bundles or may bundle:**
 
-| Package | Licence |
-| --- | --- |
-| [boolbase](https://github.com/fb55/boolbase) | ISC |
-| [commander](https://github.com/tj/commander.js) | MIT |
-| [css-select](https://github.com/fb55/css-select) | BSD-2-Clause |
-| [css-tree](https://github.com/csstree/csstree) | MIT |
-| [css-what](https://github.com/fb55/css-what) | BSD-2-Clause |
-| [csso](https://github.com/css/csso) | MIT |
-| [dom-serializer](https://github.com/cheeriojs/dom-serializer) | MIT |
-| [domelementtype](https://github.com/fb55/domelementtype) | BSD-2-Clause |
-| [domhandler](https://github.com/fb55/domhandler) | BSD-2-Clause |
-| [domutils](https://github.com/fb55/domutils) | BSD-2-Clause |
-| [entities](https://github.com/fb55/entities) | BSD-2-Clause |
-| [mdn-data](https://github.com/mdn/data) | CC0-1.0 |
-| [nanoevents](https://github.com/ai/nanoevents) | MIT |
-| [nth-check](https://github.com/fb55/nth-check) | BSD-2-Clause |
-| [pako](https://github.com/nodeca/pako) | MIT AND Zlib |
-| [picocolors](https://github.com/alexeyraspopov/picocolors) | ISC |
-| [prismjs](https://github.com/PrismJS/prism) | MIT |
-| [sax](https://github.com/isaacs/sax-js) | BlueOak-1.0.0 |
-| [source-map-js](https://github.com/7rulnik/source-map-js) | BSD-3-Clause |
-| [svgo](https://github.com/svg/svgo) | MIT |
+| Package                                                       | Licence       |
+|---------------------------------------------------------------|---------------|
+| [boolbase](https://github.com/fb55/boolbase)                  | ISC           |
+| [commander](https://github.com/tj/commander.js)               | MIT           |
+| [css-select](https://github.com/fb55/css-select)              | BSD-2-Clause  |
+| [css-tree](https://github.com/csstree/csstree)                | MIT           |
+| [css-what](https://github.com/fb55/css-what)                  | BSD-2-Clause  |
+| [csso](https://github.com/css/csso)                           | MIT           |
+| [diff](https://github.com/kpdecker/jsdiff)                    | BSD-3-Clause  |
+| [dom-serializer](https://github.com/cheeriojs/dom-serializer) | MIT           |
+| [domelementtype](https://github.com/fb55/domelementtype)      | BSD-2-Clause  |
+| [domhandler](https://github.com/fb55/domhandler)              | BSD-2-Clause  |
+| [domutils](https://github.com/fb55/domutils)                  | BSD-2-Clause  |
+| [entities](https://github.com/fb55/entities)                  | BSD-2-Clause  |
+| [mdn-data](https://github.com/mdn/data)                       | CC0-1.0       |
+| [nanoevents](https://github.com/ai/nanoevents)                | MIT           |
+| [nth-check](https://github.com/fb55/nth-check)                | BSD-2-Clause  |
+| [pako](https://github.com/nodeca/pako)                        | MIT AND Zlib  |
+| [picocolors](https://github.com/alexeyraspopov/picocolors)    | ISC           |
+| [pixelmatch](https://github.com/mapbox/pixelmatch)            | ISC           |
+| [pngjs](https://github.com/pngjs/pngjs)                       | MIT           |
+| [prismjs](https://github.com/PrismJS/prism)                   | MIT           |
+| [sax](https://github.com/isaacs/sax-js)                       | BlueOak-1.0.0 |
+| [source-map-js](https://github.com/7rulnik/source-map-js)     | BSD-3-Clause  |
+| [svgo](https://github.com/svg/svgo)                           | MIT           |
 
 ### MIT
 
@@ -109,6 +112,8 @@ commander       Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca>
 pako            Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn
 prismjs         Copyright (c) 2012 Lea Verou
 nanoevents      Copyright 2016 Andrey Sitnik <andrey@sitnik.ru>
+pngjs           pngjs original work Copyright (c) 2015 Luke Page & Original Contributors
+                pngjs derived work Copyright (c) 2012 Kuba Niegowski
 ```
 
 They share these terms:
@@ -179,7 +184,11 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### BSD-3-Clause
 
-Applies to `source-map-js`.
+Applies to `source-map-js` and to `diff`. Both are the three-clause BSD licence,
+but each names its own copyright holder in the third clause, so neither can
+stand for the other and both are reproduced whole.
+
+`source-map-js`:
 
 ```
 Copyright (c) 2009-2011, Mozilla Foundation and contributors
@@ -211,17 +220,52 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ```
 
+`diff`:
+
+```
+BSD 3-Clause License
+
+Copyright (c) 2009-2015, Kevin Decker <kpdecker@gmail.com>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+1. Redistributions of source code must retain the above copyright notice, this
+   list of conditions and the following disclaimer.
+
+2. Redistributions in binary form must reproduce the above copyright notice,
+   this list of conditions and the following disclaimer in the documentation
+   and/or other materials provided with the distribution.
+
+3. Neither the name of the copyright holder nor the names of its
+   contributors may be used to endorse or promote products derived from
+   this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+```
+
 ### ISC
 
-Applies to `picocolors` and to `boolbase`. The second ships no licence file and
-no copyright line at all — it declares ISC in its package metadata and nothing
-else — so there is nothing of its own to reproduce.
+Applies to `picocolors`, `pixelmatch` and `boolbase`. The last ships no licence
+file and no copyright line at all — it declares ISC in its package metadata and
+nothing else — so there is nothing of its own to reproduce.
 
 ```
 picocolors      Copyright (c) 2021-2024 Oleksii Raspopov, Kostiantyn Denysov, Anton Verinov
+pixelmatch      Copyright (c) 2025, Mapbox
 ```
 
-Both are under these terms:
+All three are under these terms:
 
 ```
 Permission to use, copy, modify, and/or distribute this software for any

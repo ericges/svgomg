@@ -11,10 +11,21 @@ import test from 'node:test';
 // whatever `node_modules` happens to hold, and needs no build.
 const repoRoot = path.join(import.meta.dirname, '..');
 
-// The five packages the bundles pull in directly. Everything else in the closure
-// is reached through one of them; the rest of `devDependencies` is build-time
-// tooling that ships nothing.
-const bundledRoots = ['svgo', 'pako', 'prismjs', 'nanoevents', 'css-tree'];
+// The seven packages the bundles pull in directly. Everything else in the
+// closure is reached through one of them; the rest of `devDependencies` is
+// build-time tooling that ships nothing. A new bundled import belongs here as
+// well as in `NOTICE.md` — `pixelmatch` and `diff` arrived with the diff view
+// and this list did not move, so both tests went on passing while neither
+// package was named.
+const bundledRoots = [
+  'svgo',
+  'pako',
+  'prismjs',
+  'nanoevents',
+  'css-tree',
+  'pixelmatch',
+  'diff',
+];
 
 const readLockfile = async () =>
   JSON.parse(
