@@ -9,10 +9,6 @@
       "name": "Car (green)"
     },
     {
-      "file": "car.svg",
-      "name": "Car (unoptimised)"
-    },
-    {
       "file": "tiger.svg",
       "name": "Tiger"
     },
@@ -23,10 +19,6 @@
     {
       "file": "svgo-logo.svg",
       "name": "SVGO logo"
-    },
-    {
-      "file": "github.svg",
-      "name": "GitHub logo"
     },
     {
       "file": "kitchen-sink.svg",

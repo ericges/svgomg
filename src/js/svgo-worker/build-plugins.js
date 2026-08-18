@@ -151,7 +151,7 @@ export function buildPlugins(settings) {
 
   // After `cleanupIds`, so the prefix lands on the final — possibly minified —
   // names. `delim` has to be cleared: it defaults to `__`, which would turn a
-  // typed `svgomg_` into `svgomg___id`. Running this repeatedly is safe, as it
+  // typed `omsvg_` into `omsvg___id`. Running this repeatedly is safe, as it
   // skips IDs already carrying the prefix, so multipass doesn't stack them.
   const idPrefix = normalizeIdPrefix(settings.idPrefix);
 

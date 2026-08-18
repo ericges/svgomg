@@ -2,7 +2,7 @@ import test from 'node:test';
 import { normalizeIdPrefix } from '../src/js/svgo-worker/id-prefix.js';
 
 test('passes a safe prefix through, trimmed', (t) => {
-  t.assert.strictEqual(normalizeIdPrefix('svgomg_'), 'svgomg_');
+  t.assert.strictEqual(normalizeIdPrefix('omsvg_'), 'omsvg_');
   t.assert.strictEqual(normalizeIdPrefix('  icon-  '), 'icon-');
   t.assert.strictEqual(normalizeIdPrefix('_x9'), '_x9');
 });

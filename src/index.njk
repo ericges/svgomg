@@ -4,14 +4,14 @@
         <meta charset="utf-8">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; script-src 'self'; worker-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; manifest-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; frame-src 'self' data:">
         <title>{{ title }}</title>
-        <meta name="theme-color" content="#303f9f">
+        <meta name="theme-color" content="#2b2d30">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link rel="preload" crossorigin as="font" href="fonts/JetBrainsMonoNL/JetBrainsMonoNL-Regular-latin.woff2">
         <link rel="manifest" href="manifest.json">
         <link rel="apple-touch-icon" href="{{ iconPath }}">
         <link rel="icon" href="{{ iconPath }}">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <meta name="application-name" content="SVGOMG">
+        <meta name="application-name" content="OMSVG">
         <meta name="twitter:card" content="summary">
         <meta name="description" content="{{ description }}">
         <meta property="og:description" content="{{ description }}">
@@ -28,7 +28,7 @@
                 <div class="toolbar-brand">
                     {% include "partials/icons/logo.svg" %}
                     <div class="toolbar-brand-copy">
-                        <h1>SVGOMG</h1>
+                        <h1>OMSVG</h1>
                         <p>
                             {% include "partials/icons/bolt.svg" %}
                             <span class="powered-by">Powered by</span>
@@ -82,9 +82,9 @@
                     </form>
                 </div>
                 <span class="toolbar-nav-divider" aria-hidden="true"></span>
-                <a href="https://github.com/ericges/svgomg" class="toolbar-action toolbar-link" title="Contribute on GitHub">
+                <a href="https://github.com/ericges/omsvg" class="toolbar-action toolbar-link" title="Source and contributions on GitHub">
                     {% include "partials/icons/contribute.svg" %}
-                    <span class="toolbar-action-text">Contribute</span>
+                    <span class="toolbar-action-text">Source</span>
                 </a>
                 <input type="file" class="load-file-input" accept=".svg" hidden>
             </header>
@@ -101,6 +101,10 @@
                         <p>Drop a file anywhere on this page, pick one with <span class="nowrap"><b>Open SVG</b> (<kbd>Ctrl</kbd> + <kbd>O</kbd>)</span>, or paste markup into the toolbar.</p>
                         <p>No file to hand? Load a <b>Demo</b>.</p>
                         <p class="empty-state-note">Nothing is uploaded — your file never leaves this browser.</p>
+                        {# § 2(c) of the licence asks the app itself to say where the source is,
+                           and MIT and Blue Oak ask that the bundled notices reach whoever gets a
+                           copy. Both pages are built from the markdown in the repository root. #}
+                        <p class="empty-state-legal"><a href="notices.html">Licence and notices</a></p>
                     </div>
                 </div>
                 <div class="output">
@@ -273,6 +277,11 @@
                     {# Below both panels rather than inside either: it resets everything,
                        so it has to be reachable from whichever tab is showing. #}
                     <div class="setting-reset-row">
+                        {# The empty state carries this link too, but it is gone once a file is
+                           open — and § 2(c) asks the app to say where its source is for as long
+                           as it is running. This row sits outside .settings-scroller, so the
+                           scroller's focus-cancelling mousedown never reaches the link. #}
+                        <a class="setting-legal-link" href="notices.html">Licence and notices</a>
                         <button class="unbutton setting-reset" type="button">Reset all</button>
                     </div>
                 </div>

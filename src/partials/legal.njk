@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; form-action 'none'; style-src 'self'; img-src 'self'; font-src 'self'">
+        <title>{% block pageTitle %}{% endblock %} - OMSVG</title>
+        <meta name="theme-color" content="#2b2d30">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="robots" content="noindex">
+        <link rel="apple-touch-icon" href="{{ iconPath }}">
+        <link rel="icon" href="{{ iconPath }}">
+        <link rel="stylesheet" href="legal.css">
+    </head>
+    <body>
+        <header class="legal-bar">
+            <a href="./" class="legal-home">
+                {% include "partials/icons/logo.svg" %}
+                <span>OMSVG</span>
+            </a>
+        </header>
+        <main class="legal-doc">
+            {% block doc %}{% endblock %}
+        </main>
+    </body>
+</html>

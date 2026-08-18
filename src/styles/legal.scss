@@ -1,0 +1,125 @@
+@use 'fonts';
+@use 'utils';
+
+// A standalone document page: the licence and the notices, rendered from the
+// markdown in the repository root. Deliberately does not `@use 'global'` —
+// that sets `overflow: hidden` on html and body for the app shell, which would
+// leave a long legal document with nothing to scroll.
+
+// #2249d3 rather than the primary #3574f0: these are links in running text, and
+// the primary is 4.28:1 on white — over the 3:1 non-text needs, under the 4.5:1
+// text does.
+$link: #2249d3;
+$rule: #e1e1e4;
+$ink: #1c1e21;
+$muted: #5c6068;
+
+html {
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', 'Liberation Sans', sans-serif;
+  line-height: 1.55;
+  color: $ink;
+  background: #fff;
+}
+
+body {
+  margin: 0;
+}
+
+.legal-bar {
+  background: utils.$bar;
+  padding: 0 16px;
+}
+
+.legal-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  .logo {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.legal-doc {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 32px 16px 96px;
+
+  h1 {
+    font-size: 1.7rem;
+    line-height: 1.25;
+  }
+
+  h2 {
+    margin-top: 2.2em;
+    padding-top: 0.6em;
+    border-top: 1px solid $rule;
+    font-size: 1.25rem;
+  }
+
+  h3 {
+    margin-top: 1.8em;
+    font-size: 1.05rem;
+  }
+
+  a {
+    color: $link;
+  }
+
+  code {
+    background: #f2f2f4;
+    padding: 0.1em 0.3em;
+    border-radius: 3px;
+    font-size: 0.9em;
+  }
+
+  // The MIT, BSD and Blue Oak texts are fenced blocks and are long; let them
+  // scroll on their own rather than pushing the page sideways.
+  pre {
+    overflow-x: auto;
+    background: #f7f7f9;
+    padding: 12px 14px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+  }
+
+  blockquote {
+    margin-inline: 0;
+    padding-left: 14px;
+    border-left: 3px solid $rule;
+    color: $muted;
+  }
+
+  // The bundled-package table in NOTICE.md.
+  table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  th,
+  td {
+    padding: 6px 12px 6px 0;
+    border-bottom: 1px solid $rule;
+    text-align: left;
+  }
+
+  hr {
+    margin: 2.5em 0;
+    border: 0;
+    border-top: 1px solid $rule;
+  }
+}

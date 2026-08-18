@@ -14,6 +14,33 @@
   clip: rect(1px, 1px, 1px, 1px);
 }
 
+// The toolbar's grey ramp. Two of these are given — the bar and the surface
+// that fills the primary action and outlines all three — and the rest continue
+// the same +9/+9/+10 step, so every state in the bar sits on one scale rather
+// than on ad-hoc translucent overlays. Shared because `_toolbar.scss` and
+// `_view-toggler.scss` both draw from it and would otherwise drift; variables
+// emit nothing, so this stays out of the "no output-producing rules" rule
+// below.
+//
+// The steps are small on purpose: $barSurface is 1.14:1 against $bar, so the
+// outline is decoration, not an affordance anything depends on. What identifies
+// these controls is their label, their hover fill and their focus ring — the
+// ring is white, 13.8:1 against the bar.
+$bar: #2b2d30;
+$barSurface: #34363a;
+$barHover: #3d4045;
+$barActive: #464a4f;
+// One step further again: the view toggler's checked half has to read as a
+// state at a glance, which $barSurface at 1.14:1 could not do.
+$barSelected: #4f5459;
+
+// Labels and icons in the bar, everywhere except the primary action and the
+// wordmark: muted is the resting rank, white is emphasis. It is 5.28:1 on $bar
+// and 4.63:1 on $barSurface, but only 3.98:1 once a control fills to $barHover
+// and 3.41:1 at $barActive — so every rule that fills a control also takes its
+// label back to white. Don't mute a state that is filled underneath.
+$barMuted: #9da0a8;
+
 // transition & animation
 $easeInQuad: cubic-bezier(0.55, 0.085, 0.68, 0.53);
 $easeInCubic: cubic-bezier(0.55, 0.055, 0.675, 0.19);
