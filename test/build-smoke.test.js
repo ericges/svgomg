@@ -683,8 +683,19 @@ test('the licence and its notices ship with the build', async (t) => {
   // condition what it permits — so neither may come back. See CLAUDE.md.
   t.assert.doesNotMatch(licence, /polyform/i);
 
-  t.assert.match(notice, /Jake Archibald/);
   t.assert.match(notice, /The MIT License/);
+  // MIT conditions redistribution on *the above* copyright notice, so this is
+  // the line as it stood at `f925656` — not an inferred range, and not an
+  // aggregate. The other upstream rightsholders are named outside the block.
+  t.assert.match(notice, /Copyright \(c\) 2015 Jake Archibald/);
+  // `pako` is `MIT AND Zlib` and the app bundles the zlib port, but `test/
+  // notices.test.js` only checks that package *names* appear — the zlib terms
+  // were named and never supplied for months.
+  t.assert.match(notice, /Jean-loup Gailly and Mark Adler/);
+  t.assert.match(notice, /This notice may not be removed or altered/);
+  // The WOFF2 carries no licence metadata, so the OFL has to reach the reader
+  // from here as well as from the precached file.
+  t.assert.match(notice, /SIL OPEN FONT LICENSE/);
   // Every package the bundles carry has to be named; `test/notices.test.js`
   // checks the list against the real dependency closure.
   t.assert.match(notice, /\bsvgo\b/);
@@ -751,4 +762,12 @@ test('every precached asset exists in the build', async (t) => {
   );
 
   t.assert.deepStrictEqual(missing, [], 'precached assets missing from build/');
+
+  // The other direction, for the one asset that is on the list for a licensing
+  // reason rather than a functional one: nothing would break offline without
+  // it, so nothing else would notice it going.
+  t.assert.ok(
+    assets.includes('fonts/JetBrainsMonoNL/OFL.txt'),
+    'the font licence is not precached, so an offline copy ships the font without it',
+  );
 });

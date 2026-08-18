@@ -23,6 +23,10 @@ addEventListener('install', (event) => {
         'licence.html',
         'notices.html',
         'fonts/JetBrainsMonoNL/JetBrainsMonoNL-Regular-latin.woff2',
+        // The font ships with the app, so its licence has to as well — and the
+        // WOFF2 carries no licence metadata of its own, so an offline copy
+        // would otherwise have the font and nothing else.
+        'fonts/JetBrainsMonoNL/OFL.txt',
         'images/icon.png',
         'js/gzip-worker.js',
         'js/page.js',
