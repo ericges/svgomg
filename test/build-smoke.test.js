@@ -757,7 +757,10 @@ test('the licence and its notices ship with the build', async (t) => {
   // Sections 14 and 15 are the whole of the licence's cure and its disclaimer,
   // and they sit in Part I because they reach every permission. An earlier
   // draft kept a second, weaker cure of its own alongside the form's.
-  t.assert.match(licence, /within 32 days of receiving notice/);
+  t.assert.match(
+    licence,
+    /with these\s+terms, and take practical steps to correct past violations, within 32 days of\s+receiving notice/,
+  );
   t.assert.strictEqual(
     (licence.match(/^### \d+\. Violations$/gm) ?? []).length,
     1,
@@ -776,11 +779,11 @@ test('the licence and its notices ship with the build', async (t) => {
   t.assert.match(licence, /^### 3\. No revenue from providing access$/m);
   t.assert.match(
     licence,
-    /Every permission this licence grants is\s+conditional on this section and on\s+section 3/,
+    /Every permission this license grants is\s+conditional on this section and on\s+section 3/,
   );
   t.assert.match(
     licence,
-    /Every permission this licence grants is also conditional on this section/,
+    /Every permission this license grants is also conditional on this section/,
   );
 
   // Section 3's prohibition is expressly non-exhaustive, so its exceptions must
@@ -814,12 +817,12 @@ test('the licence and its notices ship with the build', async (t) => {
   t.assert.match(licence, /^### 9\. Name and marks$/m);
   t.assert.match(
     licence,
-    /Except as this section allows, this licence gives no permission/,
+    /Except as this section allows, this license gives no permission/,
   );
   t.assert.doesNotMatch(licence, /may keep them/);
   t.assert.match(
     licence,
-    /An unchanged\s+copy may keep the name, the logo and the icons/,
+    /An unchanged\s+copy may keep the name, the logo, and the icons/,
   );
   t.assert.match(licence, /does not reach the domain omsvg\.app/);
   t.assert.match(licence, /grants no trademark rights/);
@@ -831,12 +834,12 @@ test('the licence and its notices ship with the build', async (t) => {
   t.assert.doesNotMatch(licence, /kept word for word/);
   t.assert.match(
     licence,
-    /The remaining fourteen sections are taken from a\s+standard licence form/,
+    /The remaining fourteen sections are taken from a\s+standard license form/,
   );
   t.assert.doesNotMatch(licence, /or the URL for them above/);
   t.assert.match(
     licence,
-    /Sections 2, 3, 9, 10 and 16 are the Original Licensor's own terms/,
+    /Sections 2, 3, 9, 10, and 16 are the Original Licensor's own terms/,
   );
 
   // The licence governs the code as a whole and reaches nothing the Original
@@ -859,7 +862,7 @@ test('the licence and its notices ship with the build', async (t) => {
   );
   t.assert.match(
     licence,
-    /nothing in this licence narrows,\s+replaces or adds a condition to a permission any of them gives/,
+    /nothing in this license narrows,\s+replaces, or adds a condition to a permission any of them gives/,
   );
 
   t.assert.match(notice, /The MIT License/);
