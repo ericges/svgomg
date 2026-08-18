@@ -16,6 +16,12 @@ addEventListener('install', (event) => {
       await cache.addAll([
         './',
         'all.css',
+        // The licence and the notices, as pages. They carry the bundled MIT,
+        // BSD, ISC and Blue Oak notices, so they have to be reachable from an
+        // offline copy too — that is the whole point of shipping them.
+        'legal.css',
+        'licence.html',
+        'notices.html',
         'fonts/JetBrainsMonoNL/JetBrainsMonoNL-Regular-latin.woff2',
         'images/icon.png',
         'js/gzip-worker.js',

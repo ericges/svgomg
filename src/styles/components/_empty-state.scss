@@ -91,3 +91,16 @@
 .empty-state-note {
   color: rgba(0, 0, 0, 0.45);
 }
+
+// The licence asks the app to say where its source is, and the bundled MIT and
+// Blue Oak notices have to reach whoever gets a copy. This sheet is what every
+// visitor sees at first paint, so the link lives here; once a file is open the
+// toolbar's Source link carries it.
+.empty-state-legal {
+  margin-bottom: 0;
+  font-size: 0.85rem;
+
+  a {
+    color: rgba(0, 0, 0, 0.45);
+  }
+}

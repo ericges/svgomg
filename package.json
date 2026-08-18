@@ -29,6 +29,7 @@
     "gulp-nunjucks": "^6.1.0",
     "gulp-sass": "^6.0.1",
     "html-minifier-terser": "^7.2.0",
+    "marked": "^18.0.9",
     "nanoevents": "^10.0.0",
     "pako": "^3.0.1",
     "prismjs": "^1.30.0",

@@ -18,6 +18,7 @@ import gulp from 'gulp';
 import gulpif from 'gulp-if';
 import gulpSassFactory from 'gulp-sass';
 import { nunjucksCompile } from 'gulp-nunjucks';
+import { marked } from 'marked';
 import { minify as htmlMinify } from 'html-minifier-terser';
 import * as rollup from 'rollup';
 import { nodeResolve as rollupResolve } from '@rollup/plugin-node-resolve';
@@ -205,10 +206,25 @@ function css() {
     .pipe(gulp.dest('build/', { sourcemaps: '.' }));
 }
 
+// The licence and the notices are also served as pages, so the obligation to
+// hand a recipient the notices is met by the app rather than by an unadvertised
+// URL. Rendered from the same markdown the repository root carries, so the two
+// can't drift; `marked` is build-time only and reaches no bundle.
+async function legalPage(file) {
+  const md = await fs.readFile(path.join(__dirname, file), 'utf8');
+  // In a build the sibling document is a page, not the raw markdown.
+  return marked
+    .parse(md)
+    .replaceAll('"./LICENSE.md"', '"licence.html"')
+    .replaceAll('"./NOTICE.md"', '"notices.html"');
+}
+
 async function html() {
-  const [config, headCSS] = await Promise.all([
+  const [config, headCSS, licenceHTML, noticesHTML] = await Promise.all([
     readJSON(path.join(__dirname, 'src', 'config.json')),
     fs.readFile(path.join(__dirname, 'build', 'head.css'), 'utf8'),
+    legalPage('LICENSE.md'),
+    legalPage('NOTICE.md'),
   ]);
 
   // `nunjucksCompile` rewrites the extension, so `index.njk` -> `index.html`.
@@ -220,6 +236,8 @@ async function html() {
         categories: config.categories,
         plugins: config.plugins,
         headCSS,
+        licenceHTML,
+        noticesHTML,
         SVGO_VERSION,
         liveBaseUrl: 'https://omsvg.app/',
         title: 'OMSVG - Optimize My SVG: a visual GUI for SVGO',
@@ -336,7 +354,10 @@ const mainBuild = gulp.series(
 function watch() {
   gulp.watch(['src/styles/**/*.scss'], gulp.series(css, html, swJs));
   gulp.watch(['src/js/**/*.js'], allJs);
-  gulp.watch(['LICENSE.md', 'NOTICE.md'], gulp.series(notices, swJs));
+  gulp.watch(
+    ['LICENSE.md', 'NOTICE.md'],
+    gulp.series(gulp.parallel(notices, html), swJs),
+  );
   gulp.watch(
     // `.html` still matters here: the Nunjucks partials keep that extension.
     ['src/**/*.{html,njk,svg,woff2}', 'src/*.json'],

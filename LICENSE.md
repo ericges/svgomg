@@ -13,8 +13,8 @@ copyright to this software.
 Portions of this software are derived from SVGOMG by Jake Archibald and
 contributors (<https://github.com/jakearchibald/svgomg>), licensed under the MIT
 License. Contributions to this fork from other people are licensed under the MIT
-License as well. NOTICE.md reproduces both notices, together with the notices of
-the third-party software this project bundles.
+License as well. [NOTICE.md](./NOTICE.md) reproduces both notices, together with
+the notices of the third-party software this project bundles.
 
 These terms govern this software as a whole, and the Licensor's own contributions
 to it. The MIT-licensed portions — everything published up to and including commit

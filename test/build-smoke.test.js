@@ -667,13 +667,14 @@ test('the service worker gets a build-derived cache name', async (t) => {
 
 test('the licence and its notices ship with the build', async (t) => {
   // The deployed site is where the bundled MIT/BSD/ISC code actually reaches
-  // anyone, so those licences require their notices to travel with it. Neither
-  // file is precached — the check below is one-directional, so that's fine.
+  // anyone, so those licences require their notices to travel with it. The raw
+  // markdown is the canonical form and isn't precached; the pages built from it
+  // are, and the next test covers those.
   const licence = await readBuildFile('LICENSE.md');
   const notice = await readBuildFile('NOTICE.md');
 
   // The whole construction rests on the PolyForm text being present, not just
-  // named: sections 1 and 2 grant and condition, they don't stand alone.
+  // named: sections 1 to 4 extend and condition it, they don't stand alone.
   t.assert.match(licence, /PolyForm Noncommercial License 1\.0\.0/);
   t.assert.match(licence, /## Acceptance/);
 
@@ -682,6 +683,37 @@ test('the licence and its notices ship with the build', async (t) => {
   // Every package the bundles carry has to be named; `test/notices.test.js`
   // checks the list against the real dependency closure.
   t.assert.match(notice, /\bsvgo\b/);
+});
+
+// The fenced blocks in NOTICE.md are licence texts with headings of their own,
+// so anything asking "did this get converted?" has to look past them.
+const stripPre = (html) => html.replaceAll(/<pre[\s\S]*?<\/pre>/g, '');
+
+test('the licence and notices are served as pages', async (t) => {
+  // Blue Oak and MIT both want the notice to reach whoever gets a copy, and an
+  // unadvertised `/NOTICE.md` doesn't. These are rendered from the same markdown
+  // at build time, so a stale copy isn't possible — but a silent render failure
+  // would be, which is what the conversion assertions below are for.
+  const licence = await readBuildFile('licence.html');
+  const notices = await readBuildFile('notices.html');
+
+  t.assert.match(licence, /PolyForm Noncommercial License 1\.0\.0/);
+  t.assert.match(notices, /Jake Archibald/);
+  t.assert.match(notices, /\bsvgo\b/);
+
+  t.assert.match(licence, /<h2/, 'licence.html carries no rendered headings');
+  t.assert.match(notices, /<h2/, 'notices.html carries no rendered headings');
+
+  // A `## ` left at the start of a line means the markdown was inlined rather
+  // than converted. Fenced blocks are stripped first: NOTICE.md quotes the Blue
+  // Oak licence verbatim, its headings included.
+  t.assert.doesNotMatch(stripPre(licence), /^## /m);
+  t.assert.doesNotMatch(stripPre(notices), /^## /m);
+
+  // NOTICE.md cross-references `./LICENSE.md`; in a build the sibling is a page,
+  // so that link has to have been rewritten or it serves raw markdown.
+  t.assert.match(notices, /licence\.html/);
+  t.assert.doesNotMatch(notices, /\.\/LICENSE\.md/);
 });
 
 test('every precached asset exists in the build', async (t) => {
