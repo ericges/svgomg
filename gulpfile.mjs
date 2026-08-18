@@ -221,10 +221,11 @@ function headingIds() {
 
   return {
     renderer: {
-      heading({ tokens, depth }) {
-        const text = this.parser.parseInline(tokens);
+      // The slug comes from the token's raw text, not from the rendered HTML:
+      // stripping tags back out of the latter with a regex is the sanitisation
+      // pattern that never quite works, and CodeQL is right to say so.
+      heading({ tokens, text, depth }) {
         const base = text
-          .replaceAll(/<[^<>]*>/g, '')
           .trim()
           .toLowerCase()
           .replaceAll(/[^\w -]+/g, '')
@@ -232,7 +233,8 @@ function headingIds() {
         const n = seen.get(base) ?? 0;
         seen.set(base, n + 1);
         const id = n ? `${base}-${n}` : base;
-        return `<h${depth} id="${id}">${text}</h${depth}>\n`;
+        const inner = this.parser.parseInline(tokens);
+        return `<h${depth} id="${id}">${inner}</h${depth}>\n`;
       },
     },
   };
