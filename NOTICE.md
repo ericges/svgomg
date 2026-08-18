@@ -4,6 +4,9 @@ OMSVG is licensed under the terms in [LICENSE.md](./LICENSE.md). This file carri
 the notices of the software it is derived from, of contributions from other
 people, and of the third-party code it ships to the browser.
 
+The app also ships artwork that is not code and not this project's — the demo
+drawings. Those carry their own terms, and [ASSETS.md](./ASSETS.md) records them.
+
 ---
 
 ## SVGOMG (upstream)

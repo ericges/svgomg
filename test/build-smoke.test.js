@@ -788,6 +788,51 @@ test('the licence and its notices ship with the build', async (t) => {
   // Every package the bundles carry has to be named; `test/notices.test.js`
   // checks the list against the real dependency closure.
   t.assert.match(notice, /\bsvgo\b/);
+  // The artwork is neither code nor this project's, so its terms live in their
+  // own document and the notices have to point at it.
+  t.assert.match(notice, /ASSETS\.md/);
+});
+
+test('every shipped file of artwork has its terms recorded', async (t) => {
+  // `test/notices.test.js` walks npm packages only, which is why every demo
+  // asset passed it while one of them was Free Art Licensed and unattributed.
+  // Nothing but this checks the non-package half.
+  const assets = await readBuildFile('ASSETS.md');
+  const { demos } = await readConfig();
+
+  // Driven off `config.json` rather than a fixed list, so adding a demo fails
+  // the build until someone records where it came from.
+  t.assert.deepStrictEqual(
+    demos.map((demo) => demo.file).filter((file) => !assets.includes(file)),
+    [],
+    'demos shipping with no entry in ASSETS.md',
+  );
+
+  // The repository is a point of distribution too, so the fixtures that never
+  // reach `build/` are covered as well.
+  t.assert.deepStrictEqual(
+    ['fail.svg'].filter((file) => !assets.includes(file)),
+    [],
+    'repository-only fixtures with no entry in ASSETS.md',
+  );
+
+  // The Tiger is AGPL-3.0-or-later. Section 4 conditions passing a copy on
+  // giving the recipient the licence with it, so the text has to ship and
+  // ASSETS.md has to say which drawing needs it.
+  t.assert.match(assets, /AGPL-3\.0-or-later/);
+  t.assert.match(assets, /licences\/AGPL-3\.0\.txt/);
+  const agpl = await readBuildFile('licences/AGPL-3.0.txt');
+  t.assert.match(agpl, /GNU AFFERO GENERAL PUBLIC LICENSE/);
+  t.assert.match(agpl, /Version 3, 19 November 2007/);
+
+  // Both were removed because their terms could not be carried. The record of
+  // that is the only thing stopping either being added back unnoticed.
+  t.assert.ok(
+    demos.every(
+      (demo) => demo.file !== 'car.svg' && demo.file !== 'github.svg',
+    ),
+    'a demo whose terms this project cannot carry is back in src/config.json',
+  );
 });
 
 // The fenced blocks in NOTICE.md are licence texts with headings of their own,
@@ -801,11 +846,13 @@ test('the licence and notices are served as pages', async (t) => {
   // would be, which is what the conversion assertions below are for.
   const licence = await readBuildFile('licence.html');
   const notices = await readBuildFile('notices.html');
+  const assets = await readBuildFile('assets.html');
 
   t.assert.match(licence, /OMSVG License 1\.0/);
   t.assert.doesNotMatch(licence, /polyform/i);
   t.assert.match(notices, /Jake Archibald/);
   t.assert.match(notices, /\bsvgo\b/);
+  t.assert.match(assets, /Ghostscript/);
 
   // The licence links to its own clauses; `marked` emits no heading ids unless
   // the gulpfile's renderer puts them there, and a dead anchor in a legal
@@ -820,17 +867,28 @@ test('the licence and notices are served as pages', async (t) => {
 
   t.assert.match(licence, /<h2/, 'licence.html carries no rendered headings');
   t.assert.match(notices, /<h2/, 'notices.html carries no rendered headings');
+  t.assert.match(assets, /<h2/, 'assets.html carries no rendered headings');
 
   // A `## ` left at the start of a line means the markdown was inlined rather
   // than converted. Fenced blocks are stripped first: NOTICE.md quotes the Blue
   // Oak licence verbatim, its headings included.
   t.assert.doesNotMatch(stripPre(licence), /^## /m);
   t.assert.doesNotMatch(stripPre(notices), /^## /m);
+  t.assert.doesNotMatch(stripPre(assets), /^## /m);
 
   // NOTICE.md cross-references `./LICENSE.md`; in a build the sibling is a page,
-  // so that link has to have been rewritten or it serves raw markdown.
+  // so that link has to have been rewritten or it serves raw markdown. The same
+  // goes for `./ASSETS.md`, which both of the other two point at.
   t.assert.match(notices, /licence\.html/);
   t.assert.doesNotMatch(notices, /\.\/LICENSE\.md/);
+  t.assert.match(notices, /assets\.html/);
+  t.assert.doesNotMatch(notices, /\.\/ASSETS\.md/);
+  t.assert.doesNotMatch(licence, /\.\/ASSETS\.md/);
+
+  // ASSETS.md links the AGPL text relatively, and that one path has to resolve
+  // in the repository and in the build alike — hence `licences/` at the root of
+  // both rather than under `src/`.
+  t.assert.match(assets, /href="?\.\/licences\/AGPL-3\.0\.txt"?/);
 });
 
 test('every precached asset exists in the build', async (t) => {
@@ -862,5 +920,15 @@ test('every precached asset exists in the build', async (t) => {
   t.assert.ok(
     assets.includes('fonts/JetBrainsMonoNL/OFL.txt'),
     'the font licence is not precached, so an offline copy ships the font without it',
+  );
+  // Same direction, same reason: the artwork provenance page and the AGPL text
+  // the Tiger demo needs.
+  t.assert.ok(
+    assets.includes('assets.html'),
+    'the artwork provenance page is not precached, so an offline copy ships the demos without their terms',
+  );
+  t.assert.ok(
+    assets.includes('licences/AGPL-3.0.txt'),
+    'the AGPL text is not precached, so an offline copy lists the Tiger without its licence',
   );
 });

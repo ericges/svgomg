@@ -191,11 +191,23 @@ function copy() {
     .pipe(gulp.dest('build', { encoding: false }));
 }
 
-// The deployed site is where the bundled MIT/BSD/ISC code actually reaches
-// anyone, so its notices have to travel with it. Separate from `copy()` because
-// these two live in the repository root and `copy()` is pinned to `{ base: 'src' }`.
+// The deployed site is where the bundled MIT/BSD/ISC code and the third-party
+// artwork actually reach anyone, so their notices have to travel with it.
+// Separate from `copy()` because these live in the repository root and `copy()`
+// is pinned to `{ base: 'src' }`.
+//
+// `licences/AGPL-3.0.txt` is here rather than under `src/` so that one path
+// works in both places: `ASSETS.md` links it relatively, and that link has to
+// resolve for a reader of the repository and for a visitor to the built site
+// alike. `{ base: '.' }` is what keeps it in a `licences/` directory instead of
+// flattening it into the build root — gulp otherwise resolves the base per-glob
+// and would strip the directory off.
 function notices() {
-  return gulp.src(['LICENSE.md', 'NOTICE.md']).pipe(gulp.dest('build'));
+  return gulp
+    .src(['LICENSE.md', 'NOTICE.md', 'ASSETS.md', 'licences/AGPL-3.0.txt'], {
+      base: '.',
+    })
+    .pipe(gulp.dest('build'));
 }
 
 function css() {
@@ -248,16 +260,19 @@ async function legalPage(file) {
   return new Marked(headingIds())
     .parse(md)
     .replaceAll('"./LICENSE.md"', '"licence.html"')
-    .replaceAll('"./NOTICE.md"', '"notices.html"');
+    .replaceAll('"./NOTICE.md"', '"notices.html"')
+    .replaceAll('"./ASSETS.md"', '"assets.html"');
 }
 
 async function html() {
-  const [config, headCSS, licenceHTML, noticesHTML] = await Promise.all([
-    readJSON(path.join(__dirname, 'src', 'config.json')),
-    fs.readFile(path.join(__dirname, 'build', 'head.css'), 'utf8'),
-    legalPage('LICENSE.md'),
-    legalPage('NOTICE.md'),
-  ]);
+  const [config, headCSS, licenceHTML, noticesHTML, assetsHTML] =
+    await Promise.all([
+      readJSON(path.join(__dirname, 'src', 'config.json')),
+      fs.readFile(path.join(__dirname, 'build', 'head.css'), 'utf8'),
+      legalPage('LICENSE.md'),
+      legalPage('NOTICE.md'),
+      legalPage('ASSETS.md'),
+    ]);
 
   // `nunjucksCompile` rewrites the extension, so `index.njk` -> `index.html`.
   return gulp
@@ -270,6 +285,7 @@ async function html() {
         headCSS,
         licenceHTML,
         noticesHTML,
+        assetsHTML,
         SVGO_VERSION,
         liveBaseUrl: 'https://omsvg.app/',
         title: 'OMSVG - Optimize My SVG: a visual GUI for SVGO',
@@ -387,7 +403,7 @@ function watch() {
   gulp.watch(['src/styles/**/*.scss'], gulp.series(css, html, swJs));
   gulp.watch(['src/js/**/*.js'], allJs);
   gulp.watch(
-    ['LICENSE.md', 'NOTICE.md'],
+    ['LICENSE.md', 'NOTICE.md', 'ASSETS.md', 'licences/**'],
     gulp.series(gulp.parallel(notices, html), swJs),
   );
   gulp.watch(

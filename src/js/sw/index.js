@@ -16,12 +16,14 @@ addEventListener('install', (event) => {
       await cache.addAll([
         './',
         'all.css',
-        // The licence and the notices, as pages. They carry the bundled MIT,
-        // BSD, ISC and Blue Oak notices, so they have to be reachable from an
-        // offline copy too — that is the whole point of shipping them.
+        // The licence, the notices and the artwork provenance, as pages. They
+        // carry the bundled MIT, BSD, ISC and Blue Oak notices, and the terms
+        // of the demo artwork, so they have to be reachable from an offline
+        // copy too — that is the whole point of shipping them.
         'legal.css',
         'licence.html',
         'notices.html',
+        'assets.html',
         'fonts/JetBrainsMonoNL/JetBrainsMonoNL-Regular-latin.woff2',
         // The font ships with the app, so its licence has to as well — and the
         // WOFF2 carries no licence metadata of its own, so an offline copy
@@ -33,10 +35,16 @@ addEventListener('install', (event) => {
         'js/prism-worker.js',
         'js/svgo-worker.js',
         // Only the demo the bare Demo button loads, so that button works
-        // offline. The rest of the menu is ~1MB of artwork nobody asked for, so
-        // those stay network-only — picking one offline fails with the usual
+        // offline. The rest of the menu is ~400KB of artwork nobody asked for,
+        // so those stay network-only — picking one offline fails with the usual
         // toast.
         'test-svgs/car-lite.svg',
+        // The Tiger demo is AGPL-3.0-or-later, and section 4 of that licence
+        // conditions passing a copy on giving the recipient a copy of the
+        // licence with it. The drawing itself is network-only, but an installed
+        // copy still lists it, so its terms travel — same reasoning as OFL.txt
+        // above.
+        'licences/AGPL-3.0.txt',
       ]);
 
       // Without versions there's no way to tell a breaking update from a safe
