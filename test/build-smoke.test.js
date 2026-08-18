@@ -689,6 +689,14 @@ test('the licence and its notices ship with the build', async (t) => {
   // condition what it permits — so neither may come back. See CLAUDE.md.
   t.assert.doesNotMatch(licence, /polyform/i);
 
+  // The chain a recipient of someone else's fork depends on. Pinning Part II's
+  // "the licensor" to the Licensor once broke it: every Part II grant then came
+  // from him, including when a fork was the one distributing, so the fork's own
+  // additions reached its recipients with no grant at all. These two sentences
+  // are what replaced that, and neither is decorative.
+  t.assert.match(licence, /directly from the Licensor/);
+  t.assert.match(licence, /^b\. license your own changes and new works/m);
+
   t.assert.match(notice, /The MIT License/);
   // MIT conditions redistribution on *the above* copyright notice, so this is
   // the line as it stood at `f925656` — not an inferred range, and not an
@@ -702,6 +710,10 @@ test('the licence and its notices ship with the build', async (t) => {
   // The WOFF2 carries no licence metadata, so the OFL has to reach the reader
   // from here as well as from the precached file.
   t.assert.match(notice, /SIL OPEN FONT LICENSE/);
+  // Two packages carry an e-mail address inside the copyright line itself.
+  // Dropping it is the same normalisation the upstream block was guilty of.
+  t.assert.match(notice, /TJ Holowaychuk <tj@vision-media\.ca>/);
+  t.assert.match(notice, /Andrey Sitnik <andrey@sitnik\.ru>/);
   // Every package the bundles carry has to be named; `test/notices.test.js`
   // checks the list against the real dependency closure.
   t.assert.match(notice, /\bsvgo\b/);

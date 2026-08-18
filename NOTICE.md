@@ -58,8 +58,9 @@ belongs here.
 
 ## Bundled software
 
-The built app bundles the packages below into `js/page.js` and
-`js/svgo-worker.js`. The list is the full runtime dependency closure and is
+The built app bundles the packages below into `js/page.js` and the three worker
+bundles `js/svgo-worker.js`, `js/gzip-worker.js` and `js/prism-worker.js`. The
+list is the full runtime dependency closure and is
 deliberately over-inclusive: tree-shaking removes parts of it (`commander` and
 `picocolors` reach the browser only through SVGO's CLI paths, which the browser
 build drops), and it is cheaper to name everything the closure contains than to
@@ -90,12 +91,23 @@ prove what the bundler took out. So OMSVG bundles or may bundle:
 
 ### MIT
 
-Applies to `svgo` (Copyright (c) Kir Belevich), `csso` (Copyright (C) 2015-2021
-by Roman Dvornov, Copyright (C) 2011-2015 by Sergey Kryzhanovsky), `css-tree`
-(Copyright (C) 2016-2026 by Roman Dvornov), `dom-serializer` (Copyright (c) 2014
-The cheeriojs contributors), `commander` (Copyright (c) 2011 TJ Holowaychuk),
-`pako` (Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn), `prismjs`
-(Copyright (c) 2012 Lea Verou) and `nanoevents` (Copyright 2016 Andrey Sitnik).
+Applies to the packages below, each with the copyright notice it ships. They are
+in a block rather than in prose so that none of them is reflowed, abbreviated or
+stripped of an address on the way to a reader.
+
+```
+svgo            Copyright (c) Kir Belevich
+csso            Copyright (C) 2015-2021 by Roman Dvornov
+                Copyright (C) 2011-2015 by Sergey Kryzhanovsky
+css-tree        Copyright (C) 2016-2026 by Roman Dvornov
+dom-serializer  Copyright (c) 2014 The cheeriojs contributors
+commander       Copyright (c) 2011 TJ Holowaychuk <tj@vision-media.ca>
+pako            Copyright (C) 2014-2017 by Vitaly Puzrin and Andrei Tuputcyn
+prismjs         Copyright (c) 2012 Lea Verou
+nanoevents      Copyright 2016 Andrey Sitnik <andrey@sitnik.ru>
+```
+
+They share these terms:
 
 ```
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -197,8 +209,15 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ### ISC
 
-Applies to `boolbase` (Copyright (c) Felix Böhm) and `picocolors` (Copyright (c)
-2021-2024 Oleksii Raspopov, Kostiantyn Denysov, Anton Verinov).
+Applies to `picocolors` and to `boolbase`. The second ships no licence file and
+no copyright line at all — it declares ISC in its package metadata and nothing
+else — so there is nothing of its own to reproduce.
+
+```
+picocolors      Copyright (c) 2021-2024 Oleksii Raspopov, Kostiantyn Denysov, Anton Verinov
+```
+
+Both are under these terms:
 
 ```
 Permission to use, copy, modify, and/or distribute this software for any

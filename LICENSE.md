@@ -22,7 +22,14 @@ This licence has two parts, and they are one document. Part I sets out the
 Licensor's own terms: it adds a permission, and it conditions every permission
 this licence grants. Part II sets out the noncommercial terms that Part I builds
 on. In Part II, "these terms" and "this license" mean this licence as a whole,
-Part I included, and "the licensor" means the Licensor.
+Part I included; "the licensor" keeps the meaning Part II gives it, which is
+whoever is offering the material in question under these terms.
+
+Everyone who receives a copy of this software receives the Licensor's
+permissions over the Licensor's own material directly from the Licensor, on
+these terms, whoever passed that copy on. Someone passing a copy on grants
+nothing on the Licensor's behalf, and may neither add to these terms nor
+withhold any part of them.
 
 ## Definitions
 
@@ -30,7 +37,9 @@ Two terms are used in more than one section below.
 
 You make something available "to the public" if anyone can reach and use it
 without your having separately agreed to provide it to them. A registration or
-sign-up step that anyone can complete does not make it non-public.
+sign-up step that anyone can complete does not make it non-public, and neither
+do terms of service, or any other standard terms that anyone who turns up may
+accept.
 
 Your "organisation" means you and, if you are not an individual, the people who
 work for you or under your direction in that capacity, together with any entity
@@ -54,9 +63,10 @@ publicly, you must:
 
 a. make the Corresponding Source of that version available to the public, free of
    charge, at a location that anyone can access without registration;
-b. make that source available on the terms of this licence, unchanged, and give
-   every recipient, over your own changes and new works, the same permission
-   section 2 gives; and
+b. license your own changes and new works to everyone who receives that source,
+   under this licence and unchanged, so that they have over your material the
+   same permissions this licence gives over the Licensor's — including the
+   permitted purpose section 2 adds; and
 c. state, in the software's own interface or its documentation, where that source
    can be obtained.
 
@@ -70,7 +80,8 @@ injecting into it, or otherwise interposing on it as it runs.
 
 This section does not apply if you use such a version only yourself, within your
 organisation, or to provide it to particular clients or customers under an
-agreement with them.
+agreement with them — and, in that last case, only where you do not also make
+that version available to the public.
 
 ### 2. Commercial use
 
@@ -78,7 +89,7 @@ Any commercial purpose is also a permitted purpose under Part II.
 
 This section adds to the permissions in Part II and restricts nothing; sections 1
 and 3 apply to it, as they do to every permission this licence grants. It extends
-only the permissions the Licensor can give in this software.
+only the permissions a licensor can give in their own material.
 
 ### 3. No revenue from providing access
 
@@ -111,10 +122,11 @@ are permitted:
 ### 4. Name and marks
 
 This licence gives no permission to use the name "OMSVG", the OMSVG logo and
-icons, or the domain omsvg.app. A version you make available to the public must
-identify itself by a different name and must not use those marks. Naming this
-software to say where yours came from — "based on OMSVG" — is fine, and so is
-identifying this licence by its name.
+icons, or the domain omsvg.app. A version that is both changed and made
+available to the public must identify itself by a different name and must not
+use those marks. An unchanged copy may keep them, but must not present itself as
+the official OMSVG site. Naming this software to say where yours came from —
+"based on OMSVG" — is fine, and so is identifying this licence by its name.
 
 ---
 
@@ -134,7 +146,7 @@ The licensor grants you an additional copyright license to distribute copies of 
 
 ### Notices
 
-You must ensure that anyone who gets a copy of any part of the software from you also gets a copy of these terms or the URL for them above, as well as copies of any plain-text lines beginning with `Required Notice:` that the licensor provided with the software.  For example:
+You must ensure that anyone who gets a copy of any part of the software from you also gets a copy of these terms, as well as copies of any plain-text lines beginning with `Required Notice:` that the licensor provided with the software.  For example:
 
 > Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
 

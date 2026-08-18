@@ -31,13 +31,19 @@ jobs:
           github.event_name == 'pull_request_target' ||
           github.event.comment.body == 'recheck' ||
           github.event.comment.body == 'I have read the contribution terms and I license my contribution under the MIT License'
-        uses: contributor-assistant/github-action@v2.6.1
+        # Pinned to a commit, not the tag: a release tag is mutable, and this
+        # action runs with write permissions and maintains the record that the
+        # contribution terms rest on. Treat a bump as a code review.
+        uses: contributor-assistant/github-action@ca4a40a7d1004f18d9960b404b97e5f30a505a08 # v2.6.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path-to-document: "https://github.com/ericges/omsvg/blob/main/CONTRIBUTING.md#licensing-and-copyright"
           path-to-signatures: "signatures/version1/cla.json"
-          branch: "main"
+          # Not `main`: the action documents that its storage branch must not be
+          # protected, and a signature commit on `main` would otherwise rebuild
+          # and redeploy the site for a file that never reaches `build/`.
+          branch: "cla-signatures"
           # The copyright holder has nothing to agree to, and Dependabot cannot
           # agree to anything — so the bot says nothing on their pull requests.
           # Without this it would comment on every one of them.

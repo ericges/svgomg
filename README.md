@@ -136,8 +136,8 @@ The table below is a summary; the licence governs.
 | :-: | --- | --- |
 | ✅ | Use it, at home or at work, on paid client projects | nothing to publish |
 | ✅ | Run it on your own machines or your company's intranet, changed or not | nothing to publish |
-| ✅ | Host it for your clients as part of your services | nothing to publish, as long as access to it isn't a material part of what they pay you |
-| ✅ | Mirror it publicly, free of charge, unchanged | no attribution to me — but the upstream and third-party notices must travel with the copy |
+| ✅ | Host it for your clients as part of your services | nothing to publish, as long as access to it isn't a material part of what they pay you and you don't also put that version online for everyone |
+| ✅ | Mirror it publicly, free of charge, unchanged | no attribution to me, and you may keep the name — but don't present it as the official site, and the licence and the upstream and third-party notices must travel with the copy |
 | ✅ | Fork it and host your fork publicly, free of charge | publish your source, and give it your own name |
 | ✅ | Take donations for running a free public copy | as long as paying changes nothing about access |
 | ❌ | Host it publicly with advertising on or around it | not permitted |

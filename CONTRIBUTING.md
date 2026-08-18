@@ -105,7 +105,7 @@ Two reasons it is inbound MIT rather than the project's own licence:
   outright. Contributed lines travel with it, and no past contributor has to be tracked down first.
 
 You agree to that in a comment: a bot posts on your pull request with the sentence to reply with, and
-records your reply under `signatures/` on `main`. That record is what makes these terms the "separate
+records your reply under `signatures/` on the `cla-signatures` branch. That record is what makes these terms the "separate
 agreement" GitHub's Terms of Service (§ D.6) ask for — without one, GitHub puts your contribution
 under the repository's own licence, which is not what either of us wants here. The bot doesn't ask
 the copyright holder or Dependabot; neither has anything to agree to.
