@@ -673,8 +673,8 @@ test('the licence and its notices ship with the build', async (t) => {
   const licence = await readBuildFile('LICENSE.md');
   const notice = await readBuildFile('NOTICE.md');
 
-  // The Licensor's own copyright covers his own work, and all of it was
-  // written in 2026 — the fork point is Jake Archibald's 2025 commit, and its
+  // The Original Licensor's own copyright covers his own work, and all of it
+  // was written in 2026 — the fork point is Jake Archibald's 2025 commit, and its
   // year belongs to his notice, not to this one. Widen the range only when
   // there is another year's work behind it.
   t.assert.match(licence, /^Copyright \(c\) 2026 Eric Gesemann$/m);
@@ -685,17 +685,30 @@ test('the licence and its notices ship with the build', async (t) => {
   t.assert.match(licence, /^## Part II — Noncommercial Terms$/m);
   t.assert.match(licence, /^### Acceptance$/m);
   // Part II is a standard licence form whose own terms require that a changed
-  // version drop its name and URL. It was changed — the four sections above it
+  // version drop its name and URL. It was changed — the sections above it
   // condition what it permits — so neither may come back. See CLAUDE.md.
   t.assert.doesNotMatch(licence, /polyform/i);
 
   // The chain a recipient of someone else's fork depends on. Pinning Part II's
-  // "the licensor" to the Licensor once broke it: every Part II grant then came
-  // from him, including when a fork was the one distributing, so the fork's own
-  // additions reached its recipients with no grant at all. These two sentences
+  // "the licensor" to the one named licensor once broke it: every Part II grant
+  // then came from him, including when a fork was the one distributing, so the
+  // fork's own additions reached its recipients with no grant at all. These two
   // are what replaced that, and neither is decorative.
-  t.assert.match(licence, /directly from the Licensor/);
+  t.assert.match(licence, /^### 5\. How permissions reach you$/m);
+  t.assert.match(licence, /grants\s+nothing on the Original Licensor's behalf/);
   t.assert.match(licence, /^b\. license your own changes and new works/m);
+
+  // One place to look up a word, which is what let the paragraph explaining
+  // Part II's vocabulary go away entirely.
+  t.assert.strictEqual(
+    (licence.match(/^#{2,3} Definitions$/gm) ?? []).length,
+    1,
+  );
+
+  // The ambiguity that caused the defect above was a capital letter: "the
+  // Licensor" meant one person, "the licensor" meant whoever was offering. The
+  // first is renamed so that only one of them is a proper noun.
+  t.assert.doesNotMatch(licence, /(?<!Original )Licensor/);
 
   t.assert.match(notice, /The MIT License/);
   // MIT conditions redistribution on *the above* copyright notice, so this is

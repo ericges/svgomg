@@ -4,8 +4,21 @@ OMSVG is made available under the terms in this file.
 
 Copyright (c) 2026 Eric Gesemann
 
-In this licence, "the Licensor" means Eric Gesemann and his successors in the
-copyright to this software.
+## How to read this licence
+
+One document, two parts. **Part I** is the Original Licensor's own terms:
+sections 1 to 4 add a permission and place conditions on every permission this
+licence gives, and sections 5 and 6 say how permissions reach you and how they
+end. **Part II** is a standard set of noncommercial terms, and is where the
+copyright and patent licences themselves are granted.
+
+The two parts are read together throughout, and the words defined below carry
+their meaning into both of them.
+
+## What this licence covers
+
+These terms govern this software as a whole, and the Original Licensor's own
+contributions to it.
 
 Portions of this software are derived from SVGOMG by Jake Archibald and
 contributors (<https://github.com/jakearchibald/svgomg>), licensed under the MIT
@@ -13,44 +26,57 @@ License. Contributions to this fork from other people are licensed under the MIT
 License as well. [NOTICE.md](./NOTICE.md) reproduces both notices, together with
 the notices of the third-party software this project bundles.
 
-These terms govern this software as a whole, and the Licensor's own contributions
-to it. The MIT-licensed portions — everything published up to and including commit
+The MIT-licensed portions — everything published up to and including commit
 `f925656`, and the contributions from other people since — remain independently
 available under the MIT License, and may be taken and used under it.
 
-This licence has two parts, and they are one document. Part I sets out the
-Licensor's own terms: it adds a permission, and it conditions every permission
-this licence grants. Part II sets out the noncommercial terms that Part I builds
-on. In Part II, "these terms" and "this license" mean this licence as a whole,
-Part I included; "the licensor" keeps the meaning Part II gives it, which is
-whoever is offering the material in question under these terms.
-
-Everyone who receives a copy of this software receives the Licensor's
-permissions over the Licensor's own material directly from the Licensor, on
-these terms, whoever passed that copy on. Someone passing a copy on grants
-nothing on the Licensor's behalf, and may neither add to these terms nor
-withhold any part of them.
-
 ## Definitions
 
-Two terms are used in more than one section below.
+These words carry the meaning given here wherever they appear in this licence,
+in Part I as much as in Part II.
 
-You make something available "to the public" if anyone can reach and use it
+**These terms**, **this license** and **this licence** mean this document as a
+whole: Part I and Part II together.
+
+**The Original Licensor** is Eric Gesemann and his successors in the copyright
+to this software.
+
+The **licensor** is the individual or entity offering these terms, and the
+**software** is the software the licensor makes available under these terms. So
+the licensor is the Original Licensor for this software, and it is you for the
+changes and new works you license under section 1(b).
+
+**You** refers to the individual or entity agreeing to these terms.
+
+**Your company** is any legal entity, sole proprietorship, or other kind of
+organization that you work for, plus all organizations that have control over,
+are under the control of, or are under common control with that organization.
+**Control** means ownership of substantially all the assets of an entity, or the
+power to direct its management and policies by vote, contract, or otherwise.
+Control can be direct or indirect.
+
+**Your licenses** are all the licenses granted to you for the software under
+these terms.
+
+**Use** means anything you do with the software requiring one of your licenses.
+
+Your **organisation** means you and, if you are not an individual, the people
+who work for you or under your direction in that capacity, together with any
+entity that controls you, that you control, or that is under common control with
+you. People you provide a product or service to are not part of your
+organisation.
+
+You make something available **to the public** if anyone can reach and use it
 without your having separately agreed to provide it to them. A registration or
 sign-up step that anyone can complete does not make it non-public, and neither
 do terms of service, or any other standard terms that anyone who turns up may
 accept.
 
-Your "organisation" means you and, if you are not an individual, the people who
-work for you or under your direction in that capacity, together with any entity
-that controls you, that you control, or that is under common control with you.
-People you provide a product or service to are not part of your organisation.
+**Corresponding Source** has the meaning given in section 1 of the GNU Affero
+General Public License, version 3. This licence is not the AGPL and grants none
+of the AGPL's permissions; only that definition is borrowed.
 
-## Part I — Terms of the Licensor
-
-Failing to meet a condition in this Part is a violation of these terms like any
-other, and the Violations clause in Part II is the only cure this licence gives
-for it.
+## Part I — Terms of the Original Licensor
 
 ### 1. Source availability
 
@@ -65,14 +91,10 @@ a. make the Corresponding Source of that version available to the public, free o
    charge, at a location that anyone can access without registration;
 b. license your own changes and new works to everyone who receives that source,
    under this licence and unchanged, so that they have over your material the
-   same permissions this licence gives over the Licensor's — including the
-   permitted purpose section 2 adds; and
+   same permissions this licence gives over the Original Licensor's — including
+   the permitted purpose section 2 adds; and
 c. state, in the software's own interface or its documentation, where that source
    can be obtained.
-
-"Corresponding Source" has the meaning given in section 1 of the GNU Affero
-General Public License, version 3. This licence is not the AGPL and grants none of
-the AGPL's permissions; only that definition is borrowed.
 
 You make changes or new works based on this software whether you alter its files,
 combine it with other software, or change what it does by wrapping it, framing it,
@@ -127,6 +149,20 @@ available to the public must identify itself by a different name and must not
 use those marks. An unchanged copy may keep them, but must not present itself as
 the official OMSVG site. Naming this software to say where yours came from —
 "based on OMSVG" — is fine, and so is identifying this licence by its name.
+
+### 5. How permissions reach you
+
+Everyone who receives a copy of this software receives the Original Licensor's
+permissions over the Original Licensor's own material directly from them, on
+these terms, whoever passed that copy on. Whoever passes a copy on grants
+nothing on the Original Licensor's behalf, and may neither add to these terms
+nor withhold any part of them.
+
+### 6. Violations
+
+Failing to meet a condition in this Part is a violation of these terms like any
+other. Part II's Violations clause is the only cure this licence gives, and it
+covers this Part as much as Part II.
 
 ---
 
@@ -189,15 +225,3 @@ The first time you are notified in writing that you have violated any of these t
 ### No Liability
 
 ***As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.***
-
-### Definitions
-
-The **licensor** is the individual or entity offering these terms, and the **software** is the software the licensor makes available under these terms.
-
-**You** refers to the individual or entity agreeing to these terms.
-
-**Your company** is any legal entity, sole proprietorship, or other kind of organization that you work for, plus all organizations that have control over, are under the control of, or are under common control with that organization.  **Control** means ownership of substantially all the assets of an entity, or the power to direct its management and policies by vote, contract, or otherwise.  Control can be direct or indirect.
-
-**Your licenses** are all the licenses granted to you for the software under these terms.
-
-**Use** means anything you do with the software requiring one of your licenses.

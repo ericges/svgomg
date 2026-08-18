@@ -212,10 +212,12 @@ function css() {
 // can't drift; `marked` is build-time only and reaches no bundle.
 // `marked` emits no heading ids of its own, and the licence links to its own
 // clauses (`#distribution-license`). Slugs are GitHub-shaped so the markdown and
-// the page agree, and repeats get a suffix — both parts of the licence carry a
-// "Definitions" heading. The counter is per document, so this has to be a fresh
-// `Marked` each time rather than `marked.use()`, which mutates a shared one and
-// would stack another renderer on every watch rebuild.
+// the page agree, and a repeated heading gets a suffix rather than a second
+// element with the same id — nothing in either document repeats one today, but
+// the licence did until its two "Definitions" sections became one. The counter
+// is per document, so this has to be a fresh `Marked` each time rather than
+// `marked.use()`, which mutates a shared one and would stack another renderer on
+// every watch rebuild.
 function headingIds() {
   const seen = new Map();
 
