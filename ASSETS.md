@@ -30,8 +30,8 @@ a user asks for it.
 | `test-svgs/tiger.svg`          | Ghostscript Tiger           | the Ghostscript authors                | AGPL-3.0-or-later           |
 | `test-svgs/flag.svg`           | Flag of Ecuador             | see the record below                   | Public domain, and CC0-1.0  |
 | `test-svgs/svgo-logo.svg`      | SVGO project logo           | Kir Belevich and the SVGO contributors | MIT                         |
-| `test-svgs/kitchen-sink.svg`   | OMSVG kitchen sink          | Eric Gesemann                          | Public domain               |
-| `test-svgs/fail.svg`           | OMSVG parse-failure fixture | Eric Gesemann                          | Public domain               |
+| `test-svgs/kitchen-sink.svg`   | OMSVG kitchen sink          | Eric Gesemann                          | CC0-1.0                     |
+| `test-svgs/fail.svg`           | OMSVG parse-failure fixture | Eric Gesemann                          | CC0-1.0                     |
 
 `src/config.json` determines which of these files are built and distributed with
 the application. `fail.svg` is not among them; it is distributed only in the
@@ -160,6 +160,28 @@ be exercised.
 
 **Source** — written for this project.
 
-**Terms** — public domain, as declared in `kitchen-sink.svg`'s own `<metadata>`.
+**Terms** — the **Creative Commons CC0 1.0 Universal Public Domain Dedication**
+(`CC0-1.0`), declared in `kitchen-sink.svg`'s own `<metadata>` element:
 
-**Required notices** — none.
+```
+Dedicated to the public domain by Eric Gesemann under CC0 1.0 Universal.
+SPDX-License-Identifier: CC0-1.0
+https://creativecommons.org/publicdomain/zero/1.0/
+```
+
+The dedication covers both files: `fail.svg` is a prefix of `kitchen-sink.svg`,
+so it carries the same `<metadata>` element. A bare statement of public domain
+stood here until 2026-08-18, which named an intention without an instrument — a
+poor footing under German law, where § 29 UrhG leaves copyright itself
+untransferable. CC0 is used because it waives what can be waived and, where the
+waiver is ineffective, falls back on a licence that reaches the same result.
+
+**Licence text** — reproduced in full at
+[`licences/CC0-1.0.txt`](./licences/CC0-1.0.txt), and distributed with the
+application at that path. Nothing conditions the distribution of these files on
+supplying it. It is held here so that the grant travels with the work rather than
+depending on a remote address, section 3 of that document being what carries the
+dedication in a jurisdiction that does not admit the waiver.
+
+**Required notices** — none. CC0 places no condition on a recipient and asks for
+no attribution. This record is provided for identification.

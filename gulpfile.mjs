@@ -196,15 +196,21 @@ function copy() {
 // Separate from `copy()` because these live in the repository root and `copy()`
 // is pinned to `{ base: 'src' }`.
 //
-// `licences/AGPL-3.0.txt` is here rather than under `src/` so that one path
-// works in both places: `ASSETS.md` links it relatively, and that link has to
+// `licences/` is here rather than under `src/` so that one path works in both
+// places: `ASSETS.md` links those texts relatively, and the links have to
 // resolve for a reader of the repository and for a visitor to the built site
-// alike. `{ base: '.' }` is what keeps it in a `licences/` directory instead of
-// flattening it into the build root — gulp otherwise resolves the base per-glob
-// and would strip the directory off.
+// alike. `{ base: '.' }` is what keeps them in a `licences/` directory instead
+// of flattening them into the build root — gulp otherwise resolves the base
+// per-glob and would strip the directory off.
+//
+// The glob is the whole directory, so a text added for a new asset ships
+// without a change here. The two present are on it for different reasons:
+// AGPL-3.0 because section 4 conditions conveying the Tiger on supplying it,
+// CC0-1.0 because nothing conditions anything and the grant should still travel
+// with the fixtures rather than depend on a remote address.
 function notices() {
   return gulp
-    .src(['LICENSE.md', 'NOTICE.md', 'ASSETS.md', 'licences/AGPL-3.0.txt'], {
+    .src(['LICENSE.md', 'NOTICE.md', 'ASSETS.md', 'licences/*.txt'], {
       base: '.',
     })
     .pipe(gulp.dest('build'));

@@ -45,6 +45,11 @@ addEventListener('install', (event) => {
         // copy still lists it, so its terms travel — same reasoning as OFL.txt
         // above.
         'licences/AGPL-3.0.txt',
+        // `licences/CC0-1.0.txt` is deliberately *not* here. It ships with the
+        // build so the kitchen-sink fixtures' dedication doesn't depend on a
+        // remote address, but CC0 conditions nothing on a recipient, so no
+        // obligation asks for it offline and the asymmetry with the AGPL text
+        // above is the point rather than an omission.
       ]);
 
       // Without versions there's no way to tell a breaking update from a safe

@@ -45,10 +45,12 @@
     <desc>Created with a text editor. A test card carrying every SVG construct the exposed optimisations act on.</desc>
 
     <metadata>
-        <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
-            <rdf:Description>
+        <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#">
+            <rdf:Description rdf:about="">
                 <dc:title>OMSVG kitchen sink</dc:title>
-                <dc:rights>Public domain.</dc:rights>
+                <dc:creator>Eric Gesemann</dc:creator>
+                <dc:rights>Dedicated to the public domain by Eric Gesemann under CC0 1.0 Universal. SPDX-License-Identifier: CC0-1.0. Canonical terms: https://creativecommons.org/publicdomain/zero/1.0/legalcode.en — reproduced in this project at licences/CC0-1.0.txt. To the extent the waiver is ineffective, section 3 of that document grants a royalty-free licence to use the work for any purpose. No conditions are placed on any recipient.</dc:rights>
+                <cc:license rdf:resource="https://creativecommons.org/publicdomain/zero/1.0/"/>
             </rdf:Description>
         </rdf:RDF>
     </metadata>

@@ -922,6 +922,48 @@ test('every shipped file of artwork has its terms recorded', async (t) => {
   t.assert.match(agpl, /GNU AFFERO GENERAL PUBLIC LICENSE/);
   t.assert.match(agpl, /Version 3, 19 November 2007/);
 
+  // The two fixtures are dedicated under CC0-1.0. Nothing conditions their
+  // distribution on the text — CC0 asks nothing of a recipient — so it ships for
+  // the other reason: section 3 is what carries the dedication where the waiver
+  // is ineffective, and a grant that lives only at a remote address is a grant
+  // an offline copy can't show.
+  t.assert.match(assets, /CC0-1\.0/);
+  t.assert.match(assets, /licences\/CC0-1\.0\.txt/);
+  const cc0 = await readBuildFile('licences/CC0-1.0.txt');
+  t.assert.match(cc0, /^CC0 1\.0 Universal$/m);
+  t.assert.match(cc0, /^3\. Public License Fallback\./m);
+
+  // A bare "Public domain." named an intention without an instrument, which is
+  // what this replaced — so the instrument has to be in the files themselves,
+  // not only in `ASSETS.md`. `fail.svg` is a prefix of `kitchen-sink.svg` and
+  // carries the same `<metadata>`; it ships in the repository only, so it is
+  // read from `src/`. The built copy is checked as well, because a fixture run
+  // through the optimiser would lose its `<metadata>` and say nothing at all.
+  const fixtureSvg = async (relativePath) =>
+    fs.readFile(path.join(repoRoot, relativePath), 'utf8');
+  const dedicated = [
+    [
+      'src/test-svgs/kitchen-sink.svg',
+      await fixtureSvg('src/test-svgs/kitchen-sink.svg'),
+    ],
+    ['src/test-svgs/fail.svg', await fixtureSvg('src/test-svgs/fail.svg')],
+    [
+      'build/test-svgs/kitchen-sink.svg',
+      await readBuildFile('test-svgs/kitchen-sink.svg'),
+    ],
+  ];
+  t.assert.deepStrictEqual(
+    dedicated
+      .filter(
+        ([, svg]) =>
+          !svg.includes('SPDX-License-Identifier: CC0-1.0') ||
+          !svg.includes('creativecommons.org/publicdomain/zero/1.0'),
+      )
+      .map(([name]) => name),
+    [],
+    'fixtures whose own metadata does not name the instrument it is dedicated under',
+  );
+
   // The aggregation claim has to match what the app really does: the default
   // demo is precached at install, so the old "retrieved only when a user asks
   // for it" was false of it. Driven off the real precache list, so a second
