@@ -273,8 +273,8 @@
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
         <cc:license
            rdf:resource="http://creativecommons.org/licenses/publicdomain/" />
-        <dc:title>little red racing car</dc:title>
-        <dc:description>A little red, rounded racing car with plastic details and a drop shadow</dc:description>
+        <dc:title>little green racing car</dc:title>
+        <dc:description>A little green, rounded racing car with plastic details and a drop shadow</dc:description>
         <dc:date>2013-05-02</dc:date>
         <dc:creator>
           <cc:Agent>
@@ -285,7 +285,7 @@
           <rdf:Bag>
             <rdf:li>car</rdf:li>
             <rdf:li>racing</rdf:li>
-            <rdf:li>red</rdf:li>
+            <rdf:li>green</rdf:li>
           </rdf:Bag>
         </dc:subject>
       </cc:Work>

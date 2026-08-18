@@ -18,6 +18,7 @@ import gulp from 'gulp';
 import gulpif from 'gulp-if';
 import gulpSassFactory from 'gulp-sass';
 import { nunjucksCompile } from 'gulp-nunjucks';
+import { Marked } from 'marked';
 import { minify as htmlMinify } from 'html-minifier-terser';
 import * as rollup from 'rollup';
 import { nodeResolve as rollupResolve } from '@rollup/plugin-node-resolve';
@@ -169,6 +170,8 @@ function copy() {
         'src/*.json',
         // Tells GitHub Pages which custom domain serves this site
         'src/CNAME',
+        // Keeps crawlers out of the verbatim third-party licence texts
+        'src/robots.txt',
         // Exclusions must come after every positive glob: gulp applies a
         // negative glob only to the globs that follow it, and a magic-free
         // path like `src/CNAME` errors as "not found" if one precedes it.
@@ -190,6 +193,31 @@ function copy() {
     .pipe(gulp.dest('build', { encoding: false }));
 }
 
+// The deployed site is where the bundled MIT/BSD/ISC code and the third-party
+// artwork actually reach anyone, so their notices have to travel with it.
+// Separate from `copy()` because these live in the repository root and `copy()`
+// is pinned to `{ base: 'src' }`.
+//
+// `licences/` is here rather than under `src/` so that one path works in both
+// places: `ASSETS.md` links those texts relatively, and the links have to
+// resolve for a reader of the repository and for a visitor to the built site
+// alike. `{ base: '.' }` is what keeps them in a `licences/` directory instead
+// of flattening them into the build root — gulp otherwise resolves the base
+// per-glob and would strip the directory off.
+//
+// The glob is the whole directory, so a text added for a new asset ships
+// without a change here. The two present are on it for different reasons:
+// AGPL-3.0 because section 4 conditions conveying the Tiger on supplying it,
+// CC0-1.0 because nothing conditions anything and the grant should still travel
+// with the fixtures rather than depend on a remote address.
+function notices() {
+  return gulp
+    .src(['LICENSE.md', 'NOTICE.md', 'ASSETS.md', 'licences/*.txt'], {
+      base: '.',
+    })
+    .pipe(gulp.dest('build'));
+}
+
 function css() {
   return gulp
     .src('src/styles/*.scss', { sourcemaps: true })
@@ -198,11 +226,61 @@ function css() {
     .pipe(gulp.dest('build/', { sourcemaps: '.' }));
 }
 
+// The licence and the notices are also served as pages, so the obligation to
+// hand a recipient the notices is met by the app rather than by an unadvertised
+// URL. Rendered from the same markdown the repository root carries, so the two
+// can't drift; `marked` is build-time only and reaches no bundle.
+// `marked` emits no heading ids of its own, and the licence links to its own
+// clauses (`#distribution-license`). Slugs are GitHub-shaped so the markdown and
+// the page agree, and a repeated heading gets a suffix rather than a second
+// element with the same id — nothing in either document repeats one today, but
+// the licence did until its two "Definitions" sections became one. The counter
+// is per document, so this has to be a fresh `Marked` each time rather than
+// `marked.use()`, which mutates a shared one and would stack another renderer on
+// every watch rebuild.
+function headingIds() {
+  const seen = new Map();
+
+  return {
+    renderer: {
+      // The slug comes from the token's raw text, not from the rendered HTML:
+      // stripping tags back out of the latter with a regex is the sanitisation
+      // pattern that never quite works, and CodeQL is right to say so.
+      heading({ tokens, text, depth }) {
+        const base = text
+          .trim()
+          .toLowerCase()
+          .replaceAll(/[^\w -]+/g, '')
+          .replaceAll(' ', '-');
+        const n = seen.get(base) ?? 0;
+        seen.set(base, n + 1);
+        const id = n ? `${base}-${n}` : base;
+        const inner = this.parser.parseInline(tokens);
+        return `<h${depth} id="${id}">${inner}</h${depth}>\n`;
+      },
+    },
+  };
+}
+
+async function legalPage(file) {
+  const md = await fs.readFile(path.join(__dirname, file), 'utf8');
+  // In a build the sibling document is a page, not the raw markdown.
+  return new Marked(headingIds())
+    .parse(md)
+    .replaceAll('"./LICENSE.md"', '"licence.html"')
+    .replaceAll('"./NOTICE.md"', '"notices.html"')
+    .replaceAll('"./ASSETS.md"', '"assets.html"');
+}
+
 async function html() {
-  const [config, headCSS] = await Promise.all([
-    readJSON(path.join(__dirname, 'src', 'config.json')),
-    fs.readFile(path.join(__dirname, 'build', 'head.css'), 'utf8'),
-  ]);
+  const [config, headCSS, licenceHTML, noticesHTML, assetsHTML] =
+    await Promise.all([
+      readJSON(path.join(__dirname, 'src', 'config.json')),
+      fs.readFile(path.join(__dirname, 'build', 'head.css'), 'utf8'),
+      legalPage('LICENSE.md'),
+      legalPage('NOTICE.md'),
+      legalPage('ASSETS.md'),
+    ]);
 
   // `nunjucksCompile` rewrites the extension, so `index.njk` -> `index.html`.
   return gulp
@@ -213,9 +291,12 @@ async function html() {
         categories: config.categories,
         plugins: config.plugins,
         headCSS,
+        licenceHTML,
+        noticesHTML,
+        assetsHTML,
         SVGO_VERSION,
-        liveBaseUrl: 'https://svgomg.ges.dev/',
-        title: "SVGOMG - SVGO's Missing GUI for minifying SVGs",
+        liveBaseUrl: 'https://omsvg.app/',
+        title: 'OMSVG - Optimize My SVG: a visual GUI for SVGO',
         description: 'Easy & visual compression of SVG images.',
         iconPath: 'images/icon.png',
       }),
@@ -315,20 +396,24 @@ const appJs = gulp.parallel(
 // after every task that writes there, `appJs` included.
 async function swJs() {
   await js('js/sw/index.js', '', {
-    SVGOMG_BUILD_ID: JSON.stringify(await buildId()),
+    OMSVG_BUILD_ID: JSON.stringify(await buildId()),
   });
 }
 
 const allJs = gulp.series(appJs, swJs);
 
 const mainBuild = gulp.series(
-  gulp.parallel(gulp.series(css, html), appJs, copy),
+  gulp.parallel(gulp.series(css, html), appJs, copy, notices),
   swJs,
 );
 
 function watch() {
   gulp.watch(['src/styles/**/*.scss'], gulp.series(css, html, swJs));
   gulp.watch(['src/js/**/*.js'], allJs);
+  gulp.watch(
+    ['LICENSE.md', 'NOTICE.md', 'ASSETS.md', 'licences/**'],
+    gulp.series(gulp.parallel(notices, html), swJs),
+  );
   gulp.watch(
     // `.html` still matters here: the Nunjucks partials keep that extension.
     ['src/**/*.{html,njk,svg,woff2}', 'src/*.json'],

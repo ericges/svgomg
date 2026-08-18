@@ -1,10 +1,10 @@
-/* globals SVGOMG_BUILD_ID:false */
+/* globals OMSVG_BUILD_ID:false */
 
 // A hash of everything the build produces, injected by the gulpfile. It changes
 // exactly when the cached assets change, so the cache below is rebuilt only
 // when there's something new to cache.
-const cachePrefix = 'svgomg-';
-const staticCacheName = `${cachePrefix}static-${SVGOMG_BUILD_ID}`;
+const cachePrefix = 'omsvg-';
+const staticCacheName = `${cachePrefix}static-${OMSVG_BUILD_ID}`;
 const fontCacheName = `${cachePrefix}fonts`;
 const expectedCaches = new Set([staticCacheName, fontCacheName]);
 
@@ -16,17 +16,40 @@ addEventListener('install', (event) => {
       await cache.addAll([
         './',
         'all.css',
+        // The licence, the notices and the artwork provenance, as pages. They
+        // carry the bundled MIT, BSD, ISC and Blue Oak notices, and the terms
+        // of the demo artwork, so they have to be reachable from an offline
+        // copy too — that is the whole point of shipping them.
+        'legal.css',
+        'licence.html',
+        'notices.html',
+        'assets.html',
         'fonts/JetBrainsMonoNL/JetBrainsMonoNL-Regular-latin.woff2',
+        // The font ships with the app, so its licence has to as well — and the
+        // WOFF2 carries no licence metadata of its own, so an offline copy
+        // would otherwise have the font and nothing else.
+        'fonts/JetBrainsMonoNL/OFL.txt',
         'images/icon.png',
         'js/gzip-worker.js',
         'js/page.js',
         'js/prism-worker.js',
         'js/svgo-worker.js',
         // Only the demo the bare Demo button loads, so that button works
-        // offline. The rest of the menu is ~1MB of artwork nobody asked for, so
-        // those stay network-only — picking one offline fails with the usual
+        // offline. The rest of the menu is ~400KB of artwork nobody asked for,
+        // so those stay network-only — picking one offline fails with the usual
         // toast.
         'test-svgs/car-lite.svg',
+        // The Tiger demo is AGPL-3.0-or-later, and section 4 of that licence
+        // conditions passing a copy on giving the recipient a copy of the
+        // licence with it. The drawing itself is network-only, but an installed
+        // copy still lists it, so its terms travel — same reasoning as OFL.txt
+        // above.
+        'licences/AGPL-3.0.txt',
+        // `licences/CC0-1.0.txt` is deliberately *not* here. It ships with the
+        // build so the kitchen-sink fixtures' dedication doesn't depend on a
+        // remote address, but CC0 conditions nothing on a recipient, so no
+        // obligation asks for it offline and the asymmetry with the AGPL text
+        // above is the point rather than an omission.
       ]);
 
       // Without versions there's no way to tell a breaking update from a safe
@@ -40,7 +63,7 @@ addEventListener('install', (event) => {
 addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
-      // remove caches beginning "svgomg-" that aren't in expectedCaches
+      // remove caches beginning "omsvg-" that aren't in expectedCaches
       const cacheNames = await caches.keys();
 
       await Promise.all(

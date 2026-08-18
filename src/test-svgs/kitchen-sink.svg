@@ -3,7 +3,7 @@
 <!-- An ordinary comment: `removeComments` deletes this one. -->
 <!--! A banner comment: `removeComments` keeps this one, by default. -->
 <!--
-  SVGOMG kitchen sink.
+  OMSVG kitchen sink.
 
   Every construct in here exists to give one exposed optimisation something to
   do, so that toggling any single control in the settings panel visibly changes
@@ -35,7 +35,7 @@
     viewBox="0 0 480.0000 360.0000"
     bogusattr="removeUnknownsAndDefaults eats this"
 >
-    <title>SVGOMG kitchen sink</title>
+    <title>OMSVG kitchen sink</title>
     <!--
       `removeDesc` is conservative by default: it only drops empty descriptions
       and editor boilerplate ("Created with …"), because a hand-written one is
@@ -45,10 +45,12 @@
     <desc>Created with a text editor. A test card carrying every SVG construct the exposed optimisations act on.</desc>
 
     <metadata>
-        <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
-            <rdf:Description>
-                <dc:title>SVGOMG kitchen sink</dc:title>
-                <dc:rights>Public domain.</dc:rights>
+        <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#">
+            <rdf:Description rdf:about="">
+                <dc:title>OMSVG kitchen sink</dc:title>
+                <dc:creator>Eric Gesemann</dc:creator>
+                <dc:rights>Dedicated to the public domain by Eric Gesemann under CC0 1.0 Universal. SPDX-License-Identifier: CC0-1.0. Canonical terms: https://creativecommons.org/publicdomain/zero/1.0/legalcode.en — reproduced in this project at licences/CC0-1.0.txt. To the extent the waiver is ineffective, section 3 of that document grants a royalty-free licence to use the work for any purpose. No conditions are placed on any recipient.</dc:rights>
+                <cc:license rdf:resource="https://creativecommons.org/publicdomain/zero/1.0/"/>
             </rdf:Description>
         </rdf:RDF>
     </metadata>
@@ -141,7 +143,7 @@
     <rect width="480" height="360" fill="#fdfdfd"/>
     <path fill="none" stroke="#dde3ea" d="M0 28H480M0 111H480M0 194H480M160 28V360M320 28V360"/>
 
-    <text x="12" y="19" font-family="sans-serif" font-size="11" font-weight="bold" fill="#1b2733">SVGOMG kitchen sink — every exposed optimisation</text>
+    <text x="12" y="19" font-family="sans-serif" font-size="11" font-weight="bold" fill="#1b2733">OMSVG kitchen sink — every exposed optimisation</text>
 
     <!-- Entirely outside the viewBox: `removeOffCanvasPaths` deletes it. -->
     <path fill="#000000" d="M-240-240h40v40h-40z"/>

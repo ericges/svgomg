@@ -1,17 +1,17 @@
 {
-  "name": "svgomg",
+  "name": "omsvg",
   "private": true,
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ericges/svgomg.git"
+    "url": "git+https://github.com/ericges/omsvg.git"
   },
   "keywords": [],
-  "author": "Jake Archibald",
+  "author": "Eric Gesemann",
   "bugs": {
-    "url": "https://github.com/ericges/svgomg/issues"
+    "url": "https://github.com/ericges/omsvg/issues"
   },
-  "homepage": "https://svgomg.ges.dev/",
-  "license": "MIT",
+  "homepage": "https://omsvg.app/",
+  "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
   "engines": {
     "node": "^22 || ^24 || >=26"
@@ -29,6 +29,7 @@
     "gulp-nunjucks": "^6.1.0",
     "gulp-sass": "^6.0.1",
     "html-minifier-terser": "^7.2.0",
+    "marked": "^18.0.9",
     "nanoevents": "^10.0.0",
     "pako": "^3.0.1",
     "prismjs": "^1.30.0",

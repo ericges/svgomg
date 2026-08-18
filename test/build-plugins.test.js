@@ -90,10 +90,10 @@ test('a prefix that would break IDs or selectors is not applied', (t) => {
 });
 
 test('a valid prefix is trimmed and reaches stylesheet selectors too', (t) => {
-  const data = compress(idSvg, { idPrefix: ' svgomg_ ' });
+  const data = compress(idSvg, { idPrefix: ' omsvg_ ' });
 
-  t.assert.match(data, /id="svgomg_shape"/);
-  t.assert.match(data, /#svgomg_shape\{/);
+  t.assert.match(data, /id="omsvg_shape"/);
+  t.assert.match(data, /#omsvg_shape\{/);
 });
 
 // The canonical pipeline order: `src/config.json`'s array order, which
@@ -166,7 +166,7 @@ test('the incoming map order does not reach the pipeline', (t) => {
     transformPrecision: '5',
     dimensionAttrs: 'viewBox',
     ids: 'minify',
-    idPrefix: 'svgomg_',
+    idPrefix: 'omsvg_',
     currentColor: true,
   };
   // Names and params only: the two local visitor plugins carry a fresh `fn`
@@ -191,7 +191,7 @@ test('the assembled array keeps canonical order, with the selects slotted in', (
     transformPrecision: '5',
     dimensionAttrs: 'viewBox',
     ids: 'minify',
-    idPrefix: 'svgomg_',
+    idPrefix: 'omsvg_',
     currentColor: true,
     plugins: Object.fromEntries(pluginOrder.map((name) => [name, true])),
   });
