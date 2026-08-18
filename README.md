@@ -140,10 +140,10 @@ The table below is a summary; the licence governs.
 | ✅ | Mirror it publicly, free of charge, unchanged | no attribution to me — but the upstream and third-party notices must travel with the copy |
 | ✅ | Fork it and host your fork publicly, free of charge | publish your source, and give it your own name |
 | ✅ | Take donations for running a free public copy | as long as paying changes nothing about access |
-| ❌ | Host it publicly with advertising on or around it | not without a separate licence from me |
-| ❌ | Charge for access, or include it in a paid product or service | not without a separate licence from me |
-| ❌ | Run a free copy to market a paid product of yours | not without a separate licence from me |
-| ❌ | Sell or broker data about its use | not without a separate licence from me |
+| ❌ | Host it publicly with advertising on or around it | not permitted |
+| ❌ | Charge for access, or include it in a paid product or service | not permitted |
+| ❌ | Run a free copy to market a paid product of yours | not permitted |
+| ❌ | Sell or broker data about its use | not permitted |
 
 Everything up to and including commit `f925656` is upstream SVGOMG and stays available under the
 MIT License — see [NOTICE.md](./NOTICE.md), which also carries the notices for the third-party code
