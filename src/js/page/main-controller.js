@@ -15,6 +15,7 @@ import Preloader from './ui/preloader.js';
 import EmptyState from './ui/empty-state.js';
 import ResultsContainer from './ui/results-container.js';
 import ViewToggler from './ui/view-toggler.js';
+import ViewMode from './ui/view-mode.js';
 import ResultsCache from './results-cache.js';
 import MainUi from './ui/main-ui.js';
 import { migrateSettings } from './migrate-settings.js';
@@ -42,6 +43,7 @@ export default class MainController {
     // _resultsContainerUi is unused
     this._resultsContainerUi = new ResultsContainer(this._resultsUi);
     const viewTogglerUi = new ViewToggler();
+    const viewModeUi = new ViewMode();
 
     // ui events
     this._settingsUi.emitter.on('change', () => this._onSettingsChange());
@@ -56,8 +58,15 @@ export default class MainController {
       this._handleError(error),
     );
     dropUi.emitter.on('error', ({ error }) => this._handleError(error));
-    viewTogglerUi.emitter.on('change', (event) =>
-      this._outputUi.set(event.value),
+    // The two controls are orthogonal: the toolbar picks how the file is shown,
+    // the canvas control picks which file that is. Neither writes into the
+    // other — `_renderOutput()` composes the pair.
+    viewTogglerUi.emitter.on('change', (event) => {
+      this._outputView = event.value;
+      this._renderOutput();
+    });
+    viewModeUi.emitter.on('change', (event) =>
+      this._onViewModeChange(event.value),
     );
     this._copyButtonUi.emitter.on('copy', ({ success }) =>
       this._toastsUi.show(success ? 'Copy successful' : 'Copy failed', {
@@ -73,6 +82,21 @@ export default class MainController {
 
     // state
     this._inputItem = null;
+    // The latest result, kept so a mode change can re-render without running
+    // the worker. A borrowed reference, not an owned one: every result goes
+    // into `_cache`, and the cache calls `release()` on what it evicts.
+    this._resultItem = null;
+    // Which file the canvas is showing (`optimised` | `original` | `diff`), and
+    // how the toolbar is showing it. Neither is persisted: a lens is about the
+    // moment, not a preference to restore someone into.
+    this._viewMode = 'optimised';
+    this._outputView = 'image';
+    // What `_renderOutput()` last put on screen, so an unchanged pair doesn't
+    // reload the iframe or re-highlight the markup for nothing. `image` is
+    // `Output`'s own starting type.
+    this._renderedType = 'image';
+    this._renderedFile = null;
+    this._renderedCompare = null;
     this._cache = new ResultsCache(10);
     this._latestCompressJobId = 0;
     this._userHasInteracted = false;
@@ -102,6 +126,7 @@ export default class MainController {
         '.minor-action-container',
       );
       const outputElement = container.querySelector('.output');
+      const viewModeContainer = container.querySelector('.view-mode-container');
 
       // The rest of the shell paints settled; the output is the only thing that
       // waits for a file, so it's the only thing that animates in — from
@@ -114,6 +139,7 @@ export default class MainController {
         this._pngButtonUi.container,
       );
       actionContainer.append(this._downloadButtonUi.container);
+      viewModeContainer.append(viewModeUi.container);
       outputElement.append(this._outputUi.container);
       container.append(this._toastsUi.container, dropUi.container);
 
@@ -264,7 +290,9 @@ export default class MainController {
     // Only once the replacement exists, so a failed load doesn't revoke the
     // blob URL of the file still on screen.
     previousInput?.release();
+    // The purge releases what this was pointing at, so it has to go with it.
     this._cache.purge();
+    this._resultItem = null;
 
     // The previous file's collision notices describe a document that is no
     // longer open, and the new ones aren't measured until it has been through
@@ -274,6 +302,15 @@ export default class MainController {
 
     this._compressSvg(settings);
     this._outputUi.reset();
+    // After the reset, which would otherwise wipe it. The new input is in hand
+    // before anything has been optimised, so the Original lens can show it at
+    // once instead of waiting out a run whose result it isn't going to display.
+    // The mode itself survives the new file.
+    if (this._viewMode === 'original') {
+      this._renderOutput();
+      this._updateExports();
+    }
+
     // Only now, on a file that actually parsed: a failed load leaves the app
     // empty, so it keeps the sheet that says so.
     this._emptyStateUi.hide();
@@ -298,11 +335,78 @@ export default class MainController {
   }
 
   _saveSettings(settings) {
-    // doesn't make sense to retain the "show original" option
-    const { original, ...settingsToKeep } = settings;
-    storage.set('settings', settingsToKeep).catch((error) => {
+    storage.set('settings', settings).catch((error) => {
       console.warn('Could not save settings', error);
     });
+  }
+
+  _onViewModeChange(mode) {
+    this._viewMode = mode;
+    // A lens, not a setting: this re-renders from the files already in hand.
+    // No worker run, no abort, no fingerprint lookup — and deliberately no
+    // `PanZoom.reset()` either, since comparing the same artwork at the same
+    // zoom is the whole point of flipping between them.
+    this._renderOutput();
+    this._updateExports();
+  }
+
+  /**
+   * The file the canvas is showing, which is also the one the export buttons
+   * hand over. Diff has no single file to offer, so it carries the result.
+   *
+   * @returns {object | null} An `SvgFile`, or null before there is one.
+   */
+  _shownFile() {
+    return this._viewMode === 'original' ? this._inputItem : this._resultItem;
+  }
+
+  /**
+   * The toolbar picks how the file is shown, the canvas control picks which
+   * file that is; between them they name one of `Output`'s four types.
+   *
+   * @returns {string} A key of `Output._types`.
+   */
+  _outputType() {
+    if (this._viewMode !== 'diff') return this._outputView;
+    return this._outputView === 'code' ? 'markupDiff' : 'renderDiff';
+  }
+
+  _renderOutput() {
+    const type = this._outputType();
+    const file = this._shownFile();
+    // Only the diff types read a second file; the others are handed it and
+    // ignore it.
+    const compareFile = this._viewMode === 'diff' ? this._inputItem : null;
+
+    if (
+      type === this._renderedType &&
+      file === this._renderedFile &&
+      compareFile === this._renderedCompare
+    ) {
+      return;
+    }
+
+    const hasTypeChanged = type !== this._renderedType;
+
+    this._renderedType = type;
+    this._renderedFile = file;
+    this._renderedCompare = compareFile;
+
+    if (hasTypeChanged) {
+      this._outputUi.set(type, { svgFile: file, compareFile });
+    } else if (file) {
+      this._outputUi.update(file, compareFile);
+    }
+  }
+
+  _updateExports() {
+    const file = this._shownFile();
+
+    if (!file) return;
+
+    this._downloadButtonUi.setDownload(this._inputFilename, file);
+    this._copyButtonUi.setCopyText(file.text);
+    this._pngButtonUi.setExport(this._inputFilename, file);
   }
 
   async _compressSvg(settings) {
@@ -322,20 +426,13 @@ export default class MainController {
       return;
     }
 
-    if (settings.original) {
-      this._updateForFile(this._inputItem, {
-        compress: settings.gzip,
-      });
-      return;
-    }
-
+    // Whichever lens is on the canvas: a mode is a view of the result, so the
+    // result is always computed. Showing the original used to buy silence on a
+    // slow file, and no longer does.
     const cacheMatch = this._cache.match(settings.fingerprint);
 
     if (cacheMatch) {
-      this._updateForFile(cacheMatch, {
-        compareToFile: this._inputItem,
-        compress: settings.gzip,
-      });
+      this._updateForFile(cacheMatch, { compress: settings.gzip });
       return;
     }
 
@@ -344,10 +441,7 @@ export default class MainController {
     try {
       const resultFile = await svgo.process(this._inputItem.text, settings);
 
-      this._updateForFile(resultFile, {
-        compareToFile: this._inputItem,
-        compress: settings.gzip,
-      });
+      this._updateForFile(resultFile, { compress: settings.gzip });
 
       this._cache.add(settings.fingerprint, resultFile);
     } catch (error) {
@@ -359,21 +453,28 @@ export default class MainController {
     }
   }
 
-  async _updateForFile(svgFile, { compareToFile, compress }) {
+  async _updateForFile(resultFile, { compress }) {
+    // Frozen before the awaits below: a new file can land while the sizes are
+    // being measured, and a comparison drawn from two different documents would
+    // be a lie.
+    const inputItem = this._inputItem;
+
     // The panel's collision notices are read off the run that produced this
     // file — every guarded plugin's own view of the document, recorded as it
-    // ran (`svgo-worker/collision-probes.js`). `compareToFile` is absent
-    // exactly when the file on screen *is* the input ("Show original"), which
-    // has been through no plugins and so has nothing to report.
-    this._settingsUi.setCollisions(compareToFile ? svgFile.collisions : null);
-    this._outputUi.update(svgFile);
-    this._downloadButtonUi.setDownload(this._inputFilename, svgFile);
-    this._copyButtonUi.setCopyText(svgFile.text);
-    this._pngButtonUi.setExport(this._inputFilename, svgFile);
+    // ran (`svgo-worker/collision-probes.js`). Something is optimised in every
+    // mode now, so they hold in every mode.
+    this._settingsUi.setCollisions(resultFile.collisions);
+    this._resultItem = resultFile;
+    // The canvas only moves if this is the file it's showing — under the
+    // Original lens a fresh result updates the numbers and leaves the view be.
+    this._renderOutput();
+    this._updateExports();
 
+    // Always the comparison, whichever lens is on the canvas: the numbers
+    // describe the settings, not what is being looked at.
     this._resultsUi.update({
-      comparisonSize: compareToFile && (await compareToFile.size({ compress })),
-      size: await svgFile.size({ compress }),
+      comparisonSize: await inputItem.size({ compress }),
+      size: await resultFile.size({ compress }),
     });
   }
 }

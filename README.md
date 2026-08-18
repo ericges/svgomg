@@ -25,16 +25,18 @@ SVGO is excellent, but it's a command line tool with dozens of switches and no w
 you've just done to your artwork. OMSVG puts every option behind a toggle and re-optimises as you
 change them, so you get the smallest file that still *looks right* — rather than the smallest file.
 
-- **See the damage immediately.** The preview re-renders on every change, and _Show original_
-  flips back for comparison.
+- **See the damage immediately.** The preview re-renders on every change, and a switch on the
+  canvas flips between _Optimised_ and _Original_ without losing your zoom.
+- **Or let it point at the damage.** _Diff_ compares the two: a pixel-wise comparison of the
+  renders in the preview, a line-by-line comparison of the markup in the markup view.
 - **All 47 plugins exposed**, 34 on by default, plus number/transform precision, multipass and
   pretty-printing.
 - **Real numbers.** Before/after size and percentage, optionally measured **gzipped** — which is
   what actually travels over the wire.
 - **Read the output.** A syntax-highlighted markup view, with copy-to-clipboard and download.
 - **Works offline.** A service worker caches the app, so it keeps running with no connection.
-- **Nothing to set up.** A demo SVG loads by itself, so the app opens with something to look at;
-  drop, paste or pick a file from the toolbar to replace it.
+- **Nothing to set up.** The app opens on an empty sheet and waits: drop a file anywhere, paste
+  markup, pick one from the toolbar — or load a **Demo** if you haven't got one to hand.
 
 ## Privacy
 
@@ -83,9 +85,9 @@ npm run dev
 [`node --test`](https://nodejs.org/api/test.html) — no test framework, no extra dependencies.
 
 Coverage is deliberately focused: the DOM-free logic (byte sizing, the results cache and its blob
-URL lifecycle, dimension parsing, preview clamping, the worker request/abort protocol), plus a
-**production-build smoke test** for the things only a real build can show — property mangling,
-the page↔worker key contract, and that every precached asset actually exists.
+URL lifecycle, dimension parsing, preview clamping, the markup diff, the worker request/abort
+protocol), plus a **production-build smoke test** for the things only a real build can show —
+property mangling, the page↔worker key contract, and that every precached asset actually exists.
 
 Anything DOM-, worker- or service-worker-shaped is still verified by hand in `npm run dev`;
 `src/test-svgs/` holds fixtures for that.

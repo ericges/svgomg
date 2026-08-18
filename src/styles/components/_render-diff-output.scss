@@ -1,0 +1,60 @@
+@use '../utils';
+
+// The visual diff. Same three-layer geometry as `.svg-output` — an absolutely
+// filled root, a `.svg-container` that `PanZoom` transforms, and a centred
+// canvas inside it — so the checkerboard, the centring and the gestures match
+// the preview it is standing in for.
+.render-diff-output {
+  @include utils.user-select(none);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  // Without this trio `transitionToClass()` never sees a `transitionend` and
+  // waits out its full 1s timeout on every switch, which reads as a hang.
+  opacity: 0;
+
+  &.transition {
+    transition: opacity 0.2s ease-in-out;
+  }
+
+  &.active {
+    opacity: 1;
+  }
+
+  // Shares `.svg-container`'s box with the preview (see _svg-output.scss).
+  .svg-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    transform-origin: 0 0;
+    transform: translateZ(0);
+  }
+}
+
+.render-diff-canvas {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
+// A state, not an empty canvas: the faded render stays visible behind this, so
+// the line says "nothing moved" rather than "nothing rendered".
+.render-diff-empty {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  margin: 0;
+  padding: 0.5em 1em;
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 0.85rem;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}

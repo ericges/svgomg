@@ -1,5 +1,7 @@
+@use '../utils' as utils;
+
 .results {
-  background-color: #3574f0;
+  background-color: utils.$bar;
   color: #fff;
   padding: 12px 16px;
 

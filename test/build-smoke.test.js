@@ -163,9 +163,35 @@ test('settings keys reach the worker under their HTML `name` attributes', async 
   // it's optimised.
   const page = await readBuildFile('js/page.js');
   t.assert.deepStrictEqual(
-    ['gzip', 'original', 'fingerprint'].filter((key) => !page.includes(key)),
+    ['gzip', 'fingerprint'].filter((key) => !page.includes(key)),
     [],
     'settings keys missing from build/js/page.js',
+  );
+});
+
+test('“Show original” is a view mode on the canvas, not a setting', async (t) => {
+  // It never changed a byte of SVGO's output, so it moved out of the panel and
+  // onto `.view-mode-container`, which is server-rendered inside `.output` —
+  // outside the `.output-switcher` subtree, where a pan gesture would swallow
+  // it. `ViewMode` builds its own radios, so nothing here is named `original`
+  // any more; a leftover checkbox would put it back in the settings object and
+  // the fingerprint.
+  const html = await readBuildFile('index.html');
+
+  t.assert.doesNotMatch(
+    html,
+    /\bname=(?<quote>["']?)original\k<quote>[\s>]/,
+    'a control named `original` is still in the built markup',
+  );
+
+  const outputPattern =
+    /<div[^>]+\boutput\b[^>]*>(?<body>.*?)<div[^>]+\bsettings\b/s;
+  const output = outputPattern.exec(html)?.groups.body;
+
+  t.assert.ok(output, 'no `.output` in the built markup');
+  t.assert.ok(
+    classTokenPattern('view-mode-container').test(output),
+    '`.view-mode-container` does not render inside `.output`',
   );
 });
 
@@ -567,9 +593,10 @@ test('the app opens on the empty state, ahead of everything it hides', async (t)
   // Nothing loads itself any more: the app opens on this sheet, and `EmptyState`
   // dismisses it on the first file by removing `active`. That one class does
   // three things at once (components/_empty-state.scss): it makes the sheet
-  // visible, and it takes the settings panel and the action buttons out of the
-  // layout — the latter two through sibling selectors, which only reach elements
-  // that come *after* it. Both are contracts the stylesheet can't state itself.
+  // visible, and it takes the settings panel, the action buttons and the view
+  // mode switch out of the layout — the latter through sibling selectors, which
+  // only reach elements that come *after* it. All contracts the stylesheet
+  // can't state itself.
   const html = await readBuildFile('index.html');
   const sheet = /<div[^>]+\bempty-state\b[^>]*>/.exec(html);
 
@@ -579,7 +606,11 @@ test('the app opens on the empty state, ahead of everything it hides', async (t)
     'the empty state renders without `active`, so it renders invisible',
   );
 
-  const hidden = ['settings-scroller', 'action-button-container'];
+  const hidden = [
+    'settings-scroller',
+    'action-button-container',
+    'view-mode-container',
+  ];
   t.assert.deepStrictEqual(
     hidden.filter((name) => html.indexOf(name) < html.indexOf('empty-state')),
     [],

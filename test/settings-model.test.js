@@ -15,10 +15,15 @@ import {
 } from './panel-order.js';
 
 // The fingerprint's fixed half, hand-computed from `index.njk`: every named
-// control except `gzip` and `original`, in document order, a checkbox as a bit
-// and everything else delimited. The plugin half is derived below rather than
+// control except `gzip`, in `globalFields` order, a checkbox as a bit and
+// everything else delimited. The plugin half is derived below rather than
 // spelled out, since adding a plugin to `config.json` legitimately lengthens
 // it.
+//
+// This literal did not move when "Show original" stopped being a setting, and
+// that is the point: it was excluded from the fingerprint all along, so
+// removing it left every result cached in the wild still valid. The `|original|`
+// in here is `dimensionAttrs`, which is a different thing entirely.
 const GLOBAL_PREFIX = '0,|3|,|5|,|original|,|minify|,||,0,0';
 
 const defaultPluginBits = config.plugins
@@ -106,11 +111,10 @@ test('the default fingerprint is the panel state, encoded as it always was', (t)
     model.fingerprint,
     `${GLOBAL_PREFIX},${defaultPluginBits}`,
   );
-  // One field per named control except the two view-only ones, plus one bit
-  // per plugin.
+  // One field per named control except `gzip`, plus one bit per plugin.
   t.assert.strictEqual(
     model.fingerprint.split(',').length,
-    globalFields.length - 2 + config.plugins.length,
+    globalFields.length - 1 + config.plugins.length,
   );
 });
 
@@ -123,17 +127,16 @@ test('a whole fingerprint, written out', (t) => {
   );
 });
 
-test('gzip and original are settings but not cache keys', (t) => {
+test('gzip is a setting but not a cache key', (t) => {
   const model = new SettingsModel();
   const before = model.fingerprint;
 
   model.setGlobal('gzip', false);
-  model.setGlobal('original', true);
 
   t.assert.strictEqual(model.fingerprint, before);
-  // They do reach the settings object — `MainController` reads both.
+  // It does reach the settings object — `MainController` reads it to decide how
+  // to measure the result.
   t.assert.strictEqual(model.get().gzip, false);
-  t.assert.strictEqual(model.get().original, true);
 });
 
 test('every other control moves the fingerprint', (t) => {
@@ -196,7 +199,8 @@ test('a plugin toggle flips its own bit, in pipeline order', (t) => {
   // `removeTitle` ships off and sits fourth in `config.json`.
   model.setPlugin('removeTitle', true);
 
-  const bits = model.fingerprint.split(',').slice(globalFields.length - 2);
+  // Past the fixed half: every global but `gzip`, which is unfingerprinted.
+  const bits = model.fingerprint.split(',').slice(globalFields.length - 1);
 
   t.assert.strictEqual(bits[3], '1');
   t.assert.strictEqual(
@@ -330,7 +334,6 @@ test('the defaults are config.json and the shared test vocabulary', (t) => {
 // fingerprint, so the contract is spelled out instead — reordering this list
 // reorders `GLOBAL_PREFIX` and invalidates every cached result in the wild.
 const fingerprintOrder = [
-  'original',
   'gzip',
   'pretty',
   'floatPrecision',
@@ -451,18 +454,6 @@ test('the notices are the ones collectNotes produces', (t) => {
   );
 });
 
-test('nothing is claimed while Show original is on', (t) => {
-  const model = new SettingsModel();
-
-  model.setCollisions({
-    fingerprint: model.fingerprint,
-    subjects: everywhere(STYLE),
-  });
-  model.setGlobal('original', true);
-
-  t.assert.deepStrictEqual(model.notes(), []);
-});
-
 test('the notices go pending when they describe another run', (t) => {
   const model = new SettingsModel();
 
@@ -483,8 +474,7 @@ test('the notices go pending when they describe another run', (t) => {
 
   t.assert.strictEqual(model.pending, false, 'back to the settings it ran on');
 
-  // `gzip` and `original` are outside the fingerprint, so neither invalidates
-  // a report.
+  // `gzip` is outside the fingerprint, so it doesn't invalidate a report.
   model.setGlobal('gzip', false);
 
   t.assert.strictEqual(model.pending, false);

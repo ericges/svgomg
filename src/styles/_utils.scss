@@ -14,6 +14,9 @@
   clip: rect(1px, 1px, 1px, 1px);
 }
 
+$primary: #3574f0;
+$primary-dark: #2249d3;
+
 // The toolbar's grey ramp. Two of these are given — the bar and the surface
 // that fills the primary action and outlines all three — and the rest continue
 // the same +9/+9/+10 step, so every state in the bar sits on one scale rather

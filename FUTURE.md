@@ -4,7 +4,7 @@ Ideas that came out of the settings-panel UX work (2026-08) and were deliberatel
 left out of it. Nothing here is committed to — it's a record of the reasoning so
 the next person doesn't have to rediscover it.
 
-The panel now has three categories (View, Output, Optimisation) and five
+The panel now has two tabs (Optimise, Output) and five
 non-binary controls: a size-attribute select, an ID mode select with a free-text
 prefix, a staged metadata select and a staged styles select — both with a Custom
 escape hatch — and a currentColor toggle. The idea below extends that same

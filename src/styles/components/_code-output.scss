@@ -34,9 +34,14 @@
     line-height: 1.5;
     display: block;
     padding: 14px;
+    // Clears the view mode switch, which floats over this panel from the top
+    // left: its 8px offset, a 44px touch-height segment and 8px of gap.
+    padding-top: 60px;
 
     @media (min-width: 640px) {
       padding: 20px 24px;
+      // The same sum with the control's desktop metrics: 12 + 32 + 12.
+      padding-top: 56px;
       // Allow the code area to scroll past the floating action buttons.
       margin-bottom: 200px;
     }
@@ -56,6 +61,8 @@
       // out ~45px rather than 30px because `100vw` ignores this element's own
       // scrollbar, and it stays constant at any width.
       padding-right: 400px;
+      // Re-stated because the shorthand above resets it.
+      padding-top: 56px;
     }
   }
 

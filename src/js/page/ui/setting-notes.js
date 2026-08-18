@@ -261,14 +261,10 @@ export const settingNotes = [
  * @param {object} settings A `Settings.getSettings()` object.
  * @param {object} [collisions] What each guarded plugin saw when it last ran,
  * keyed by plugin name (`svgo-worker/collision-probes.js`). Absent until the
- * first file has been optimised, and while "Show original" is on.
+ * first file has been optimised.
  * @returns {Array<{name: string, text: string}>} One entry per control with something to say.
  */
 export function collectNotes(settings, collisions) {
-  // Nothing is being optimised at all while "Show original" is on, so nothing
-  // is being overruled either.
-  if (settings.original) return [];
-
   return settingNotes
     .map((rule) => {
       // A rule whose plugin didn't run has nothing to explain — including

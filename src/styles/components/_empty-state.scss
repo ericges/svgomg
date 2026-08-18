@@ -33,15 +33,20 @@
   }
 }
 
-// Both blocks belong to the file that isn't there yet: a panel of options for
-// nothing, and a Download button pointing at nothing. `EmptyState.hide()`
-// removes `active` before it starts fading, so they settle into place behind an
-// opaque sheet rather than appearing out of it.
+// All three belong to the file that isn't there yet: a panel of options for
+// nothing, a Download button pointing at nothing, and a switch between two
+// views of nothing. `EmptyState.hide()` removes `active` before it starts
+// fading, so they settle into place behind an opaque sheet rather than
+// appearing out of it — which is why none of them needs a fade of its own.
 .empty-state.active ~ .settings {
   display: none;
 }
 
 .empty-state.active ~ .output .action-button-container {
+  display: none;
+}
+
+.empty-state.active ~ .output .view-mode-container {
   display: none;
 }
 

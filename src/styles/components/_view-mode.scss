@@ -1,0 +1,85 @@
+@use '../utils';
+
+// The lens switch, sitting on the artwork at the top left of the output area.
+// Not critical-path, unlike the toolbar's `.view-toggler` it borrows its shape
+// from: there is no file to look at until one has been loaded, so this control
+// cannot be on screen before the async stylesheet has arrived.
+//
+// The container is server-rendered inside `.output` and outside the
+// `.output-switcher` subtree, which keeps it clear of `SvgOutput`'s pan gestures
+// — see the comment in `index.njk`.
+.view-mode-container {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  // Above `.output-switcher`, which sets none, and level with
+  // `.action-button-container`. `.empty-state` (3) still covers it.
+  z-index: 2;
+}
+
+// Dark and translucent because it sits over the artwork rather than over the
+// bar: on the checkerboard, white-on-dark is the pairing that stays legible
+// whatever is underneath.
+.view-mode {
+  @include utils.user-select(none);
+  display: flex;
+  align-items: stretch;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: rgba(#000, 0.55);
+  color: #fff;
+  font-size: 0.8rem;
+  line-height: 1;
+
+  input {
+    @include utils.visually-hidden();
+  }
+}
+
+.view-mode-segment {
+  // Contains .selected's negative z-index so the fill sits behind the label.
+  z-index: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  // Comfortably past the 44px touch target at the sizes below.
+  min-height: 32px;
+  padding: 0 0.9em;
+  white-space: nowrap;
+  cursor: pointer;
+
+  + .view-mode-segment {
+    box-shadow: inset 1px 0 0 rgba(#fff, 0.18);
+  }
+
+  .selected {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  :checked + .selected {
+    background-color: rgba(#fff, 0.26);
+  }
+
+  // Keyboard focus only, like the toolbar's control — `trackFocusMethod()` tags
+  // the input. A ring left behind by a mouse click reads as a stuck state.
+  .key-focused + .selected {
+    box-shadow: inset 0 0 0 2px #00bcd4;
+  }
+}
+
+// Touch widths: the segments become the only thing between a finger and the
+// artwork, so they get the full 44px.
+@media (max-width: 639px) {
+  .view-mode-container {
+    top: 8px;
+    left: 8px;
+  }
+
+  .view-mode-segment {
+    min-height: 44px;
+    padding: 0 1em;
+  }
+}

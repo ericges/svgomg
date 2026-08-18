@@ -9,8 +9,11 @@
 @forward 'drop-overlay';
 @forward 'empty-state';
 @forward 'svg-output';
+@forward 'view-mode';
 @forward 'results';
 @forward 'output';
 @forward 'code-output';
+@forward 'render-diff-output';
+@forward 'markup-diff-output';
 @forward 'prism';
 @forward 'ripple';
