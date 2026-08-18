@@ -18,7 +18,7 @@ import gulp from 'gulp';
 import gulpif from 'gulp-if';
 import gulpSassFactory from 'gulp-sass';
 import { nunjucksCompile } from 'gulp-nunjucks';
-import { marked } from 'marked';
+import { Marked } from 'marked';
 import { minify as htmlMinify } from 'html-minifier-terser';
 import * as rollup from 'rollup';
 import { nodeResolve as rollupResolve } from '@rollup/plugin-node-resolve';
@@ -210,10 +210,38 @@ function css() {
 // hand a recipient the notices is met by the app rather than by an unadvertised
 // URL. Rendered from the same markdown the repository root carries, so the two
 // can't drift; `marked` is build-time only and reaches no bundle.
+// `marked` emits no heading ids of its own, and the licence links to its own
+// clauses (`#distribution-license`). Slugs are GitHub-shaped so the markdown and
+// the page agree, and repeats get a suffix — both parts of the licence carry a
+// "Definitions" heading. The counter is per document, so this has to be a fresh
+// `Marked` each time rather than `marked.use()`, which mutates a shared one and
+// would stack another renderer on every watch rebuild.
+function headingIds() {
+  const seen = new Map();
+
+  return {
+    renderer: {
+      heading({ tokens, depth }) {
+        const text = this.parser.parseInline(tokens);
+        const base = text
+          .replaceAll(/<[^<>]*>/g, '')
+          .trim()
+          .toLowerCase()
+          .replaceAll(/[^\w -]+/g, '')
+          .replaceAll(' ', '-');
+        const n = seen.get(base) ?? 0;
+        seen.set(base, n + 1);
+        const id = n ? `${base}-${n}` : base;
+        return `<h${depth} id="${id}">${text}</h${depth}>\n`;
+      },
+    },
+  };
+}
+
 async function legalPage(file) {
   const md = await fs.readFile(path.join(__dirname, file), 'utf8');
   // In a build the sibling document is a page, not the raw markdown.
-  return marked
+  return new Marked(headingIds())
     .parse(md)
     .replaceAll('"./LICENSE.md"', '"licence.html"')
     .replaceAll('"./NOTICE.md"', '"notices.html"');

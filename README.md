@@ -119,9 +119,9 @@ code, how to report a bug usefully, and the licensing terms a contribution comes
 
 ## Licence
 
-Source-available, not open source. The full terms are in [LICENSE.md](./LICENSE.md); it is the
-[PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)
-under four sections that change what it permits. Two rules matter in practice:
+Source-available, not open source. The full terms are in [LICENSE.md](./LICENSE.md) — the **OMSVG
+License 1.0**: noncommercial by default, with commercial use added back, under two conditions that
+reach every permission it gives. Those two are what matter in practice:
 
 1. **Don't make money from giving other people access to it.** No ads, no subscription, no paywall,
    no "feature of our paid plan", no lead generation, no selling usage data. This one is a condition

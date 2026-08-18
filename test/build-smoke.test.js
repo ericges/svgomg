@@ -673,10 +673,15 @@ test('the licence and its notices ship with the build', async (t) => {
   const licence = await readBuildFile('LICENSE.md');
   const notice = await readBuildFile('NOTICE.md');
 
-  // The whole construction rests on the PolyForm text being present, not just
-  // named: sections 1 to 4 extend and condition it, they don't stand alone.
-  t.assert.match(licence, /PolyForm Noncommercial License 1\.0\.0/);
-  t.assert.match(licence, /## Acceptance/);
+  // The whole construction rests on Part II being present, not just referred
+  // to: sections 1 to 4 extend and condition it, they don't stand alone.
+  t.assert.match(licence, /^# OMSVG License 1\.0$/m);
+  t.assert.match(licence, /^## Part II — Noncommercial Terms$/m);
+  t.assert.match(licence, /^### Acceptance$/m);
+  // Part II is a standard licence form whose own terms require that a changed
+  // version drop its name and URL. It was changed — the four sections above it
+  // condition what it permits — so neither may come back. See CLAUDE.md.
+  t.assert.doesNotMatch(licence, /polyform/i);
 
   t.assert.match(notice, /Jake Archibald/);
   t.assert.match(notice, /The MIT License/);
@@ -697,9 +702,17 @@ test('the licence and notices are served as pages', async (t) => {
   const licence = await readBuildFile('licence.html');
   const notices = await readBuildFile('notices.html');
 
-  t.assert.match(licence, /PolyForm Noncommercial License 1\.0\.0/);
+  t.assert.match(licence, /OMSVG License 1\.0/);
+  t.assert.doesNotMatch(licence, /polyform/i);
   t.assert.match(notices, /Jake Archibald/);
   t.assert.match(notices, /\bsvgo\b/);
+
+  // The licence links to its own clauses; `marked` emits no heading ids unless
+  // the gulpfile's renderer puts them there, and a dead anchor in a legal
+  // document is invisible until someone follows it. The optional quotes are
+  // because `html-minifier-terser` drops them in a production build.
+  t.assert.match(licence, /<h3 id="?distribution-license"?>/);
+  t.assert.match(licence, /href="?#distribution-license"?/);
 
   t.assert.match(licence, /<h2/, 'licence.html carries no rendered headings');
   t.assert.match(notices, /<h2/, 'notices.html carries no rendered headings');

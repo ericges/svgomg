@@ -1,9 +1,6 @@
-# Licence
+# OMSVG License 1.0
 
-OMSVG is made available under the licence set out in this file. It incorporates
-the PolyForm Noncommercial License 1.0.0, reproduced verbatim below, with the
-additions and conditions in sections 1 to 4. Where those sections and the PolyForm
-text differ, sections 1 to 4 control.
+OMSVG is made available under the terms in this file.
 
 Copyright (c) 2025-2026 Eric Gesemann
 
@@ -21,6 +18,12 @@ to it. The MIT-licensed portions — everything published up to and including co
 `f925656`, and the contributions from other people since — remain independently
 available under the MIT License, and may be taken and used under it.
 
+This licence has two parts, and they are one document. Part I sets out the
+Licensor's own terms: it adds a permission, and it conditions every permission
+this licence grants. Part II sets out the noncommercial terms that Part I builds
+on. In Part II, "these terms" and "this license" mean this licence as a whole,
+Part I included, and "the licensor" means the Licensor.
+
 ## Definitions
 
 Two terms are used in more than one section below.
@@ -34,10 +37,16 @@ work for you or under your direction in that capacity, together with any entity
 that controls you, that you control, or that is under common control with you.
 People you provide a product or service to are not part of your organisation.
 
-## 1. Source availability
+## Part I — Terms of the Licensor
 
-Every permission granted by this licence — by section 2, and by the PolyForm
-Noncommercial License below — is conditional on this section and on section 3.
+Failing to meet a condition in this Part is a violation of these terms like any
+other, and the Violations clause in Part II is the only cure this licence gives
+for it.
+
+### 1. Source availability
+
+Every permission granted by this licence — by section 2, and by Part II — is
+conditional on this section and on section 3.
 
 If you make changes or new works based on this software available to the public,
 whether by hosting them for the public to use or by distributing copies of them
@@ -63,23 +72,18 @@ This section does not apply if you use such a version only yourself, within your
 organisation, or to provide it to particular clients or customers under an
 agreement with them.
 
-If you fail to meet this condition, your permissions under this licence end. They
-are reinstated if you come into compliance within 32 days of being notified in
-writing of the failure.
+### 2. Commercial use
 
-## 2. Commercial use
+Any commercial purpose is also a permitted purpose under Part II.
 
-Any commercial purpose is also a permitted purpose under the PolyForm
-Noncommercial License below.
+This section adds to the permissions in Part II and restricts nothing; sections 1
+and 3 apply to it, as they do to every permission this licence grants. It extends
+only the permissions the Licensor can give in this software.
 
-This section adds to the permissions below and restricts nothing; sections 1 and 3
-apply to it, as they do to every permission this licence grants. It extends only
-the permissions the Licensor can give in this software.
+### 3. No revenue from providing access
 
-## 3. No revenue from providing access
-
-Every permission granted by this licence — by section 2, and by the PolyForm
-Noncommercial License below — is also conditional on this section.
+Every permission granted by this licence — by section 2, and by Part II — is also
+conditional on this section.
 
 You may not derive revenue, or other consideration of monetary value, from
 providing others access to this software. You do that if you make it available for
@@ -104,82 +108,77 @@ are permitted:
 - accepting donations, where access is the same for those who give and those who
   do not, and is never conditional on payment.
 
-If you fail to meet this condition, your permissions under this licence end. They
-are reinstated if you come into compliance within 32 days of being notified in
-writing of the failure.
-
-## 4. Name and marks
+### 4. Name and marks
 
 This licence gives no permission to use the name "OMSVG", the OMSVG logo and
 icons, or the domain omsvg.app. A version you make available to the public must
 identify itself by a different name and must not use those marks. Naming this
-software to say where yours came from — "based on OMSVG" — is fine.
+software to say where yours came from — "based on OMSVG" — is fine, and so is
+identifying this licence by its name.
 
 ---
 
-# PolyForm Noncommercial License 1.0.0
+## Part II — Noncommercial Terms
 
-<https://polyformproject.org/licenses/noncommercial/1.0.0>
-
-## Acceptance
+### Acceptance
 
 In order to get any license under these terms, you must agree to them as both strict obligations and conditions to all your licenses.
 
-## Copyright License
+### Copyright License
 
 The licensor grants you a copyright license for the software to do everything you might do with the software that would otherwise infringe the licensor's copyright in it for any permitted purpose.  However, you may only distribute the software according to [Distribution License](#distribution-license) and make changes or new works based on the software according to [Changes and New Works License](#changes-and-new-works-license).
 
-## Distribution License
+### Distribution License
 
 The licensor grants you an additional copyright license to distribute copies of the software.  Your license to distribute covers distributing the software with changes and new works permitted by [Changes and New Works License](#changes-and-new-works-license).
 
-## Notices
+### Notices
 
 You must ensure that anyone who gets a copy of any part of the software from you also gets a copy of these terms or the URL for them above, as well as copies of any plain-text lines beginning with `Required Notice:` that the licensor provided with the software.  For example:
 
 > Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
 
-## Changes and New Works License
+### Changes and New Works License
 
 The licensor grants you an additional copyright license to make changes and new works based on the software for any permitted purpose.
 
-## Patent License
+### Patent License
 
 The licensor grants you a patent license for the software that covers patent claims the licensor can license, or becomes able to license, that you would infringe by using the software.
 
-## Noncommercial Purposes
+### Noncommercial Purposes
 
 Any noncommercial purpose is a permitted purpose.
 
-## Personal Uses
+### Personal Uses
 
 Personal use for research, experiment, and testing for the benefit of public knowledge, personal study, private entertainment, hobby projects, amateur pursuits, or religious observance, without any anticipated commercial application, is use for a permitted purpose.
 
-## Noncommercial Organizations
+### Noncommercial Organizations
 
 Use by any charitable organization, educational institution, public research organization, public safety or health organization, environmental protection organization, or government institution is use for a permitted purpose regardless of the source of funding or obligations resulting from the funding.
 
-## Fair Use
+### Fair Use
 
 You may have "fair use" rights for the software under the law. These terms do not limit them.
 
-## No Other Rights
+### No Other Rights
 
 These terms do not allow you to sublicense or transfer any of your licenses to anyone else, or prevent the licensor from granting licenses to anyone else.  These terms do not imply any other licenses.
 
-## Patent Defense
+### Patent Defense
 
 If you make any written claim that the software infringes or contributes to infringement of any patent, your patent license for the software granted under these terms ends immediately. If your company makes such a claim, your patent license ends immediately for work on behalf of your company.
 
-## Violations
+### Violations
 
 The first time you are notified in writing that you have violated any of these terms, or done anything with the software not covered by your licenses, your licenses can nonetheless continue if you come into full compliance with these terms, and take practical steps to correct past violations, within 32 days of receiving notice.  Otherwise, all your licenses end immediately.
 
-## No Liability
+### No Liability
 
 ***As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.***
 
-## Definitions
+### Definitions
 
 The **licensor** is the individual or entity offering these terms, and the **software** is the software the licensor makes available under these terms.
 
