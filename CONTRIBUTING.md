@@ -104,11 +104,18 @@ Two reasons it is inbound MIT rather than the project's own licence:
 - **The terms may still change.** The project may one day be released under a permissive licence
   outright. Contributed lines travel with it, and no past contributor has to be tracked down first.
 
-You agree to that in a comment: a bot posts on your pull request with the sentence to reply with, and
-records your reply under `signatures/` on the `cla-signatures` branch. That record is what makes these terms the "separate
-agreement" GitHub's Terms of Service (§ D.6) ask for — without one, GitHub puts your contribution
-under the repository's own licence, which is not what either of us wants here. The bot doesn't ask
-the copyright holder or Dependabot; neither has anything to agree to.
+You agree to that twice, and both are quick. The pull request template carries a checkbox; tick it,
+and **post this sentence as a comment** on the pull request as well:
+
+> I have read the contribution terms and I license my contribution under the MIT License
+
+The comment is the half that lasts. GitHub logs edits to a comment where a rewritten description
+leaves nothing behind, and the sentence goes into the merge commit, so the record survives the pull
+request. That record is what makes these terms the "separate agreement" GitHub's Terms of Service
+(§ D.6) ask for — without one, GitHub puts your contribution under the repository's own licence,
+which is not what either of us wants here.
+
+Nothing is automated: whoever merges checks for it, and nothing merges without it.
 
 The pull request template also asks how you want to be credited. MIT requires a copyright notice to
 travel with the code, so a merged contribution gets a line in [NOTICE.md](./NOTICE.md), and the built
