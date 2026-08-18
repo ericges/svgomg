@@ -5,6 +5,11 @@ on:
     branches:
       - main
       - "!dependabot/**"
+    # The CLA bot commits contributors' assent to `main`. Nothing it writes
+    # reaches `build/`, so a full build and a Pages deploy of identical bytes
+    # would be the only result.
+    paths-ignore:
+      - "signatures/**"
   pull_request:
   workflow_dispatch:
 

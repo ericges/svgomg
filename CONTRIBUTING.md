@@ -104,9 +104,15 @@ Two reasons it is inbound MIT rather than the project's own licence:
 - **The terms may still change.** The project may one day be released under a permissive licence
   outright. Contributed lines travel with it, and no past contributor has to be tracked down first.
 
-There is no CLA to sign. The pull request template asks you to confirm the line above, and to say how
-you want to be credited — MIT requires a copyright notice to travel with the code, so a merged
-contribution gets a line in [NOTICE.md](./NOTICE.md), and the built app ships that file.
+You agree to that in a comment: a bot posts on your pull request with the sentence to reply with, and
+records your reply under `signatures/` on `main`. That record is what makes these terms the "separate
+agreement" GitHub's Terms of Service (§ D.6) ask for — without one, GitHub puts your contribution
+under the repository's own licence, which is not what either of us wants here. The bot doesn't ask
+the copyright holder or Dependabot; neither has anything to agree to.
+
+The pull request template also asks how you want to be credited. MIT requires a copyright notice to
+travel with the code, so a merged contribution gets a line in [NOTICE.md](./NOTICE.md), and the built
+app ships that file.
 
 If you add a dependency that ends up in a **bundle** — as opposed to build tooling — its notice has
 to go there too, including any transitive dependency it brings with it. `test/notices.test.js` covers
