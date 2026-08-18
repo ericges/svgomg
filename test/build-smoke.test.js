@@ -1047,6 +1047,16 @@ test('the licence and notices are served as pages', async (t) => {
   t.assert.match(assets, /href="?\.\/licences\/AGPL-3\.0\.txt"?/);
 });
 
+test('robots.txt ships and keeps crawlers out of the licence texts', async (t) => {
+  // `copy()` carries this as a magic-free path, which errors as "not found" if a
+  // negative glob precedes it — so a reordering of that array silently costs the
+  // file. The rendered legal pages stay crawlable; only the verbatim third-party
+  // texts under `licences/` are excluded.
+  const robots = await readBuildFile('robots.txt');
+  t.assert.match(robots, /^User-agent:\s*\*$/m);
+  t.assert.match(robots, /^Disallow:\s*\/licences\/$/m);
+});
+
 test('every precached asset exists in the build', async (t) => {
   // The precache list is hand-written, and `cache.addAll` rejects as a whole if
   // any entry 404s — one stale path disables offline support entirely.

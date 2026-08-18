@@ -170,6 +170,8 @@ function copy() {
         'src/*.json',
         // Tells GitHub Pages which custom domain serves this site
         'src/CNAME',
+        // Keeps crawlers out of the verbatim third-party licence texts
+        'src/robots.txt',
         // Exclusions must come after every positive glob: gulp applies a
         // negative glob only to the globs that follow it, and a magic-free
         // path like `src/CNAME` errors as "not found" if one precedes it.

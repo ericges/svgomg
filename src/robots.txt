@@ -1,0 +1,6 @@
+# omsvg.app — https://omsvg.app/
+#
+# Crawling the app itself is welcome. `licences/` holds third-party licence
+# texts, shipped verbatim because the licences require it.
+User-agent: *
+Disallow: /licences/

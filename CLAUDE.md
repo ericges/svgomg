@@ -66,7 +66,7 @@ Five separate Rollup IIFE bundles, one per entry directory under `src/js/` — t
 
 Adding a bundle means adding a `js.bind(...)` line to `appJs`. The service worker is deliberately *not* in `appJs`: it is bundled by the separate `swJs` task, which runs last (see "The service worker and its cache name" below).
 
-Other tasks: `css` (Sass → `build/all.css`, `build/head.css` and `build/legal.css`), `html` (Nunjucks over `src/*.njk`: `index.njk` → `build/index.html`, plus `licence.njk`, `notices.njk` and `assets.njk` → the three legal pages), `notices` (copies `LICENSE.md`, `NOTICE.md`, `ASSETS.md` and `licences/*.txt` into `build/` verbatim, with an explicit `{ base: '.' }` so the licence texts keep their directory instead of flattening into the build root), `copy` (`.well-known`, `images`, `fonts`, `src/*.json`, and the `test-svgs/` files `src/config.json` lists as demos — it reads that file synchronously to build the exclusion glob).
+Other tasks: `css` (Sass → `build/all.css`, `build/head.css` and `build/legal.css`), `html` (Nunjucks over `src/*.njk`: `index.njk` → `build/index.html`, plus `licence.njk`, `notices.njk` and `assets.njk` → the three legal pages), `notices` (copies `LICENSE.md`, `NOTICE.md`, `ASSETS.md` and `licences/*.txt` into `build/` verbatim, with an explicit `{ base: '.' }` so the licence texts keep their directory instead of flattening into the build root), `copy` (`images`, `fonts`, `src/*.json`, `src/CNAME`, `src/robots.txt` — which disallows `/licences/` so the verbatim third-party texts aren't indexed — and the `test-svgs/` files `src/config.json` lists as demos, which it reads synchronously to build the exclusion glob).
 
 Seven build facts that are easy to trip over:
 

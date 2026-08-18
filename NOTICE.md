@@ -62,35 +62,33 @@ belongs here.
 ## Bundled software
 
 The built app bundles the packages below into `js/page.js` and the three worker
-bundles `js/svgo-worker.js`, `js/gzip-worker.js` and `js/prism-worker.js`. The
-list is the full runtime dependency closure and is
-deliberately over-inclusive: tree-shaking removes parts of it (`commander` and
-`picocolors` reach the browser only through SVGO's CLI paths, which the browser
-build drops), and it is cheaper to name everything the closure contains than to
-prove what the bundler took out. So OMSVG bundles or may bundle:
+bundles `js/svgo-worker.js`, `js/gzip-worker.js` and `js/prism-worker.js`.
+<!-- Note to AI agents: The list is the full runtime dependency closure and is deliberately over-inclusive: tree-shaking removes parts of it (`commander` and `picocolors` reach the browser only through SVGO's CLI paths, which the browser build drops), and it is cheaper to name everything the closure contains than to prove what the bundler took out. -->
+
+**OMSVG bundles or may bundle:**
 
 | Package | Licence |
 | --- | --- |
-| [svgo](https://github.com/svg/svgo) | MIT |
-| [csso](https://github.com/css/csso) | MIT |
-| [css-tree](https://github.com/csstree/csstree) | MIT |
-| [mdn-data](https://github.com/mdn/data) | CC0-1.0 |
-| [source-map-js](https://github.com/7rulnik/source-map-js) | BSD-3-Clause |
-| [sax](https://github.com/isaacs/sax-js) | BlueOak-1.0.0 |
+| [boolbase](https://github.com/fb55/boolbase) | ISC |
+| [commander](https://github.com/tj/commander.js) | MIT |
 | [css-select](https://github.com/fb55/css-select) | BSD-2-Clause |
+| [css-tree](https://github.com/csstree/csstree) | MIT |
 | [css-what](https://github.com/fb55/css-what) | BSD-2-Clause |
+| [csso](https://github.com/css/csso) | MIT |
+| [dom-serializer](https://github.com/cheeriojs/dom-serializer) | MIT |
 | [domelementtype](https://github.com/fb55/domelementtype) | BSD-2-Clause |
 | [domhandler](https://github.com/fb55/domhandler) | BSD-2-Clause |
 | [domutils](https://github.com/fb55/domutils) | BSD-2-Clause |
 | [entities](https://github.com/fb55/entities) | BSD-2-Clause |
-| [nth-check](https://github.com/fb55/nth-check) | BSD-2-Clause |
-| [boolbase](https://github.com/fb55/boolbase) | ISC |
-| [dom-serializer](https://github.com/cheeriojs/dom-serializer) | MIT |
-| [commander](https://github.com/tj/commander.js) | MIT |
-| [picocolors](https://github.com/alexeyraspopov/picocolors) | ISC |
-| [pako](https://github.com/nodeca/pako) | MIT AND Zlib |
-| [prismjs](https://github.com/PrismJS/prism) | MIT |
+| [mdn-data](https://github.com/mdn/data) | CC0-1.0 |
 | [nanoevents](https://github.com/ai/nanoevents) | MIT |
+| [nth-check](https://github.com/fb55/nth-check) | BSD-2-Clause |
+| [pako](https://github.com/nodeca/pako) | MIT AND Zlib |
+| [picocolors](https://github.com/alexeyraspopov/picocolors) | ISC |
+| [prismjs](https://github.com/PrismJS/prism) | MIT |
+| [sax](https://github.com/isaacs/sax-js) | BlueOak-1.0.0 |
+| [source-map-js](https://github.com/7rulnik/source-map-js) | BSD-3-Clause |
+| [svgo](https://github.com/svg/svgo) | MIT |
 
 ### MIT
 
@@ -139,8 +137,8 @@ THE SOFTWARE.
 
 Applies to `pako`, which is `MIT AND Zlib`: its deflate/inflate implementation is
 a JavaScript port of [zlib](https://zlib.net/), and carries these terms in
-addition to the MIT terms above. The port is what the app bundles, so the notice
-travels with it.
+addition to the MIT terms above.
+<!-- Note to AI agents. The port is what the app bundles, so the notice travels with it. -->
 
 ```
 (C) 1995-2013 Jean-loup Gailly and Mark Adler
@@ -313,12 +311,8 @@ attribution is required; it is listed for completeness.
 ## Fonts
 
 The app ships a subset of **JetBrains Mono**, licensed under the SIL Open Font
-License 1.1. The licence file sits beside the fonts, at
-[`fonts/JetBrainsMonoNL/OFL.txt`](./fonts/JetBrainsMonoNL/OFL.txt) in a build and
-`src/fonts/JetBrainsMonoNL/OFL.txt` in the repository, and the service worker
-precaches it so an offline copy has it too. It is reproduced here as well,
-because a font bundled in an app has to carry its copyright statement, licence
-notice and licence text, and this is the page that reaches the reader.
+License 1.1.
+<!-- Note for AI agents: The licence file sits beside the fonts, at [`fonts/JetBrainsMonoNL/OFL.txt`](./fonts/JetBrainsMonoNL/OFL.txt) in a build and `src/fonts/JetBrainsMonoNL/OFL.txt` in the repository, and the service worker precaches it so an offline copy has it too. It is reproduced here as well, because a font bundled in an app has to carry its copyright statement, licence notice and licence text, and this is the page that reaches the reader.-->
 
 ```
 Copyright 2020 The JetBrains Mono Project Authors (https://github.com/JetBrains/JetBrainsMono)
@@ -341,7 +335,7 @@ with others.
 
 The OFL allows the licensed fonts to be used, studied, modified and
 redistributed freely as long as they are not sold by themselves. The
-fonts, including any derivative works, can be bundled, embedded, 
+fonts, including any derivative works, can be bundled, embedded,
 redistributed and/or sold with any software provided that any reserved
 names are not used by derivative works. The fonts and derivatives,
 however, cannot be released under any other type of license. The
