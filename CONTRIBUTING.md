@@ -97,10 +97,10 @@ different terms, deliberately:
 
 Two reasons it is inbound MIT rather than the project's own licence:
 
-- **Section 2 of the licence re-opens commercial use, and only the copyright holder can extend it.**
-  A contribution licensed merely "under the same licence" couldn't carry that, so those lines would
-  be noncommercial-only. Under MIT the question doesn't arise: they don't need section 2, because
-  every recipient already has them on permissive terms.
+- **Section 16 of the licence re-opens commercial use, and only the copyright holder can extend
+  it.** A contribution licensed merely "under the same licence" couldn't carry that, so those lines
+  would be noncommercial-only. Under MIT the question doesn't arise: they don't need section 16,
+  because every recipient already has them on permissive terms.
 - **The terms may still change.** The project may one day be released under a permissive licence
   outright. Contributed lines travel with it, and no past contributor has to be tracked down first.
 

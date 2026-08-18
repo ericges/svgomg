@@ -6,14 +6,22 @@ Copyright (c) 2026 Eric Gesemann
 
 ## How to read this licence
 
-One document, two parts. **Part I** is the Original Licensor's own terms:
-sections 1 to 4 add a permission and place conditions on every permission this
-licence gives, and sections 5 and 6 say how permissions reach you and how they
-end. **Part II** is a standard set of noncommercial terms, and is where the
-copyright and patent licences themselves are granted.
+One document, three parts, with nineteen numbered sections running straight
+through them.
 
-The two parts are read together throughout, and the words defined below carry
-their meaning into both of them.
+**Part I** carries the licences themselves, the conditions on them, and the terms
+that apply whatever you do with this software. **Part II** and **Part III** each
+do one thing: they say what a permitted purpose is, which is the purpose Part I's
+licences are given for. Part II makes any commercial purpose one; Part III covers
+noncommercial purposes, personal uses, and use by noncommercial organisations.
+
+Sections 2, 3, 9, 10 and 16 are the Original Licensor's own terms; sections 2 and
+3 place conditions on every permission this licence gives, and are set out ahead
+of the licences they condition. The remaining sections are a standard licence
+form, kept word for word.
+
+The three parts are read together throughout, and the words defined below carry
+their meaning into all of them.
 
 ## What this licence covers
 
@@ -33,10 +41,10 @@ available under the MIT License, and may be taken and used under it.
 ## Definitions
 
 These words carry the meaning given here wherever they appear in this licence,
-in Part I as much as in Part II.
+in Parts I, II and III alike.
 
 **These terms**, **this license** and **this licence** mean this document as a
-whole: Part I and Part II together.
+whole: Parts I, II and III together.
 
 **The Original Licensor** is Eric Gesemann and his successors in the copyright
 to this software.
@@ -44,7 +52,7 @@ to this software.
 The **licensor** is the individual or entity offering these terms, and the
 **software** is the software the licensor makes available under these terms. So
 the licensor is the Original Licensor for this software, and it is you for the
-changes and new works you license under section 1(b).
+changes and new works you license under section 2(b).
 
 **You** refers to the individual or entity agreeing to these terms.
 
@@ -59,6 +67,9 @@ Control can be direct or indirect.
 these terms.
 
 **Use** means anything you do with the software requiring one of your licenses.
+
+**Permitted purposes** are the purposes Parts II and III set out, and no others.
+Where either part says that a use is use for a permitted purpose, it is.
 
 Your **organisation** means you and, if you are not an individual, the people
 who work for you or under your direction in that capacity, together with any
@@ -76,12 +87,18 @@ accept.
 General Public License, version 3. This licence is not the AGPL and grants none
 of the AGPL's permissions; only that definition is borrowed.
 
-## Part I — Terms of the Original Licensor
+---
 
-### 1. Source availability
+## Part I — General Terms
 
-Every permission granted by this licence — by section 2, and by Part II — is
-conditional on this section and on section 3.
+### 1. Acceptance
+
+In order to get any license under these terms, you must agree to them as both strict obligations and conditions to all your licenses.
+
+### 2. Source availability
+
+Every permission this licence grants is conditional on this section and on
+section 3.
 
 If you make changes or new works based on this software available to the public,
 whether by hosting them for the public to use or by distributing copies of them
@@ -92,7 +109,7 @@ a. make the Corresponding Source of that version available to the public, free o
 b. license your own changes and new works to everyone who receives that source,
    under this licence and unchanged, so that they have over your material the
    same permissions this licence gives over the Original Licensor's — including
-   the permitted purpose section 2 adds; and
+   the permitted purpose section 16 adds; and
 c. state, in the software's own interface or its documentation, where that source
    can be obtained.
 
@@ -105,18 +122,9 @@ organisation, or to provide it to particular clients or customers under an
 agreement with them — and, in that last case, only where you do not also make
 that version available to the public.
 
-### 2. Commercial use
-
-Any commercial purpose is also a permitted purpose under Part II.
-
-This section adds to the permissions in Part II and restricts nothing; sections 1
-and 3 apply to it, as they do to every permission this licence grants. It extends
-only the permissions a licensor can give in their own material.
-
 ### 3. No revenue from providing access
 
-Every permission granted by this licence — by section 2, and by Part II — is also
-conditional on this section.
+Every permission this licence grants is also conditional on this section.
 
 You may not derive revenue, or other consideration of monetary value, from
 providing others access to this software. You do that if you make it available for
@@ -141,7 +149,29 @@ are permitted:
 - accepting donations, where access is the same for those who give and those who
   do not, and is never conditional on payment.
 
-### 4. Name and marks
+### 4. Copyright License
+
+The licensor grants you a copyright license for the software to do everything you might do with the software that would otherwise infringe the licensor's copyright in it for any permitted purpose.  However, you may only distribute the software according to [Distribution License](#5-distribution-license) and make changes or new works based on the software according to [Changes and New Works License](#7-changes-and-new-works-license).
+
+### 5. Distribution License
+
+The licensor grants you an additional copyright license to distribute copies of the software.  Your license to distribute covers distributing the software with changes and new works permitted by [Changes and New Works License](#7-changes-and-new-works-license).
+
+### 6. Notices
+
+You must ensure that anyone who gets a copy of any part of the software from you also gets a copy of these terms, as well as copies of any plain-text lines beginning with `Required Notice:` that the licensor provided with the software.  For example:
+
+> Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
+
+### 7. Changes and New Works License
+
+The licensor grants you an additional copyright license to make changes and new works based on the software for any permitted purpose.
+
+### 8. Patent License
+
+The licensor grants you a patent license for the software that covers patent claims the licensor can license, or becomes able to license, that you would infringe by using the software.
+
+### 9. Name and marks
 
 This licence gives no permission to use the name "OMSVG", the OMSVG logo and
 icons, or the domain omsvg.app. A version that is both changed and made
@@ -150,7 +180,7 @@ use those marks. An unchanged copy may keep them, but must not present itself as
 the official OMSVG site. Naming this software to say where yours came from —
 "based on OMSVG" — is fine, and so is identifying this licence by its name.
 
-### 5. How permissions reach you
+### 10. How permissions reach you
 
 Everyone who receives a copy of this software receives the Original Licensor's
 permissions over the Original Licensor's own material directly from them, on
@@ -158,70 +188,50 @@ these terms, whoever passed that copy on. Whoever passes a copy on grants
 nothing on the Original Licensor's behalf, and may neither add to these terms
 nor withhold any part of them.
 
-### 6. Violations
-
-Failing to meet a condition in this Part is a violation of these terms like any
-other. Part II's Violations clause is the only cure this licence gives, and it
-covers this Part as much as Part II.
-
----
-
-## Part II — Noncommercial Terms
-
-### Acceptance
-
-In order to get any license under these terms, you must agree to them as both strict obligations and conditions to all your licenses.
-
-### Copyright License
-
-The licensor grants you a copyright license for the software to do everything you might do with the software that would otherwise infringe the licensor's copyright in it for any permitted purpose.  However, you may only distribute the software according to [Distribution License](#distribution-license) and make changes or new works based on the software according to [Changes and New Works License](#changes-and-new-works-license).
-
-### Distribution License
-
-The licensor grants you an additional copyright license to distribute copies of the software.  Your license to distribute covers distributing the software with changes and new works permitted by [Changes and New Works License](#changes-and-new-works-license).
-
-### Notices
-
-You must ensure that anyone who gets a copy of any part of the software from you also gets a copy of these terms, as well as copies of any plain-text lines beginning with `Required Notice:` that the licensor provided with the software.  For example:
-
-> Required Notice: Copyright Yoyodyne, Inc. (http://example.com)
-
-### Changes and New Works License
-
-The licensor grants you an additional copyright license to make changes and new works based on the software for any permitted purpose.
-
-### Patent License
-
-The licensor grants you a patent license for the software that covers patent claims the licensor can license, or becomes able to license, that you would infringe by using the software.
-
-### Noncommercial Purposes
-
-Any noncommercial purpose is a permitted purpose.
-
-### Personal Uses
-
-Personal use for research, experiment, and testing for the benefit of public knowledge, personal study, private entertainment, hobby projects, amateur pursuits, or religious observance, without any anticipated commercial application, is use for a permitted purpose.
-
-### Noncommercial Organizations
-
-Use by any charitable organization, educational institution, public research organization, public safety or health organization, environmental protection organization, or government institution is use for a permitted purpose regardless of the source of funding or obligations resulting from the funding.
-
-### Fair Use
+### 11. Fair Use
 
 You may have "fair use" rights for the software under the law. These terms do not limit them.
 
-### No Other Rights
+### 12. No Other Rights
 
 These terms do not allow you to sublicense or transfer any of your licenses to anyone else, or prevent the licensor from granting licenses to anyone else.  These terms do not imply any other licenses.
 
-### Patent Defense
+### 13. Patent Defense
 
 If you make any written claim that the software infringes or contributes to infringement of any patent, your patent license for the software granted under these terms ends immediately. If your company makes such a claim, your patent license ends immediately for work on behalf of your company.
 
-### Violations
+### 14. Violations
 
 The first time you are notified in writing that you have violated any of these terms, or done anything with the software not covered by your licenses, your licenses can nonetheless continue if you come into full compliance with these terms, and take practical steps to correct past violations, within 32 days of receiving notice.  Otherwise, all your licenses end immediately.
 
-### No Liability
+### 15. No Liability
 
 ***As far as the law allows, the software comes as is, without any warranty or condition, and the licensor will not be liable to you for any damages arising out of these terms or the use or nature of the software, under any kind of legal claim.***
+
+---
+
+## Part II — Commercial Terms
+
+### 16. Commercial use
+
+Any commercial purpose is a permitted purpose.
+
+This section adds to the permissions in Part I and restricts nothing; sections 2
+and 3 apply to it, as they do to every permission this licence grants. It extends
+only the permissions a licensor can give in their own material.
+
+---
+
+## Part III — Noncommercial Terms
+
+### 17. Noncommercial Purposes
+
+Any noncommercial purpose is a permitted purpose.
+
+### 18. Personal Uses
+
+Personal use for research, experiment, and testing for the benefit of public knowledge, personal study, private entertainment, hobby projects, amateur pursuits, or religious observance, without any anticipated commercial application, is use for a permitted purpose.
+
+### 19. Noncommercial Organizations
+
+Use by any charitable organization, educational institution, public research organization, public safety or health organization, environmental protection organization, or government institution is use for a permitted purpose regardless of the source of funding or obligations resulting from the funding.

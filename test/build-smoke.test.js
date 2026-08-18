@@ -679,29 +679,87 @@ test('the licence and its notices ship with the build', async (t) => {
   // there is another year's work behind it.
   t.assert.match(licence, /^Copyright \(c\) 2026 Eric Gesemann$/m);
 
-  // The whole construction rests on Part II being present, not just referred
-  // to: sections 1 to 4 extend and condition it, they don't stand alone.
+  // Three parts, and the whole construction rests on all three being present:
+  // Part I grants and conditions, Parts II and III say what a permitted purpose
+  // is, and Part I's grants are given for nothing else.
   t.assert.match(licence, /^# OMSVG License 1\.0$/m);
-  t.assert.match(licence, /^## Part II — Noncommercial Terms$/m);
-  t.assert.match(licence, /^### Acceptance$/m);
-  // Part II is a standard licence form whose own terms require that a changed
-  // version drop its name and URL. It was changed — the sections above it
-  // condition what it permits — so neither may come back. See CLAUDE.md.
+  t.assert.match(licence, /^## Part I — General Terms$/m);
+  t.assert.match(licence, /^## Part II — Commercial Terms$/m);
+  t.assert.match(licence, /^## Part III — Noncommercial Terms$/m);
+  // The two purpose declarations are what the four grants hang on, and they are
+  // deliberately parallel — neither part grants anything itself.
+  t.assert.match(licence, /^### 16\. Commercial use$/m);
+  t.assert.match(licence, /^Any commercial purpose is a permitted purpose\.$/m);
+  t.assert.match(
+    licence,
+    /^Any noncommercial purpose is a permitted purpose\.$/m,
+  );
+  // Most of the document is a standard licence form whose own terms require that
+  // a changed version drop its name and URL. It was changed — the sections that
+  // condition it, and the numbering — so neither may come back. See CLAUDE.md.
   t.assert.doesNotMatch(licence, /polyform/i);
 
-  // The chain a recipient of someone else's fork depends on. Pinning Part II's
-  // "the licensor" to the one named licensor once broke it: every Part II grant
-  // then came from him, including when a fork was the one distributing, so the
+  // The chain a recipient of someone else's fork depends on. Pinning the form's
+  // "the licensor" to the one named licensor once broke it: every grant then
+  // came from him, including when a fork was the one distributing, so the
   // fork's own additions reached its recipients with no grant at all. These two
   // are what replaced that, and neither is decorative.
-  t.assert.match(licence, /^### 5\. How permissions reach you$/m);
+  t.assert.match(licence, /^### 10\. How permissions reach you$/m);
   t.assert.match(licence, /grants\s+nothing on the Original Licensor's behalf/);
   t.assert.match(licence, /^b\. license your own changes and new works/m);
 
-  // One place to look up a word, which is what let the paragraph explaining
-  // Part II's vocabulary go away entirely.
+  // One place to look up a word, which is what let the paragraph explaining the
+  // form's own vocabulary go away entirely.
   t.assert.strictEqual(
     (licence.match(/^#{2,3} Definitions$/gm) ?? []).length,
+    1,
+  );
+
+  // The section numbers run continuously across all three parts, so a gap, a
+  // repeat or an off-by-one is a citation pointing at the wrong clause — the
+  // failure mode of renumbering, and invisible in a diff of the prose.
+  t.assert.deepStrictEqual(
+    (licence.match(/^### \d+\. .+$/gm) ?? []).map((h) =>
+      Number.parseInt(h.slice(4), 10),
+    ),
+    Array.from({ length: 19 }, (_, i) => i + 1),
+  );
+
+  // The form's fourteen clauses, each under the number it was given. They are
+  // distributed across Parts I and III and their text is kept word for word, so
+  // nothing but this says where a clause is meant to have ended up — and a
+  // count rather than a presence check, because a clause rendering twice would
+  // hand the second copy a `-1` slug and a dead link.
+  const formClauses = [
+    '1. Acceptance',
+    '4. Copyright License',
+    '5. Distribution License',
+    '6. Notices',
+    '7. Changes and New Works License',
+    '8. Patent License',
+    '11. Fair Use',
+    '12. No Other Rights',
+    '13. Patent Defense',
+    '14. Violations',
+    '15. No Liability',
+    '17. Noncommercial Purposes',
+    '18. Personal Uses',
+    '19. Noncommercial Organizations',
+  ];
+  t.assert.deepStrictEqual(
+    formClauses.map(
+      (heading) =>
+        `${heading}: ${licence.split(`\n### ${heading}\n`).length - 1}`,
+    ),
+    formClauses.map((heading) => `${heading}: 1`),
+  );
+
+  // Sections 14 and 15 are the whole of the licence's cure and its disclaimer,
+  // and they sit in Part I because they reach every permission. An earlier
+  // draft kept a second, weaker cure of its own alongside the form's.
+  t.assert.match(licence, /within 32 days of receiving notice/);
+  t.assert.strictEqual(
+    (licence.match(/^### \d+\. Violations$/gm) ?? []).length,
     1,
   );
 
@@ -753,8 +811,12 @@ test('the licence and notices are served as pages', async (t) => {
   // the gulpfile's renderer puts them there, and a dead anchor in a legal
   // document is invisible until someone follows it. The optional quotes are
   // because `html-minifier-terser` drops them in a production build.
-  t.assert.match(licence, /<h3 id="?distribution-license"?>/);
-  t.assert.match(licence, /href="?#distribution-license"?/);
+  // The slug carries the section number, so numbering the form's clause
+  // headings retargeted both of the licence's own internal links.
+  t.assert.match(licence, /<h3 id="?5-distribution-license"?>/);
+  t.assert.match(licence, /href="?#5-distribution-license"?/);
+  t.assert.match(licence, /<h3 id="?7-changes-and-new-works-license"?>/);
+  t.assert.match(licence, /href="?#7-changes-and-new-works-license"?/);
 
   t.assert.match(licence, /<h2/, 'licence.html carries no rendered headings');
   t.assert.match(notices, /<h2/, 'notices.html carries no rendered headings');
