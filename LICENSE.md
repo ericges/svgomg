@@ -43,12 +43,22 @@ The MIT-licensed portions — everything published up to and including commit
 `f925656`, and the contributions from other people since — remain independently
 available under the MIT License, and may be taken and used under it.
 
-"As a whole" is said of the software: these terms reach all of its code,
-whatever its origin. They do not reach material the Original Licensor holds no
-rights in. The repository and the built app also carry artwork and other
-non-software files that came from other people and stay under their own terms;
-this licence grants nothing over those files, withholds nothing over them, and
-says nothing about them that their own terms do not.
+"As a whole" is said of the software: these terms reach all of its code as it is
+assembled here, and they cover the Original Licensor's own interest in that
+assembled work — as much of it as he is able to license, and no more. They do not
+reach material the Original Licensor holds no rights in.
+
+The third-party software components this project bundles are such material. They
+stay under the licences [NOTICE.md](./NOTICE.md) reproduces for them, those
+licences are the terms that govern them, and nothing in this licence narrows,
+replaces or adds a condition to a permission any of them gives. Where this
+licence and one of those licences would say different things about such a
+component, its own licence is what applies to it.
+
+The repository and the built app also carry artwork and other non-software files
+that came from other people and stay under their own terms; this licence grants
+nothing over those files, withholds nothing over them, and says nothing about
+them that their own terms do not.
 
 [ASSETS.md](./ASSETS.md) records those files — what each one is, where it came
 from, who holds the rights in it, whether this project changed it, and the terms

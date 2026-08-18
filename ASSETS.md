@@ -1,33 +1,37 @@
 # Asset notices
 
-This is the declaration of the artwork and other non-code files distributed with
-OMSVG, in the source repository and in the built application alike. Each record
-below states the work, its author, the source it was obtained from, the terms it
-is distributed under, where those terms are reproduced, and any modification made
-to it here.
+This is the declaration of the demo and test artwork distributed with OMSVG, in
+the source repository and in the built application alike — the SVG files listed
+below, and those only. Each record states the work, its author, the source it was
+obtained from, the terms it is distributed under, where those terms are
+reproduced, and any modification made to it here.
 
-OMSVG's own terms are in [LICENSE.md](./LICENSE.md), and the notices for the code
-it bundles are in [NOTICE.md](./NOTICE.md). Those terms grant nothing over the
+Nothing else the app ships needs a record here. Its own artwork — the logo, the
+icons and the drawings they are made from — is Eric Gesemann's own work, covered
+by [LICENSE.md](./LICENSE.md); the code it bundles and the code font it ships are
+covered by [NOTICE.md](./NOTICE.md). Neither document grants anything over the
 works declared here: each is distributed under the terms stated with it, and
 those terms govern it.
 
 No work declared here is incorporated into a script, a stylesheet or any other
-part of the application. Each is a separate file, retrieved only when a user asks
-for it, and is distributed alongside OMSVG rather than as a part of it.
+part of the application. Each is a separate file, distributed alongside OMSVG
+rather than as a part of it, and fetched whole: `car-lite.svg` when the service
+worker installs, so that the Demo button works offline, and every other one when
+a user asks for it.
 
 ---
 
 ## Summary
 
-| File | Work | Rights holder | Terms |
-| --- | --- | --- | --- |
-| `test-svgs/car-lite.svg` | little red racing car | Onsemeliot | CC Public Domain Dedication |
-| `test-svgs/car-lite-green.svg` | little green racing car | Onsemeliot | CC Public Domain Dedication |
-| `test-svgs/tiger.svg` | Ghostscript Tiger | the Ghostscript authors | AGPL-3.0-or-later |
-| `test-svgs/flag.svg` | Flag of Ecuador | see the record below | Public domain, and CC0-1.0 |
-| `test-svgs/svgo-logo.svg` | SVGO project logo | Kir Belevich and the SVGO contributors | MIT |
-| `test-svgs/kitchen-sink.svg` | OMSVG kitchen sink | Eric Gesemann | Public domain |
-| `test-svgs/fail.svg` | OMSVG parse-failure fixture | Eric Gesemann | Public domain |
+| File                           | Work                        | Rights holder                          | Terms                       |
+|--------------------------------|-----------------------------|----------------------------------------|-----------------------------|
+| `test-svgs/car-lite.svg`       | little red racing car       | Onsemeliot                             | CC Public Domain Dedication |
+| `test-svgs/car-lite-green.svg` | little green racing car     | Onsemeliot                             | CC Public Domain Dedication |
+| `test-svgs/tiger.svg`          | Ghostscript Tiger           | the Ghostscript authors                | AGPL-3.0-or-later           |
+| `test-svgs/flag.svg`           | Flag of Ecuador             | see the record below                   | Public domain, and CC0-1.0  |
+| `test-svgs/svgo-logo.svg`      | SVGO project logo           | Kir Belevich and the SVGO contributors | MIT                         |
+| `test-svgs/kitchen-sink.svg`   | OMSVG kitchen sink          | Eric Gesemann                          | Public domain               |
+| `test-svgs/fail.svg`           | OMSVG parse-failure fixture | Eric Gesemann                          | Public domain               |
 
 `src/config.json` determines which of these files are built and distributed with
 the application. `fail.svg` is not among them; it is distributed only in the

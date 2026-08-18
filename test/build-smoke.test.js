@@ -845,9 +845,22 @@ test('the licence and its notices ship with the build', async (t) => {
   t.assert.match(licence, /These terms govern this software as a whole/);
   t.assert.match(
     licence,
-    /They do not reach material the Original Licensor holds no\s+rights in/,
+    /They do not\s+reach material the Original Licensor holds no\s+rights in/,
   );
   t.assert.match(licence, /ASSETS\.md/);
+  // The bundled npm components are that material too, and the licence has to
+  // say so as expressly as it says it of the artwork: "all of its code" once
+  // read "whatever its origin", which invited the reading that these terms
+  // relicense third-party code the Original Licensor never wrote.
+  t.assert.doesNotMatch(licence, /whatever its origin/);
+  t.assert.match(
+    licence,
+    /The third-party software components this project bundles are such\s+material/,
+  );
+  t.assert.match(
+    licence,
+    /nothing in this licence narrows,\s+replaces or adds a condition to a permission any of them gives/,
+  );
 
   t.assert.match(notice, /The MIT License/);
   // MIT conditions redistribution on *the above* copyright notice, so this is
@@ -905,6 +918,23 @@ test('every shipped file of artwork has its terms recorded', async (t) => {
   const agpl = await readBuildFile('licences/AGPL-3.0.txt');
   t.assert.match(agpl, /GNU AFFERO GENERAL PUBLIC LICENSE/);
   t.assert.match(agpl, /Version 3, 19 November 2007/);
+
+  // The aggregation claim has to match what the app really does: the default
+  // demo is precached at install, so the old "retrieved only when a user asks
+  // for it" was false of it. Driven off the real precache list, so a second
+  // precached drawing fails until the sentence accounts for it too.
+  const [intro] = assets.split(/^---$/m);
+  t.assert.doesNotMatch(intro, /retrieved only when a user asks/);
+  t.assert.match(intro, /service\s+worker installs/);
+  const precachedDemos = (precachedAssets(await readBuildFile('sw.js')) ?? [])
+    .filter((asset) => asset.startsWith('test-svgs/'))
+    .map((asset) => asset.slice('test-svgs/'.length));
+  t.assert.ok(precachedDemos.length > 0, 'no precached demo to check against');
+  t.assert.deepStrictEqual(
+    precachedDemos.filter((file) => !intro.includes(file)),
+    [],
+    'a precached drawing the ASSETS.md aggregation claim does not account for',
+  );
 
   // Both were removed because their terms could not be carried. The record of
   // that is the only thing stopping either being added back unnoticed.
