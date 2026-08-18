@@ -220,15 +220,18 @@ using the software.
 ### 9. Name and marks
 
 Except as this section allows, this license gives no permission to use the name
-"OMSVG", the OMSVG logo and icons, or the domain omsvg.app.
+"OMSVG", the OMSVG logo and the app icons made from it, or the domain omsvg.app.
+The icons the application's own interface displays are not among them: those
+came from other people, and [ASSETS.md](./ASSETS.md) records whose they are and
+the terms they are carried under.
 
 A version that is both changed and made available to the public must identify
-itself by a different name and must not use the logo or the icons. An unchanged
-copy may keep the name, the logo, and the icons, but must not present itself as
-the official OMSVG site; that permission does not reach the domain omsvg.app,
-which this license never gives permission to use. Naming this software to say
-where yours came from — "based on OMSVG" — is fine, and so is identifying this
-license by its name.
+itself by a different name and must not use the logo or those app icons. An
+unchanged copy may keep the name, the logo, and those app icons, but must not
+present itself as the official OMSVG site; that permission does not reach the
+domain omsvg.app, which this license never gives permission to use. Naming this
+software to say where yours came from — "based on OMSVG" — is fine, and so is
+identifying this license by its name.
 
 This section works by copyright permission. It grants no trademark rights, and
 it neither adds to nor takes away from whatever rights in the name or the marks

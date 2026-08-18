@@ -822,10 +822,23 @@ test('the licence and its notices ship with the build', async (t) => {
   t.assert.doesNotMatch(licence, /may keep them/);
   t.assert.match(
     licence,
-    /An unchanged\s+copy may keep the name, the logo, and the icons/,
+    /An\s+unchanged copy may keep the name, the logo, and those app icons/,
   );
-  t.assert.match(licence, /does not reach the domain omsvg\.app/);
+  t.assert.match(licence, /does not reach\s+the\s+domain omsvg\.app/);
   t.assert.match(licence, /grants no trademark rights/);
+
+  // What the section reserves is the logo and the app icons drawn from it. It
+  // used to say "the OMSVG logo and icons", which read against
+  // `src/partials/icons/` reserved eleven Lucide icons, a Tabler one and
+  // GitHub's mark — an overclaim of exactly the kind the rest of this section
+  // was rewritten to remove, and one section 3's promise not to narrow a
+  // permission a bundled licence gives already contradicts.
+  t.assert.match(licence, /the OMSVG logo and the app icons made from it/);
+  t.assert.doesNotMatch(licence, /the OMSVG logo and icons/);
+  t.assert.match(
+    licence,
+    /The icons the application's own interface displays are not among them/,
+  );
 
   // The front matter says which sections are the form's and what was done to
   // them. It used to claim they were "kept word for word", which was untrue:
@@ -911,6 +924,39 @@ test('every shipped file of artwork has its terms recorded', async (t) => {
     ['fail.svg'].filter((file) => !assets.includes(file)),
     [],
     'repository-only fixtures with no entry in ASSETS.md',
+  );
+
+  // The other half of the artwork, and the half that went unrecorded until
+  // 2026-08-18: every interface icon but the logo came from somewhere else —
+  // eleven from Lucide, one from Tabler, and GitHub's own mark. They are
+  // inlined into the markup rather than fetched, so no glob in the gulpfile
+  // ever mentions them and nothing else would notice a new one arriving. Driven
+  // off the directory for that reason, `logo.svg` included: it is first-party,
+  // and the intro says so by name.
+  const iconDir = await fs.readdir(path.join(repoRoot, 'src/partials/icons'));
+  const iconFiles = iconDir.filter((file) => file.endsWith('.svg'));
+  t.assert.ok(iconFiles.length > 0, 'no icon partials to check against');
+  t.assert.deepStrictEqual(
+    iconFiles.filter((file) => !assets.includes(file)),
+    [],
+    'interface icons with no entry in ASSETS.md',
+  );
+
+  // ISC and MIT both condition copying on the copyright notice and the
+  // permission notice travelling with it, and every copy of the app carries
+  // these icons inside its markup — so the notices have to reach `build/`, not
+  // just the repository. Pinned line by line, the way `test/notices.test.js`
+  // pins the packages': a reflowed or re-dated copyright line is no longer a
+  // reproduction of the notice it stands in for.
+  t.assert.match(assets, /^ISC License$/m);
+  t.assert.deepStrictEqual(
+    [
+      'Copyright (c) 2026 Lucide Icons and Contributors',
+      'Copyright (c) 2013-present Cole Bemis',
+      'Copyright (c) 2020-2026 Paweł Kuna',
+    ].filter((line) => !assets.includes(line)),
+    [],
+    'copyright lines the icons ship under that ASSETS.md does not reproduce',
   );
 
   // The Tiger is AGPL-3.0-or-later. Section 4 conditions passing a copy on

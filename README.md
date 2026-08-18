@@ -138,7 +138,7 @@ The table below is a summary; the licence governs.
 | ✅ | Run it on your own machines or your company's intranet, changed or not | nothing to publish                                                                                                                                                                                           |
 | ✅ | Host it for your clients as part of your services                      | nothing to publish, as long as access to it isn't a material part of what they pay you and you don't also put that version online for everyone                                                               |
 | ✅ | Mirror it publicly, free of charge, unchanged                          | no attribution to me, and you may keep the name and the logo — but not the domain, don't present it as the official site, and the licence and the upstream and third-party notices must travel with the copy |
-| ✅ | Fork it and host your fork publicly, free of charge                    | publish your source, and give it your own name                                                                                                                                                               |
+| ✅ | Fork it and host your fork publicly, free of charge                    | publish your source, and give it your own name and logo                                                                                                                                                      |
 | ✅ | Take donations for running a free public copy                          | as long as paying changes nothing about access                                                                                                                                                               |
 | ❌ | Host it publicly with advertising on or around it                      | not permitted                                                                                                                                                                                                |
 | ❌ | Charge for access, or include it in a paid product or service          | not permitted                                                                                                                                                                                                |
@@ -149,9 +149,11 @@ Everything up to and including commit `f925656` is upstream SVGOMG and stays ava
 MIT License — see [NOTICE.md](./NOTICE.md), which also carries the notices for the third-party code
 the built app bundles.
 
-Some of the demo artwork here belongs to other people and stays under their own terms — one drawing
-is AGPL-3.0-or-later, the rest are public domain or MIT. [ASSETS.md](./ASSETS.md) says which is
-which, and where each came from.
+Artwork here that belongs to other people stays under its own terms — the demo drawings, one of
+which is AGPL-3.0-or-later and the rest public domain or MIT, and the interface icons, which are
+eleven from [Lucide](https://lucide.dev) (ISC), one from [Tabler](https://tabler.io/icons) (MIT) and
+GitHub's own mark. [ASSETS.md](./ASSETS.md) says which is which, where each came from, and what its
+terms ask of you.
 
 Contributions from other people are licensed under the MIT License and stay available under it — see
 [CONTRIBUTING.md](./CONTRIBUTING.md#licensing-and-copyright).
