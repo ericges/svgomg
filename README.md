@@ -143,6 +143,9 @@ Everything up to and including commit `f925656` is upstream SVGOMG and stays ava
 MIT License — see [NOTICE.md](./NOTICE.md), which also carries the notices for the third-party code
 the built app bundles.
 
+Contributions from other people are licensed under the MIT License and stay available under it — see
+[CONTRIBUTING.md](./CONTRIBUTING.md#licensing-and-copyright).
+
 ## Credits
 
 SVGOMG, which this is a [fork](https://github.com/jakearchibald/svgomg) of, was created by

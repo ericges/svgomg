@@ -83,27 +83,32 @@ browser console says is the only record.
 ## Licensing and copyright
 
 OMSVG is source-available, not open source — the terms are in [LICENSE.md](./LICENSE.md), and the
-[README](./README.md#licence) summarises what they permit in practice. Contributions are covered by
-them too:
+[README](./README.md#licence) summarises what they permit in practice. Contributions come in under
+different terms, deliberately:
 
 > By opening a pull request you confirm that you wrote the contribution yourself or have the right to
-> submit it, and that you license it under the licence in [LICENSE.md](./LICENSE.md) — granting Eric
-> Gesemann the right to publish it under that licence and under any later version of it published for
-> this project. You keep the copyright in your contribution.
+> submit it — or, if your employer has rights in it, that you have their permission — and that you
+> license it under the [MIT License](https://opensource.org/license/mit) (SPDX: `MIT`). You keep the
+> copyright in your contribution, and it stays available to everyone under MIT; that licence is what
+> lets it be distributed as part of OMSVG under the terms in [LICENSE.md](./LICENSE.md).
+>
+> These terms are a separate agreement governing contributions, and apply instead of the repository's
+> own licence terms, however you submit the contribution.
 
-There is no CLA to sign and no checkbox to tick; opening the pull request is the whole of it.
+Two reasons it is inbound MIT rather than the project's own licence:
 
-Two reasons that clause is worded the way it is, since it asks for slightly more than "same licence
-as the project":
+- **Section 2 of the licence is a grant only the copyright holder can make.** It re-opens commercial
+  use on top of the noncommercial base, and a contribution licensed merely "under the same licence"
+  couldn't carry it. Under MIT the question doesn't arise: those lines don't need section 2, because
+  every recipient already has them on permissive terms.
+- **The terms may still change.** The project may one day be released under a permissive licence
+  outright. Contributed lines travel with it, and no past contributor has to be tracked down first.
 
-- **Section 2 of the licence is a grant, and only the copyright holder can make it.** It re-opens
-  commercial use on top of the noncommercial base. A contribution licensed merely "under the same
-  licence" couldn't carry that grant, so those lines would be noncommercial-only and the combined
-  work's commercial permission would break.
-- **The licence may still need rewording.** Sections 1 and 2 haven't been through a lawyer. If a
-  review calls for changes, they have to be possible for contributed lines too — otherwise every
-  past contributor would have to be tracked down first.
+There is no CLA to sign. The pull request template asks you to confirm the line above, and to say how
+you want to be credited — MIT requires a copyright notice to travel with the code, so a merged
+contribution gets a line in [NOTICE.md](./NOTICE.md), and the built app ships that file.
 
 If you add a dependency that ends up in a **bundle** — as opposed to build tooling — its notice has
-to go into [NOTICE.md](./NOTICE.md), including any transitive dependency it brings with it.
-`test/notices.test.js` will fail until it does.
+to go there too, including any transitive dependency it brings with it. `test/notices.test.js` covers
+dependencies and will fail until it does; it cannot check contributor lines, so those are on whoever
+merges.

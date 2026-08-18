@@ -1,8 +1,8 @@
 # Third-party notices
 
 OMSVG is licensed under the terms in [LICENSE.md](./LICENSE.md). This file carries
-the notices of the software it is derived from and of the third-party code it
-ships to the browser.
+the notices of the software it is derived from, of contributions from other
+people, and of the third-party code it ships to the browser.
 
 ---
 
@@ -35,6 +35,18 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+---
+
+## Contributions to this fork
+
+Contributions to OMSVG from anyone other than the copyright holder are licensed
+under the MIT License, the text of which is reproduced above, and remain
+available under it. OMSVG distributes them under the terms in
+[LICENSE.md](./LICENSE.md), which is what that licence permits.
+
+No such contributions have been merged yet. When one is, its copyright line
+belongs here.
 
 ---
 
