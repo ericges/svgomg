@@ -2,31 +2,52 @@
 
 OMSVG is made available under the licence set out in this file. It incorporates
 the PolyForm Noncommercial License 1.0.0, reproduced verbatim below, with the
-additions in sections 1 and 2.
+additions and conditions in sections 1 to 4. Where those sections and the PolyForm
+text differ, sections 1 to 4 control.
 
 Copyright (c) 2025-2026 Eric Gesemann
 
-Portions of this software are derived from SVGOMG by Jake Archibald and
-contributors, licensed under the MIT License. That MIT licence continues to apply
-to those portions; its notice is reproduced in NOTICE.md, together with the
-notices of the third-party software this project bundles.
+In this licence, "the Licensor" means Eric Gesemann and his successors in the
+copyright to this software.
 
-Commits published up to and including `f925656` were released under the MIT License
-and remain available under it. The terms here apply to everything after that
-point.
+Portions of this software are derived from SVGOMG by Jake Archibald and
+contributors (<https://github.com/jakearchibald/svgomg>), licensed under the MIT
+License. Contributions to this fork from other people are licensed under the MIT
+License as well. NOTICE.md reproduces both notices, together with the notices of
+the third-party software this project bundles.
+
+These terms govern this software as a whole, and the Licensor's own contributions
+to it. The MIT-licensed portions — everything published up to and including commit
+`f925656`, and the contributions from other people since — remain independently
+available under the MIT License, and may be taken and used under it.
+
+## Definitions
+
+Two terms are used in more than one section below.
+
+You make something available "to the public" if anyone can reach and use it
+without your having separately agreed to provide it to them. A registration or
+sign-up step that anyone can complete does not make it non-public.
+
+Your "organisation" means you and, if you are not an individual, the people who
+work for you or under your direction in that capacity, together with any entity
+that controls you, that you control, or that is under common control with you.
+People you provide a product or service to are not part of your organisation.
 
 ## 1. Source availability
 
-Every permission granted by this licence — both by section 2 and by the PolyForm
-Noncommercial License below — is conditional on this section.
+Every permission granted by this licence — by section 2, and by the PolyForm
+Noncommercial License below — is conditional on this section and on section 3.
 
-If you make a modified version of this software available to the public, whether
-by hosting it for the public to use or by distributing copies of it publicly, you
-must:
+If you make changes or new works based on this software available to the public,
+whether by hosting them for the public to use or by distributing copies of them
+publicly, you must:
 
 a. make the Corresponding Source of that version available to the public, free of
    charge, at a location that anyone can access without registration;
-b. license that source under this same licence, unchanged; and
+b. make that source available on the terms of this licence, unchanged, and give
+   every recipient, over your own changes and new works, the same permission
+   section 2 gives; and
 c. state, in the software's own interface or its documentation, where that source
    can be obtained.
 
@@ -34,49 +55,65 @@ c. state, in the software's own interface or its documentation, where that sourc
 General Public License, version 3. This licence is not the AGPL and grants none of
 the AGPL's permissions; only that definition is borrowed.
 
-You make it available "to the public" if anyone can reach and use it without your
-having separately agreed to provide it to them. A registration or sign-up step
-that anyone can complete does not make it non-public.
+You make changes or new works based on this software whether you alter its files,
+combine it with other software, or change what it does by wrapping it, framing it,
+injecting into it, or otherwise interposing on it as it runs.
 
-This section does not apply if you use a modified version only yourself, within
-your organisation, or to provide it to particular clients or customers under an
+This section does not apply if you use such a version only yourself, within your
+organisation, or to provide it to particular clients or customers under an
 agreement with them.
 
 If you fail to meet this condition, your permissions under this licence end. They
-are reinstated if you meet it within 30 days of becoming aware of the failure.
+are reinstated if you come into compliance within 32 days of being notified in
+writing of the failure.
 
-## 2. Additional use grant
+## 2. Commercial use
 
-In addition to the rights granted by the PolyForm Noncommercial License 1.0.0,
-Eric Gesemann grants every recipient permission to use this software for any
-commercial purpose, **except** to derive revenue or other consideration from
-providing access to the software.
+Any commercial purpose is also a permitted purpose under the PolyForm
+Noncommercial License below.
 
-You derive revenue or other consideration from providing access to the software if
-you make it available for others to use — publicly, or to registered or paying
-users — and you are paid for that access, or you monetise it indirectly. That
-includes, without limitation:
+This section adds to the permissions below and restricts nothing; sections 1 and 3
+apply to it, as they do to every permission this licence grants. It extends only
+the permissions the Licensor can give in this software.
+
+## 3. No revenue from providing access
+
+Every permission granted by this licence — by section 2, and by the PolyForm
+Noncommercial License below — is also conditional on this section.
+
+You may not derive revenue, or other consideration of monetary value, from
+providing others access to this software. You do that if you make it available for
+others to use — to the public, or to registered or paying users — and you are paid
+for that access, or you monetise it indirectly. That includes, without limitation:
 
 - charging a fee, subscription or usage-based price for access to it;
 - displaying advertising, sponsorship or affiliate content on or around it;
 - offering it as a feature of a paid product or service;
-- collecting, selling or brokering data about its use.
+- using it to promote, market or acquire customers for a paid product or service;
+- collecting data about its use for sale, brokerage or advertising.
 
 The following are expressly **not** treated as providing access for revenue, and
 are permitted:
 
 - using it yourself, or within your organisation, including for paid work;
-- hosting it for your clients as part of services you provide to them, where they
-  are not charged for access to this software as such;
+- hosting it for your clients as part of services you provide to them, where
+  access to this software is not a material part of what they pay for, and where
+  you do not also make it available to the public;
 - hosting it publicly free of charge, without any of the monetisation listed
-  above.
+  above;
+- accepting donations, where access is the same for those who give and those who
+  do not, and is never conditional on payment.
 
-Your "organisation" means you and, if you are not an individual, the people who
-work for you in that capacity. People you provide a product or service to are not
-part of your organisation.
+If you fail to meet this condition, your permissions under this licence end. They
+are reinstated if you come into compliance within 32 days of being notified in
+writing of the failure.
 
-This grant covers only the copyright held by Eric Gesemann in this software. It
-adds to the permissions below and restricts nothing; section 1 applies to it.
+## 4. Name and marks
+
+This licence gives no permission to use the name "OMSVG", the OMSVG logo and
+icons, or the domain omsvg.app. A version you make available to the public must
+identify itself by a different name and must not use those marks. Naming this
+software to say where yours came from — "based on OMSVG" — is fine.
 
 ---
 

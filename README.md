@@ -121,23 +121,29 @@ code, how to report a bug usefully, and the licensing terms a contribution comes
 
 Source-available, not open source. The full terms are in [LICENSE.md](./LICENSE.md); it is the
 [PolyForm Noncommercial License 1.0.0](https://polyformproject.org/licenses/noncommercial/1.0.0)
-with two additions. Two rules matter in practice:
+under four sections that change what it permits. Two rules matter in practice:
 
 1. **Don't make money from giving other people access to it.** No ads, no subscription, no paywall,
-   no "feature of our paid plan", no selling usage data.
-2. **If you host a modified version publicly, publish your source** — under this same licence, free
-   to download, at a URL anyone can reach, and say in the app where to find it.
+   no "feature of our paid plan", no lead generation, no selling usage data. This one is a condition
+   on every permission the licence gives, so it holds for charities and universities too.
+2. **If you host a changed version publicly, publish your source** — on these same terms, free to
+   download, at a URL anyone can reach, and say in the app where to find it. "Changed" includes
+   wrapping it or injecting into it, not just editing its files.
+
+The table below is a summary; the licence governs.
 
 | | | |
 | :-: | --- | --- |
-| ✅ | Use it, at home or at work, on paid client projects | no conditions |
-| ✅ | Run it on your own machines or your company's intranet, modified or not | no conditions |
-| ✅ | Host it for your clients as part of your services | no conditions, no disclosure |
-| ✅ | Mirror it publicly, free of charge, unmodified | no conditions — no attribution needed |
-| ✅ | Fork it and host your fork publicly, free of charge | publish your source |
-| ❌ | Host it publicly with advertising on or around it | not permitted |
-| ❌ | Charge for access, or include it in a paid product or service | not permitted |
-| ❌ | Sell or broker data about its use | not permitted |
+| ✅ | Use it, at home or at work, on paid client projects | nothing to publish |
+| ✅ | Run it on your own machines or your company's intranet, changed or not | nothing to publish |
+| ✅ | Host it for your clients as part of your services | nothing to publish, as long as access to it isn't a material part of what they pay you |
+| ✅ | Mirror it publicly, free of charge, unchanged | no attribution to me — but the upstream and third-party notices must travel with the copy |
+| ✅ | Fork it and host your fork publicly, free of charge | publish your source, and give it your own name |
+| ✅ | Take donations for running a free public copy | as long as paying changes nothing about access |
+| ❌ | Host it publicly with advertising on or around it | not without a separate licence from me |
+| ❌ | Charge for access, or include it in a paid product or service | not without a separate licence from me |
+| ❌ | Run a free copy to market a paid product of yours | not without a separate licence from me |
+| ❌ | Sell or broker data about its use | not without a separate licence from me |
 
 Everything up to and including commit `f925656` is upstream SVGOMG and stays available under the
 MIT License — see [NOTICE.md](./NOTICE.md), which also carries the notices for the third-party code
