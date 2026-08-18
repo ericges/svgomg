@@ -768,6 +768,87 @@ test('the licence and its notices ship with the build', async (t) => {
   // first is renamed so that only one of them is a proper noun.
   t.assert.doesNotMatch(licence, /(?<!Original )Licensor/);
 
+  // Sections 2 and 3 carry the whole construction: each opens by making every
+  // permission conditional on itself, which is what stops it being an
+  // "additional restriction" a recipient could strip. Neither is pinned
+  // anywhere else — the numbering check below reads numbers, not titles.
+  t.assert.match(licence, /^### 2\. Source availability$/m);
+  t.assert.match(licence, /^### 3\. No revenue from providing access$/m);
+  t.assert.match(
+    licence,
+    /Every permission this licence grants is\s+conditional on this section and on\s+section 3/,
+  );
+  t.assert.match(
+    licence,
+    /Every permission this licence grants is also conditional on this section/,
+  );
+
+  // Section 3's prohibition is expressly non-exhaustive, so its exceptions must
+  // refer to the rule and never back to the examples: "without any of the
+  // monetisation listed above" let an unlisted form of indirect monetisation
+  // argue it was expressly permitted.
+  t.assert.match(licence, /That includes, without limitation:/);
+  t.assert.doesNotMatch(licence, /listed above/);
+  t.assert.match(
+    licence,
+    /hosting it publicly free of charge, where you derive no revenue or other\s+consideration of monetary value, directly or indirectly, from providing that\s+access/,
+  );
+  // The exceptions are deemed rather than illustrative, which is deliberate —
+  // so the deeming has to be limited to the conduct each one describes, or free
+  // hosting plus something unlisted lands inside it.
+  t.assert.match(
+    licence,
+    /None of the following is, \*\*in itself\*\*, deriving revenue from providing access/,
+  );
+  t.assert.match(licence, /judged against this section on its own/);
+  // The three qualifiers that keep a subscription business out of the client
+  // and donation exceptions.
+  t.assert.match(licence, /not a material part of what they pay for/);
+  t.assert.match(licence, /you do not also make it available to the public/);
+  t.assert.match(licence, /is never conditional on payment/);
+
+  // Section 9 reserves the marks against a *changed* public version, not
+  // against a mirror — so it has to open with the carve-out rather than a flat
+  // prohibition its own third sentence then contradicts. "may keep them"
+  // pointed back at a bundle that included the domain.
+  t.assert.match(licence, /^### 9\. Name and marks$/m);
+  t.assert.match(
+    licence,
+    /Except as this section allows, this licence gives no permission/,
+  );
+  t.assert.doesNotMatch(licence, /may keep them/);
+  t.assert.match(
+    licence,
+    /An unchanged\s+copy may keep the name, the logo and the icons/,
+  );
+  t.assert.match(licence, /does not reach the domain omsvg\.app/);
+  t.assert.match(licence, /grants no trademark rights/);
+
+  // The front matter says which sections are the form's and what was done to
+  // them. It used to claim they were "kept word for word", which was untrue:
+  // section 6 dropped an alternative that pointed at the removed URL, and the
+  // form's own definitions were folded into this document's.
+  t.assert.doesNotMatch(licence, /kept word for word/);
+  t.assert.match(
+    licence,
+    /The remaining fourteen sections are taken from a\s+standard licence form/,
+  );
+  t.assert.doesNotMatch(licence, /or the URL for them above/);
+  t.assert.match(
+    licence,
+    /Sections 2, 3, 9, 10 and 16 are the Original Licensor's own terms/,
+  );
+
+  // The licence governs the code as a whole and reaches nothing the Original
+  // Licensor holds no rights in — the repository ships artwork that is other
+  // people's, one drawing of it under a copyleft licence.
+  t.assert.match(licence, /These terms govern this software as a whole/);
+  t.assert.match(
+    licence,
+    /They do not reach material the Original Licensor holds no\s+rights in/,
+  );
+  t.assert.match(licence, /ASSETS\.md/);
+
   t.assert.match(notice, /The MIT License/);
   // MIT conditions redistribution on *the above* copyright notice, so this is
   // the line as it stood at `f925656` — not an inferred range, and not an

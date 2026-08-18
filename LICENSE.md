@@ -17,8 +17,13 @@ noncommercial purposes, personal uses, and use by noncommercial organisations.
 
 Sections 2, 3, 9, 10 and 16 are the Original Licensor's own terms; sections 2 and
 3 place conditions on every permission this licence gives, and are set out ahead
-of the licences they condition. The remaining sections are a standard licence
-form, kept word for word.
+of the licences they condition. The remaining fourteen sections are taken from a
+standard licence form, and no clause's text is changed, save that section 6 no
+longer offers the alternative of giving a URL for these terms. What changed is
+arrangement: the form's title and the URL line above it are gone, its own
+definitions were folded into the Definitions section below sentence for
+sentence, each clause heading gained the section number it carries here, and the
+clauses are distributed across Parts I and III in their original relative order.
 
 The three parts are read together throughout, and the words defined below carry
 their meaning into all of them.
@@ -37,6 +42,18 @@ the notices of the third-party software this project bundles.
 The MIT-licensed portions — everything published up to and including commit
 `f925656`, and the contributions from other people since — remain independently
 available under the MIT License, and may be taken and used under it.
+
+"As a whole" is said of the software: these terms reach all of its code,
+whatever its origin. They do not reach material the Original Licensor holds no
+rights in. The repository and the built app also carry artwork and other
+non-software files that came from other people and stay under their own terms;
+this licence grants nothing over those files, withholds nothing over them, and
+says nothing about them that their own terms do not.
+
+[ASSETS.md](./ASSETS.md) records those files — what each one is, where it came
+from, who holds the rights in it, whether this project changed it, and the terms
+it is carried under. Where it records terms for a file, those are the terms that
+govern that file.
 
 ## Definitions
 
@@ -137,17 +154,21 @@ for that access, or you monetise it indirectly. That includes, without limitatio
 - using it to promote, market or acquire customers for a paid product or service;
 - collecting data about its use for sale, brokerage or advertising.
 
-The following are expressly **not** treated as providing access for revenue, and
-are permitted:
+None of the following is, **in itself**, deriving revenue from providing access,
+and each is permitted:
 
 - using it yourself, or within your organisation, including for paid work;
 - hosting it for your clients as part of services you provide to them, where
   access to this software is not a material part of what they pay for, and where
   you do not also make it available to the public;
-- hosting it publicly free of charge, without any of the monetisation listed
-  above;
+- hosting it publicly free of charge, where you derive no revenue or other
+  consideration of monetary value, directly or indirectly, from providing that
+  access;
 - accepting donations, where access is the same for those who give and those who
   do not, and is never conditional on payment.
+
+Each of these covers only the conduct it describes. Anything else you do
+alongside it is judged against this section on its own.
 
 ### 4. Copyright License
 
@@ -173,12 +194,20 @@ The licensor grants you a patent license for the software that covers patent cla
 
 ### 9. Name and marks
 
-This licence gives no permission to use the name "OMSVG", the OMSVG logo and
-icons, or the domain omsvg.app. A version that is both changed and made
-available to the public must identify itself by a different name and must not
-use those marks. An unchanged copy may keep them, but must not present itself as
-the official OMSVG site. Naming this software to say where yours came from —
-"based on OMSVG" — is fine, and so is identifying this licence by its name.
+Except as this section allows, this licence gives no permission to use the name
+"OMSVG", the OMSVG logo and icons, or the domain omsvg.app.
+
+A version that is both changed and made available to the public must identify
+itself by a different name and must not use the logo or the icons. An unchanged
+copy may keep the name, the logo and the icons, but must not present itself as
+the official OMSVG site; that permission does not reach the domain omsvg.app,
+which this licence never gives permission to use. Naming this software to say
+where yours came from — "based on OMSVG" — is fine, and so is identifying this
+licence by its name.
+
+This section works by copyright permission. It grants no trademark rights, and
+it neither adds to nor takes away from whatever rights in the name or the marks
+the law gives independently of this licence.
 
 ### 10. How permissions reach you
 
