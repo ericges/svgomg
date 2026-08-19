@@ -22,26 +22,25 @@ Runs entirely in your browser. No upload, no backend, no tracking.
 ## Why
 
 SVGO is excellent, but it's a command line tool with dozens of switches and no way to see what
-you've just done to your artwork. OMSVG puts every option behind a toggle and re-optimises as you
-change them, so you get the smallest file that still *looks right* — rather than the smallest file.
+you've just done to your artwork. OMSVG puts every option behind toggles and selects and re-optimises
+as you change them, so you get the smallest file that still *looks right* — rather than the smallest file.
 
 - **See the damage immediately.** The preview re-renders on every change, and a switch on the
   canvas flips between _Optimised_ and _Original_ without losing your zoom.
 - **Or let it point at the damage.** _Diff_ compares the two: a pixel-wise comparison of the
   renders in the preview, a line-by-line comparison of the markup in the markup view.
-- **All 44 SVGO optimisations behind one toggle each**, 32 on by default, plus grouped controls
+- **48 SVGO optimisations behind to choose from**, 32 on by default, plus grouped controls
   for dimensions, IDs and colours, number and transform precision, multipass and pretty-printing.
-- **Real numbers.** Before/after size and percentage, optionally measured **gzipped** — which is
-  what actually travels over the wire.
-- **Read the output.** A syntax-highlighted markup view, with copy-to-clipboard and download.
+- **Real numbers.** Before/after size and percentage, optionally measured **gzipped**.
+- **Read the output.** A syntax-highlighted markup view, ready to copy-to-clipboard or download.
 - **Works offline.** A service worker caches the app, so it keeps running with no connection.
-- **Nothing to set up.** The app opens on an empty sheet and waits: drop a file anywhere, paste
-  markup, pick one from the toolbar — or load a **Demo** if you haven't got one to hand.
 
 ## Privacy
 
 There is no server. The app is a bundle of static files: your SVG is read, optimised and rendered
-entirely inside the page, and never leaves your machine. Optimisation, gzip sizing and syntax
+entirely inside the page, and never leaves your machine.
+
+Optimisation, gzip sizing and syntax
 highlighting all run in web workers, and a [Content-Security-Policy][csp] defaulting to `none`
 keeps it that way.
 
@@ -134,6 +133,9 @@ are the [**OMSVG License 1.0**](./LICENSE.md).
    to download, somewhere anyone can reach, and say in the app where to find it. Wrapping it or
    injecting into it counts as changing it.
 
+<details>
+<summary><em>What that means in practice&hellip;</em></summary>
+
 |    | You want to…                                                         | Then…                                                                                                                                                                                                   |
 |:--:|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ✅ | Use it, at home or at work, including on paid client projects        | nothing to publish, nothing to ask                                                                                                                                                                      |
@@ -146,6 +148,8 @@ are the [**OMSVG License 1.0**](./LICENSE.md).
 | ❌ | Charge for access, or bundle it into something you sell              | not permitted                                                                                                                                                                                           |
 | ❌ | Run a free copy to market a paid product of yours                    | not permitted                                                                                                                                                                                           |
 | ❌ | Sell or broker data about how it's used                              | not permitted                                                                                                                                                                                           |
+
+</details>
 
 **Where the rest of the code came from.** Everything up to and including commit `f925656` is
 upstream SVGOMG and stays available under the MIT License. [NOTICE.md](./NOTICE.md) has this
