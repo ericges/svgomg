@@ -29,8 +29,8 @@ change them, so you get the smallest file that still *looks right* — rather th
   canvas flips between _Optimised_ and _Original_ without losing your zoom.
 - **Or let it point at the damage.** _Diff_ compares the two: a pixel-wise comparison of the
   renders in the preview, a line-by-line comparison of the markup in the markup view.
-- **All 47 plugins exposed**, 34 on by default, plus number/transform precision, multipass and
-  pretty-printing.
+- **All 44 SVGO optimisations behind one toggle each**, 32 on by default, plus grouped controls
+  for dimensions, IDs and colours, number and transform precision, multipass and pretty-printing.
 - **Real numbers.** Before/after size and percentage, optionally measured **gzipped** — which is
   what actually travels over the wire.
 - **Read the output.** A syntax-highlighted markup view, with copy-to-clipboard and download.
@@ -121,44 +121,42 @@ code, how to report a bug usefully, and the licensing terms a contribution comes
 
 ## Licence
 
-Source-available, not open source. The full terms are in [LICENSE.md](./LICENSE.md) — the **OMSVG
-License 1.0**: noncommercial by default, with commercial use added back, under two conditions that
-reach every permission it gives. Those two are what matter in practice:
+OMSVG is **source-available, not open source**. The code is here to read, run, change and pass on —
+what you can't do is charge people for access to it, or quietly host a changed version. The terms
+are the [**OMSVG License 1.0**](./LICENSE.md).
 
-1. **Don't make money from giving other people access to it.** No ads, no subscription, no paywall,
-   no "feature of our paid plan", no lead generation, no selling usage data. This one is a condition
-   on every permission the licence gives, so it holds for charities and universities too.
-2. **If you host a changed version publicly, publish your source** — on these same terms, free to
-   download, at a URL anyone can reach, and say in the app where to find it. "Changed" includes
-   wrapping it or injecting into it, not just editing its files.
+**_TL;DR:_**
 
-The table below is a summary; the licence governs.
+1. **Don't make money from giving other people access.** No ads, no subscription, no paywall, no
+   "included in our paid plan", no lead generation, no selling data about how it's used. Donations
+   are fine, as long as donating doesn't buy anyone a better version.
+2. **If you put a changed version online, publish the changed source** — on these same terms, free
+   to download, somewhere anyone can reach, and say in the app where to find it. Wrapping it or
+   injecting into it counts as changing it.
 
-|    | Usage                                                                  | Conditions                                                                                                                                                                                                   |
-|:--:|------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| ✅ | Use it, at home or at work, on paid client projects                    | nothing to publish                                                                                                                                                                                           |
-| ✅ | Run it on your own machines or your company's intranet, changed or not | nothing to publish                                                                                                                                                                                           |
-| ✅ | Host it for your clients as part of your services                      | nothing to publish, as long as access to it isn't a material part of what they pay you and you don't also put that version online for everyone                                                               |
-| ✅ | Mirror it publicly, free of charge, unchanged                          | no attribution to me, and you may keep the name and the logo — but not the domain, don't present it as the official site, and the licence and the upstream and third-party notices must travel with the copy |
-| ✅ | Fork it and host your fork publicly, free of charge                    | publish your source, and give it your own name and logo                                                                                                                                                      |
-| ✅ | Take donations for running a free public copy                          | as long as paying changes nothing about access                                                                                                                                                               |
-| ❌ | Host it publicly with advertising on or around it                      | not permitted                                                                                                                                                                                                |
-| ❌ | Charge for access, or include it in a paid product or service          | not permitted                                                                                                                                                                                                |
-| ❌ | Run a free copy to market a paid product of yours                      | not permitted                                                                                                                                                                                                |
-| ❌ | Sell or broker data about its use                                      | not permitted                                                                                                                                                                                                |
+|    | You want to…                                                         | Then…                                                                                                                                                                                                   |
+|:--:|----------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ✅ | Use it, at home or at work, including on paid client projects        | nothing to publish, nothing to ask                                                                                                                                                                      |
+| ✅ | Run it on your own machines or your company intranet, changed or not | nothing to publish                                                                                                                                                                                      |
+| ✅ | Host it for your clients as part of your services                    | nothing to publish — as long as access to OMSVG isn't a meaningful part of what they pay you for, and you don't also put that version up for everyone                                                   |
+| ✅ | Put up a free public mirror, unchanged                               | no attribution to me needed; keep the licence and the upstream and third-party notices with the copy; you may keep the name and the logo, but not the domain, and don't present it as the official site |
+| ✅ | Fork it and host your fork publicly, free of charge                  | publish your source, and give it your own name and logo                                                                                                                                                 |
+| ✅ | Take donations for running a free public copy                        | fine, as long as paying changes nothing about access                                                                                                                                                    |
+| ❌ | Run advertising on or around a public copy                           | not permitted                                                                                                                                                                                           |
+| ❌ | Charge for access, or bundle it into something you sell              | not permitted                                                                                                                                                                                           |
+| ❌ | Run a free copy to market a paid product of yours                    | not permitted                                                                                                                                                                                           |
+| ❌ | Sell or broker data about how it's used                              | not permitted                                                                                                                                                                                           |
 
-Everything up to and including commit `f925656` is upstream SVGOMG and stays available under the
-MIT License — see [NOTICE.md](./NOTICE.md), which also carries the notices for the third-party code
-the built app bundles.
+**Where the rest of the code came from.** Everything up to and including commit `f925656` is
+upstream SVGOMG and stays available under the MIT License. [NOTICE.md](./NOTICE.md) has this
+and the notices for every third-party package the built app bundles.
 
-Artwork here that belongs to other people stays under its own terms — the demo drawings, one of
-which is AGPL-3.0-or-later and the rest public domain or MIT, and the interface icons, which are
-eleven from [Lucide](https://lucide.dev) (ISC), one from [Tabler](https://tabler.io/icons) (MIT) and
-GitHub's own mark. [ASSETS.md](./ASSETS.md) says which is which, where each came from, and what its
-terms ask of you.
+**The artwork mostly isn't mine and isn't covered by the above.** The demo drawings and the interface icons
+belong to other people and keep their own terms. [ASSETS.md](./ASSETS.md) says which
+is which, where each came from, and what it asks of you.
 
-Contributions from other people are licensed under the MIT License and stay available under it — see
-[CONTRIBUTING.md](./CONTRIBUTING.md#licensing-and-copyright).
+**Contributions** from other people are licensed under the MIT License and stay available under it —
+see [CONTRIBUTING.md](./CONTRIBUTING.md#licensing-and-copyright).
 
 ## Credits
 
